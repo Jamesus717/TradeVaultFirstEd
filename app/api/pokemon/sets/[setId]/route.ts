@@ -1,0 +1,16 @@
+import { NextResponse } from 'next/server';
+import { pokemonFetch } from '../../../../../lib/pokemonServer';
+
+export const revalidate = 3600;
+
+type Params = { params: Promise<{ setId: string }> };
+
+export async function GET(_request: Request, context: Params) {
+  const { setId } = await context.params;
+  const response = await pokemonFetch(`/sets/${encodeURIComponent(setId)}`, {
+    next: { revalidate },
+  });
+
+  const json = await response.json();
+  return NextResponse.json(json, { status: response.status });
+}
