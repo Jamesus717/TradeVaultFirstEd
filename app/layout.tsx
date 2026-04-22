@@ -1,10 +1,13 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import './globals.css';
+import { AuthProvider } from './auth';
+import Navbar from './navbar';
 
 export const metadata: Metadata = {
-  title: '151 Master Set Tracker',
-  description: 'Track Normal and Reverse Holo variants from Pokemon 151.',
+  title: 'TradeVault — Pokémon TCG collection tracker & trading platform',
+  description:
+    'Track Pokémon TCG collections, completion, variants, and wishlist, plus manage trades with other collectors.',
 };
 
 export default function RootLayout({
@@ -13,8 +16,13 @@ export default function RootLayout({
   children: ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="en" suppressHydrationWarning style={{ scrollbarGutter: 'stable' }}>
+      <body suppressHydrationWarning>
+        <AuthProvider>
+          <Navbar />
+          {children}
+        </AuthProvider>
+      </body>
     </html>
   );
 }
