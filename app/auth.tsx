@@ -28,6 +28,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const client = supabase;
     let mounted = true;
+    const loadingFallback = window.setTimeout(() => {
+      if (mounted) {
+        setAuthLoading(false);
+      }
+    }, 3000);
 
     async function loadUser() {
       const { data, error } = await client.auth.getUser();
@@ -43,6 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       setAuthLoading(false);
+      window.clearTimeout(loadingFallback);
     }
 
     loadUser();
@@ -55,6 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       mounted = false;
+      window.clearTimeout(loadingFallback);
       subscription.unsubscribe();
     };
   }, [supabaseDisabled]);
