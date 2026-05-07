@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from './auth';
 
@@ -19,6 +19,12 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileAuthOpen, setMobileAuthOpen] = useState(false);
   const [profileHref, setProfileHref] = useState<string | null>(null);
+  const [unreadState, setUnreadState] = useState<{ userId: string; count: number }>({
+    userId: '',
+    count: 0,
+  });
+
+  const inboxActive = pathname.startsWith('/inbox');
 
   useEffect(() => {
     async function loadProfileHref() {
@@ -49,8 +55,78 @@ export default function Navbar() {
     loadProfileHref();
   }, [supabaseDisabled, user]);
 
+  useEffect(() => {
+    let active = true;
+    let channel: ReturnType<NonNullable<typeof supabase>['channel']> | null = null;
+    let timeout: ReturnType<typeof setTimeout> | null = null;
+
+    async function refreshCount() {
+      if (!user || supabaseDisabled || !supabase) {
+        return;
+      }
+
+      const { count } = await supabase
+        .from('notifications')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('read', false);
+
+      if (active) {
+        setUnreadState({ userId: user.id, count: count ?? 0 });
+      }
+    }
+
+    function scheduleRefresh() {
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+      timeout = setTimeout(refreshCount, 250);
+    }
+
+    if (!user || supabaseDisabled || !supabase) {
+      return () => {
+        active = false;
+      };
+    }
+
+    refreshCount();
+
+    channel = supabase
+      .channel(`notifications-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          scheduleRefresh();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      active = false;
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+      if (channel && supabase) {
+        supabase.removeChannel(channel);
+      }
+    };
+  }, [supabaseDisabled, user]);
+
+  const unreadCount = user && unreadState.userId === user.id ? unreadState.count : 0;
   const resolvedProfileHref = user ? (profileHref ?? `/profile/${user.id}`) : null;
   const profileActive = pathname.startsWith('/profile') || pathname.startsWith('/u/');
+  const unreadBadgeText = useMemo(() => {
+    if (unreadCount <= 0) {
+      return '';
+    }
+    return unreadCount > 9 ? '9+' : String(unreadCount);
+  }, [unreadCount]);
 
   async function handleSubmit() {
     if (submitting) {
@@ -171,6 +247,32 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-3">
+          {user && !supabaseDisabled ? (
+            <Link
+              href="/inbox"
+              className="relative inline-flex items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] p-2 text-stone-300 hover:bg-white/[0.06] hover:text-white"
+              aria-label="Inbox"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-5 w-5"
+              >
+                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              </svg>
+              {unreadBadgeText ? (
+                <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-400 px-1 text-[10px] font-bold text-emerald-950">
+                  {unreadBadgeText}
+                </span>
+              ) : null}
+            </Link>
+          ) : null}
+
           <div className="hidden items-center gap-3 sm:flex">
             {authLoading ? (
               <p className="text-sm text-stone-300">Checking session...</p>
@@ -277,6 +379,19 @@ export default function Navbar() {
       {mobileOpen ? (
         <div className="border-t border-white/10 bg-stone-950/85 px-4 py-4 backdrop-blur-md sm:hidden">
           <div className="mx-auto flex w-full max-w-7xl flex-col gap-3">
+            {user && !supabaseDisabled ? (
+              <Link
+                href="/inbox"
+                onClick={() => setMobileOpen(false)}
+                className={`rounded-xl border border-white/10 px-4 py-3 text-sm font-medium ${
+                  inboxActive
+                    ? 'bg-emerald-400 text-emerald-950'
+                    : 'bg-white/[0.03] text-stone-200 hover:bg-white/[0.06]'
+                }`}
+              >
+                Inbox
+              </Link>
+            ) : null}
             <Link
               href="/"
               onClick={() => setMobileOpen(false)}
