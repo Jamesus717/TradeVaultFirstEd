@@ -7,17 +7,34 @@ import { supabase } from '../lib/supabaseClient';
 import { useAuth } from './auth';
 
 type AuthMode = 'login' | 'signup';
+type AuthStage = 'form' | 'signup_done';
+
+function classNames(...values: Array<string | false | null | undefined>) {
+  return values.filter(Boolean).join(' ');
+}
+
+function isUnverifiedEmailError(message: string) {
+  const value = message.toLowerCase();
+  return (
+    value.includes('email not confirmed') ||
+    value.includes('not confirmed') ||
+    value.includes('confirm your email') ||
+    value.includes('email confirmation') ||
+    value.includes('user not confirmed')
+  );
+}
 
 export default function Navbar() {
   const { user, authLoading, supabaseDisabled, signIn, signOut, signUp } = useAuth();
   const pathname = usePathname();
   const [authMode, setAuthMode] = useState<AuthMode>('login');
+  const [authStage, setAuthStage] = useState<AuthStage>('form');
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [mobileAuthOpen, setMobileAuthOpen] = useState(false);
   const [profileHref, setProfileHref] = useState<string | null>(null);
   const [unreadState, setUnreadState] = useState<{ userId: string; count: number }>({
     userId: '',
@@ -128,6 +145,23 @@ export default function Navbar() {
     return unreadCount > 9 ? '9+' : String(unreadCount);
   }, [unreadCount]);
 
+  function openAuthModal(mode: AuthMode) {
+    if (supabaseDisabled) {
+      return;
+    }
+    setAuthMode(mode);
+    setAuthStage('form');
+    setAuthError('');
+    setAuthModalOpen(true);
+  }
+
+  function closeAuthModal() {
+    setAuthModalOpen(false);
+    setAuthError('');
+    setPassword('');
+    setAuthStage('form');
+  }
+
   async function handleSubmit() {
     if (submitting) {
       return;
@@ -140,11 +174,25 @@ export default function Navbar() {
     const error = await action(email, password);
 
     if (error) {
-      setAuthError(error);
+      if (authMode === 'login' && isUnverifiedEmailError(error)) {
+        setAuthError(
+          'Please verify your email before logging in. Check your inbox for the verification link.'
+        );
+      } else {
+        setAuthError(error);
+      }
       setSubmitting(false);
       return;
     }
 
+    if (authMode === 'signup') {
+      setAuthStage('signup_done');
+      setPassword('');
+      setSubmitting(false);
+      return;
+    }
+
+    setAuthModalOpen(false);
     setEmail('');
     setPassword('');
     setSubmitting(false);
@@ -167,8 +215,9 @@ export default function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-stone-950/75 backdrop-blur-md">
-      <nav className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+    <>
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-stone-950/75 backdrop-blur-md">
+        <nav className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
         <div className="flex items-center gap-3">
           <div className="h-2 w-2 rounded-full bg-emerald-400" />
           <Link href="/" className="text-lg font-semibold tracking-tight text-white">
@@ -295,60 +344,21 @@ export default function Navbar() {
                 </button>
               </>
             ) : (
-              <div className="flex items-center gap-3">
-                <div className="hidden items-center gap-2 sm:flex">
-                  <button
-                    type="button"
-                    onClick={() => setAuthMode('login')}
-                    className={`rounded-xl px-3 py-2 text-sm ${
-                      authMode === 'login'
-                        ? 'bg-emerald-400 text-emerald-950'
-                        : 'border border-white/10 bg-white/[0.03] text-stone-200 hover:bg-white/[0.06]'
-                    }`}
-                  >
-                    Login
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setAuthMode('signup')}
-                    className={`rounded-xl px-3 py-2 text-sm ${
-                      authMode === 'signup'
-                        ? 'bg-emerald-400 text-emerald-950'
-                        : 'border border-white/10 bg-white/[0.03] text-stone-200 hover:bg-white/[0.06]'
-                    }`}
-                  >
-                    Sign Up
-                  </button>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    placeholder="Email"
-                    className="hidden w-48 rounded-xl border border-white/10 bg-stone-900 px-3 py-2 text-sm text-white outline-none sm:block"
-                  />
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
-                    placeholder="Password"
-                    className="hidden w-40 rounded-xl border border-white/10 bg-stone-900 px-3 py-2 text-sm text-white outline-none sm:block"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleSubmit}
-                    disabled={submitting || !email || !password}
-                    className={`rounded-xl px-4 py-2 text-sm font-medium transition-colors ${
-                      submitting || !email || !password
-                        ? 'cursor-not-allowed border border-white/10 bg-white/[0.03] text-stone-400'
-                        : 'bg-emerald-400 text-emerald-950 hover:bg-emerald-300'
-                    }`}
-                  >
-                    {submitting ? '...' : authMode === 'signup' ? 'Create' : 'Login'}
-                  </button>
-                </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => openAuthModal('login')}
+                  className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2 text-sm text-stone-100 hover:bg-white/[0.06]"
+                >
+                  Login
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openAuthModal('signup')}
+                  className="rounded-xl bg-emerald-400 px-4 py-2 text-sm font-semibold text-emerald-950 hover:bg-emerald-300"
+                >
+                  Sign Up
+                </button>
               </div>
             )}
           </div>
@@ -374,11 +384,11 @@ export default function Navbar() {
             </svg>
           </button>
         </div>
-      </nav>
+        </nav>
 
-      {mobileOpen ? (
-        <div className="border-t border-white/10 bg-stone-950/85 px-4 py-4 backdrop-blur-md sm:hidden">
-          <div className="mx-auto flex w-full max-w-7xl flex-col gap-3">
+        {mobileOpen ? (
+          <div className="border-t border-white/10 bg-stone-950/85 px-4 py-4 backdrop-blur-md sm:hidden">
+            <div className="mx-auto flex w-full max-w-7xl flex-col gap-3">
             {user && !supabaseDisabled ? (
               <Link
                 href="/inbox"
@@ -474,79 +484,167 @@ export default function Navbar() {
               <div className="space-y-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => setMobileAuthOpen((current) => !current)}
+                  onClick={() => {
+                    setMobileOpen(false);
+                    openAuthModal('login');
+                  }}
                   className="w-full rounded-xl bg-emerald-400 px-4 py-3 text-left text-sm font-medium text-emerald-950 hover:bg-emerald-300"
                 >
                   Login / Sign Up
                 </button>
+              </div>
+            )}
+            </div>
+          </div>
+        ) : null}
+      </header>
 
-                {mobileAuthOpen ? (
-                  <div className="space-y-3 rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-4">
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setAuthMode('login')}
-                        className={`rounded-xl px-3 py-2 text-sm ${
-                          authMode === 'login'
-                            ? 'bg-emerald-400 text-emerald-950'
-                            : 'border border-white/10 bg-white/[0.03] text-stone-200 hover:bg-white/[0.06]'
-                        }`}
-                      >
-                        Login
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setAuthMode('signup')}
-                        className={`rounded-xl px-3 py-2 text-sm ${
-                          authMode === 'signup'
-                            ? 'bg-emerald-400 text-emerald-950'
-                            : 'border border-white/10 bg-white/[0.03] text-stone-200 hover:bg-white/[0.06]'
-                        }`}
-                      >
-                        Sign Up
-                      </button>
-                    </div>
+      {authModalOpen && !user && !supabaseDisabled ? (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              closeAuthModal();
+            }
+          }}
+        >
+          <div
+            className="w-full max-w-md rounded-[2rem] border border-white/10 bg-stone-900 p-8 shadow-2xl shadow-black/30"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-semibold text-white">
+                  {authStage === 'signup_done'
+                    ? 'Check your email'
+                    : authMode === 'signup'
+                      ? 'Create your account'
+                      : 'Welcome back'}
+                </h2>
+                <p className="mt-1 text-sm text-stone-400">
+                  {authStage === 'signup_done'
+                    ? "We've sent you a verification link."
+                    : authMode === 'signup'
+                      ? 'Sign up to start tracking and trading.'
+                      : 'Log in to your TradeVault account.'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={closeAuthModal}
+                className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-stone-200 hover:bg-white/[0.06]"
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
 
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(event) => setEmail(event.target.value)}
-                      placeholder="Email"
-                      className="w-full rounded-xl border border-white/10 bg-stone-900 px-3 py-2 text-sm text-white outline-none"
-                    />
-                    <input
-                      type="password"
-                      value={password}
-                      onChange={(event) => setPassword(event.target.value)}
-                      placeholder="Password"
-                      className="w-full rounded-xl border border-white/10 bg-stone-900 px-3 py-2 text-sm text-white outline-none"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleSubmit}
-                      disabled={submitting || !email || !password}
-                      className={`w-full rounded-xl px-4 py-3 text-sm font-medium transition-colors ${
-                        submitting || !email || !password
-                          ? 'cursor-not-allowed border border-white/10 bg-white/[0.03] text-stone-400'
-                          : 'bg-emerald-400 text-emerald-950 hover:bg-emerald-300'
-                      }`}
-                    >
-                      {submitting ? '...' : authMode === 'signup' ? 'Create' : 'Login'}
-                    </button>
+            {authStage === 'signup_done' ? (
+              <div className="mt-6 space-y-4">
+                <div className="rounded-[1.5rem] border border-emerald-300/20 bg-emerald-400/10 p-5 text-sm text-stone-100">
+                  <p className="font-semibold text-white">Check your email!</p>
+                  <p className="mt-2 text-stone-200">
+                    We&apos;ve sent you a verification link. You must verify your email before you can log in.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode('login');
+                    setAuthStage('form');
+                    setAuthError('');
+                  }}
+                  className="w-full rounded-2xl bg-emerald-400 px-4 py-3 text-sm font-semibold text-emerald-950 hover:bg-emerald-300"
+                >
+                  Back to Login
+                </button>
+              </div>
+            ) : (
+              <div className="mt-6 space-y-4">
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthMode('login');
+                      setAuthStage('form');
+                      setAuthError('');
+                    }}
+                    className={classNames(
+                      'rounded-xl px-3 py-2 text-sm',
+                      authMode === 'login'
+                        ? 'bg-emerald-400 text-emerald-950'
+                        : 'border border-white/10 bg-white/[0.03] text-stone-200 hover:bg-white/[0.06]'
+                    )}
+                  >
+                    Login
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthMode('signup');
+                      setAuthStage('form');
+                      setAuthError('');
+                    }}
+                    className={classNames(
+                      'rounded-xl px-3 py-2 text-sm',
+                      authMode === 'signup'
+                        ? 'bg-emerald-400 text-emerald-950'
+                        : 'border border-white/10 bg-white/[0.03] text-stone-200 hover:bg-white/[0.06]'
+                    )}
+                  >
+                    Sign Up
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder="Email"
+                    className="w-full rounded-xl border border-white/10 bg-stone-950 px-4 py-3 text-sm text-white outline-none"
+                  />
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    placeholder="Password"
+                    className="w-full rounded-xl border border-white/10 bg-stone-950 px-4 py-3 text-sm text-white outline-none"
+                  />
+                </div>
+
+                {authError ? (
+                  <div
+                    className={classNames(
+                      'rounded-[1.5rem] border p-4 text-sm backdrop-blur',
+                      authError.toLowerCase().includes('verify your email')
+                        ? 'border-amber-300/15 bg-amber-400/5 text-amber-200/80'
+                        : 'border-rose-300/20 bg-rose-500/10 text-rose-100'
+                    )}
+                  >
+                    {authError}
                   </div>
                 ) : null}
+
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={submitting || !email || !password}
+                  className={classNames(
+                    'w-full rounded-2xl px-4 py-3 text-sm font-semibold transition-colors',
+                    submitting || !email || !password
+                      ? 'cursor-not-allowed border border-white/10 bg-white/[0.03] text-stone-400'
+                      : 'bg-emerald-400 text-emerald-950 hover:bg-emerald-300'
+                  )}
+                >
+                  {submitting ? '...' : authMode === 'signup' ? 'Create account' : 'Login'}
+                </button>
               </div>
             )}
           </div>
         </div>
       ) : null}
-
-      {authError ? (
-        <div className="mx-auto w-full max-w-7xl px-4 pb-3 text-sm text-rose-200 sm:px-6 lg:px-8">
-          {authError}
-        </div>
-      ) : null}
-    </header>
+    </>
   );
 }
 
