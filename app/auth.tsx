@@ -81,7 +81,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return 'Supabase environment variables are missing.';
       }
 
-      const { error } = await supabase.auth.signUp({ email, password });
+      const emailRedirectTo =
+        typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined;
+
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: emailRedirectTo ? { emailRedirectTo } : undefined,
+      });
       return error ? error.message : null;
     }
 
