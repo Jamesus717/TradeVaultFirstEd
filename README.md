@@ -4,6 +4,8 @@ TradeVault is a full-stack web app for Pokémon TCG collecting and trading.
 
 I built this project to get hands-on, end-to-end experience shipping a real product: authentication, database design with RLS, API integration, realtime updates, and a consistent UI system.
 
+Live site: https://tradevault.jamesfburt69.workers.dev/
+
 ## Tech Stack
 
 - Next.js App Router + React + TypeScript
