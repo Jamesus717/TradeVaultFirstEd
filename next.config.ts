@@ -9,6 +9,10 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'images.scrydex.com',
+      },
+      {
+        protocol: 'https',
         hostname: 'rjlwwyaeubvuioxyadfu.supabase.co',
       },
     ],

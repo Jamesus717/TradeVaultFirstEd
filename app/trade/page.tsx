@@ -136,6 +136,8 @@ export default function TradeBoardPage() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalStepCardQuery, setModalStepCardQuery] = useState('');
+  const [cardSearchMode, setCardSearchMode] = useState<'collection' | 'all'>('collection');
+  const [ownedCards, setOwnedCards] = useState<CardSearchResult[]>([]);
   const [modalCardResults, setModalCardResults] = useState<CardSearchResult[]>([]);
   const [modalCardLoading, setModalCardLoading] = useState(false);
   const [modalCardError, setModalCardError] = useState('');
@@ -356,6 +358,8 @@ export default function TradeBoardPage() {
     });
   }, [conditionFilter, listings, postcodeFilter, searchText, setFilter, typeFilter]);
 
+  const ownedCardIdSet = useMemo(() => new Set(ownedCards.map((card) => card.id)), [ownedCards]);
+
   useEffect(() => {
     async function searchCards() {
       const needle = modalStepCardQuery.trim();
@@ -369,6 +373,12 @@ export default function TradeBoardPage() {
 
       setModalCardLoading(true);
       setModalCardError('');
+
+      if (cardSearchMode === 'collection' && ownedCardIdSet.size === 0) {
+        setModalCardResults([]);
+        setModalCardLoading(false);
+        return;
+      }
 
       if (cardSearchAbortRef.current) {
         cardSearchAbortRef.current.abort();
@@ -388,7 +398,12 @@ export default function TradeBoardPage() {
         }
 
         const json = (await response.json()) as { data?: CardSearchResult[] };
-        setModalCardResults(json.data ?? []);
+        const allResults = json.data ?? [];
+        const results =
+          cardSearchMode === 'collection'
+            ? allResults.filter((card) => ownedCardIdSet.has(card.id))
+            : allResults;
+        setModalCardResults(results);
       } catch (cause) {
         if (cause instanceof DOMException && cause.name === 'AbortError') {
           return;
@@ -403,7 +418,7 @@ export default function TradeBoardPage() {
 
     const handle = setTimeout(searchCards, 400);
     return () => clearTimeout(handle);
-  }, [modalOpen, modalStepCardQuery, selectedCard]);
+  }, [cardSearchMode, modalOpen, modalStepCardQuery, ownedCardIdSet, selectedCard]);
 
   const modalCanSubmit = Boolean(
     user &&
@@ -641,13 +656,39 @@ export default function TradeBoardPage() {
     setSubmitting(false);
   }
 
-  function openModal() {
+  async function openModal() {
     if (!user) {
       return;
     }
 
     setModalOpen(true);
     setSubmitError('');
+
+    if (!supabase) {
+      setOwnedCards([]);
+      return;
+    }
+
+    const { data, error: ownedError } = await supabase
+      .from('user_cards')
+      .select('card_id')
+      .eq('user_id', user.id)
+      .eq('owned', true);
+
+    if (ownedError || !data) {
+      setOwnedCards([]);
+      return;
+    }
+
+    const mapped = (data as Array<{
+      card_id: string;
+    }>).map((row) => ({
+      id: row.card_id,
+      name: row.card_id,
+      number: '',
+    }));
+
+    setOwnedCards(mapped);
   }
 
   function closeModal() {
@@ -660,6 +701,8 @@ export default function TradeBoardPage() {
     setSelectedCard(null);
     setUploadFile(null);
     setUploadPreview(null);
+    setCardSearchMode('collection');
+    setOwnedCards([]);
 
     if (cardSearchAbortRef.current) {
       cardSearchAbortRef.current.abort();
@@ -1057,6 +1100,33 @@ export default function TradeBoardPage() {
                     </div>
                   ) : (
                     <>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setCardSearchMode('collection')}
+                          className={classNames(
+                            'rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] transition-colors',
+                            cardSearchMode === 'collection'
+                              ? 'border-emerald-300/20 bg-emerald-400/10 text-emerald-200'
+                              : 'border-white/10 bg-white/[0.03] text-stone-300 hover:bg-white/[0.06]'
+                          )}
+                        >
+                          My Collection
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setCardSearchMode('all')}
+                          className={classNames(
+                            'rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] transition-colors',
+                            cardSearchMode === 'all'
+                              ? 'border-emerald-300/20 bg-emerald-400/10 text-emerald-200'
+                              : 'border-white/10 bg-white/[0.03] text-stone-300 hover:bg-white/[0.06]'
+                          )}
+                        >
+                          All Cards
+                        </button>
+                      </div>
+
                       <input
                         value={modalStepCardQuery}
                         onChange={(event) => setModalStepCardQuery(event.target.value)}
@@ -1071,45 +1141,74 @@ export default function TradeBoardPage() {
                       ) : null}
 
                       {modalCardLoading ? (
-                        <div className="grid grid-cols-4 gap-2">
-                          {Array.from({ length: 12 }).map((_, index) => (
+                        <div className="space-y-2">
+                          {Array.from({ length: 6 }).map((_, index) => (
                             <div
-                              key={`thumb-${index}`}
-                              className="aspect-[3/4] animate-pulse rounded-xl bg-white/[0.06]"
+                              key={`row-${index}`}
+                              className="h-16 animate-pulse rounded-2xl border border-white/10 bg-white/[0.03]"
                             />
                           ))}
                         </div>
                       ) : modalCardResults.length > 0 ? (
-                        <div className="grid grid-cols-4 gap-2">
-                          {modalCardResults.map((card) => (
-                            <button
-                              key={card.id}
-                              type="button"
-                              onClick={() => setSelectedCard(card)}
-                              className="group overflow-hidden rounded-xl ring-2 ring-transparent transition-all hover:ring-emerald-400"
-                            >
-                              <div className="relative aspect-[3/4] bg-stone-950/80">
-                                {card.images?.small ? (
-                                  <Image
-                                    src={card.images.small}
-                                    alt={card.name}
-                                    fill
-                                    sizes="25vw"
-                                    className="object-cover"
-                                  />
-                                ) : (
-                                  <div className="flex h-full w-full items-center justify-center text-xs text-stone-500">
-                                    No image
+                        <div className="max-h-80 overflow-y-auto rounded-2xl border border-white/10 bg-white/[0.03]">
+                          {modalCardResults.map((card) => {
+                            const isOwned = ownedCards.some((owned) => owned.id === card.id);
+                            return (
+                              <button
+                                key={card.id}
+                                type="button"
+                                onClick={() => setSelectedCard(card)}
+                                className="flex w-full items-center gap-3 border-b border-white/10 p-3 text-left transition-colors last:border-b-0 hover:bg-white/[0.05]"
+                              >
+                                <div className="relative h-16 w-12 overflow-hidden rounded-xl bg-stone-950/80 ring-1 ring-white/5">
+                                  {card.images?.small ? (
+                                    <Image
+                                      src={card.images.small}
+                                      alt={card.name}
+                                      fill
+                                      sizes="48px"
+                                      className="object-cover"
+                                    />
+                                  ) : (
+                                    <div className="flex h-full w-full items-center justify-center text-[10px] text-stone-500">
+                                      No image
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <p className="truncate text-sm font-semibold text-white">{card.name}</p>
+                                    {cardSearchMode === 'all' && isOwned ? (
+                                      <span className="rounded-full border border-emerald-300/20 bg-emerald-400/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-200">
+                                        Owned
+                                      </span>
+                                    ) : null}
                                   </div>
-                                )}
-                              </div>
-                            </button>
-                          ))}
+                                  <p className="truncate text-xs text-stone-400">
+                                    {card.set?.name ?? 'Unknown set'} · #{card.number}
+                                  </p>
+                                </div>
+                              </button>
+                            );
+                          })}
                         </div>
                       ) : modalStepCardQuery.trim().length >= 2 ? (
-                        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-stone-300">
-                          No results.
-                        </div>
+                        cardSearchMode === 'collection' ? (
+                          <div className="space-y-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-stone-300">
+                            <p>No matching cards in your collection.</p>
+                            <button
+                              type="button"
+                              onClick={() => setCardSearchMode('all')}
+                              className="rounded-2xl bg-emerald-400 px-4 py-2 text-sm font-semibold text-emerald-950 hover:bg-emerald-300"
+                            >
+                              Search All Cards
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-stone-300">
+                            No results.
+                          </div>
+                        )
                       ) : null}
                     </>
                   )}
