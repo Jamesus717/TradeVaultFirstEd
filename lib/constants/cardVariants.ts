@@ -4,9 +4,10 @@ export type { CardVariantType };
 
 export const NO_REVERSE_HOLO_SETS = new Set([
   'base1',
-  'jungle',
-  'fossil',
   'base2',
+  'base3',
+  'base4',
+  'base5',
   'teamrocket',
   'gym1',
   'gym2',
@@ -18,9 +19,9 @@ export const NO_REVERSE_HOLO_SETS = new Set([
 
 export const FIRST_EDITION_SETS = new Set([
   'base1',
-  'jungle',
-  'fossil',
-  'teamrocket',
+  'base2',
+  'base3',
+  'base5',
   'gym1',
   'gym2',
   'neo1',
@@ -31,7 +32,7 @@ export const FIRST_EDITION_SETS = new Set([
 
 export const SHADOWLESS_SETS = new Set(['base1']);
 
-export const UNLIMITED_ONLY_SETS = new Set(['base2']);
+export const UNLIMITED_ONLY_SETS = new Set(['base4']);
 
 export function getVariantsForSet(setId: string): CardVariantType[] {
   if (SHADOWLESS_SETS.has(setId)) {
