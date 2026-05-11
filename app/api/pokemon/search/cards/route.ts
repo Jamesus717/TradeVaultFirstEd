@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { pokemonFetch } from '../../../../../lib/pokemonServer';
-import { withWorkerCache } from '../../../../../lib/workerCache';
 
 export const revalidate = 300;
 
@@ -46,40 +45,37 @@ function buildContainsQuery(tokens: Array<{ raw: string; norm: string }>) {
 }
 
 export async function GET(request: Request) {
-  return withWorkerCache(request, 60 * 5, async () => {
-    const url = new URL(request.url);
-    const name = (url.searchParams.get('name') ?? '').trim();
-    const pageSizeRaw = url.searchParams.get('pageSize') ?? '20';
+  const url = new URL(request.url);
+  const name = (url.searchParams.get('name') ?? '').trim();
+  const pageSizeRaw = url.searchParams.get('pageSize') ?? '20';
 
-    if (!name) {
-      return NextResponse.json({ data: [] }, { status: 200 });
-    }
+  if (!name) {
+    return NextResponse.json({ data: [] }, { status: 200 });
+  }
 
-    if (name.length > 60) {
-      return NextResponse.json({ error: { message: 'Search term too long.' } }, { status: 400 });
-    }
+  if (name.length > 60) {
+    return NextResponse.json({ error: { message: 'Search term too long.' } }, { status: 400 });
+  }
 
-    const pageSizeNumber = Math.max(1, Math.min(36, Number.parseInt(pageSizeRaw, 10) || 20));
-    const pageSize = String(pageSizeNumber);
+  const pageSizeNumber = Math.max(1, Math.min(36, Number.parseInt(pageSizeRaw, 10) || 20));
+  const pageSize = String(pageSizeNumber);
 
-    const tokens = tokenizeSearch(name);
-    if (tokens.length === 0) {
-      return NextResponse.json({ data: [] }, { status: 200 });
-    }
+  const tokens = tokenizeSearch(name);
+  if (tokens.length === 0) {
+    return NextResponse.json({ data: [] }, { status: 200 });
+  }
 
-    const primary = buildContainsQuery(tokens);
-    const coreTokens = tokens.filter((token) => !OPTIONAL_TOKENS.has(token.norm));
-    const core = coreTokens.length > 0 ? buildContainsQuery(coreTokens) : '';
+  const primary = buildContainsQuery(tokens);
+  const coreTokens = tokens.filter((token) => !OPTIONAL_TOKENS.has(token.norm));
+  const core = coreTokens.length > 0 ? buildContainsQuery(coreTokens) : '';
 
-    const q = core && core !== primary ? `(${primary}) OR (${core})` : primary;
-    const select = 'id,name,number,rarity,set.id,set.name,set.series,set.releaseDate,images.small,images.large';
-    const search = new URLSearchParams({ q, pageSize, orderBy: '-set.releaseDate', select });
+  const q = core && core !== primary ? `(${primary}) OR (${core})` : primary;
+  const search = new URLSearchParams({ q, pageSize, orderBy: '-set.releaseDate' });
 
-    const response = await pokemonFetch(`/cards?${search.toString()}`, {
-      next: { revalidate },
-    });
-
-    const json = await response.json();
-    return NextResponse.json(json, { status: response.status });
+  const response = await pokemonFetch(`/cards?${search.toString()}`, {
+    next: { revalidate },
   });
+
+  const json = await response.json();
+  return NextResponse.json(json, { status: response.status });
 }
