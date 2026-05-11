@@ -1,8 +1,10 @@
-import type { CardVariant, CardVariantType, PokemonCard, PokemonSet } from './types';
+import type { CardVariant, PokemonCard, PokemonSet } from './types';
+import { getVariantsForSet, variantToSlug } from '../../lib/constants/cardVariants';
 
 export const LEGACY_SET_ID = 'sv3pt5';
 
 const reverseHoloRarities = new Set(['Common', 'Uncommon', 'Rare']);
+const vintagePrintRarities = new Set(['Common', 'Uncommon', 'Rare', 'Rare Holo']);
 
 const preferredSets = [
   { id: 'sv1' },
@@ -40,27 +42,30 @@ export function buildVariants(cards: PokemonCard[]): CardVariant[] {
     .slice()
     .sort((left, right) => compareCardNumbers(left.number, right.number))
     .flatMap((card) => {
-      const variants: CardVariantType[] = ['Normal'];
+      const setId = card.set?.id ?? '';
+      const availableVariants = getVariantsForSet(setId);
 
-      if (card.rarity && reverseHoloRarities.has(card.rarity)) {
-        variants.push('Reverse Holo');
-      }
-
-      return variants.map((variant) => ({
-        id: `${card.id}-${variant === 'Normal' ? 'normal' : 'reverse'}`,
-        baseCardId: card.id,
-        setId: card.set?.id ?? '',
-        setName: card.set?.name ?? '',
-        name: card.name,
-        number: card.number,
-        image: card.images?.small ?? '',
-        variant,
-      }));
+      return availableVariants
+        .filter((variant) => {
+          if (variant === 'Normal') {
+            return true;
+          }
+          if (variant === 'Reverse Holo') {
+            return Boolean(card.rarity && reverseHoloRarities.has(card.rarity));
+          }
+          return Boolean(card.rarity && vintagePrintRarities.has(card.rarity));
+        })
+        .map((variant) => ({
+          id: `${card.id}-${variantToSlug(variant)}`,
+          baseCardId: card.id,
+          setId,
+          setName: card.set?.name ?? '',
+          name: card.name,
+          number: card.number,
+          image: card.images?.small ?? '',
+          variant,
+        }));
     });
-}
-
-export function variantSuffix(variant: CardVariantType) {
-  return variant === 'Reverse Holo' ? 'reverse' : 'normal';
 }
 
 export function buildSetList(allSets: PokemonSet[]) {
@@ -110,4 +115,3 @@ export function groupSetsBySeries(sets: PokemonSet[]) {
     return accumulator;
   }, {});
 }
-

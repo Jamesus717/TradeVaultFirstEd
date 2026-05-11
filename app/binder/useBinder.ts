@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../auth';
 import type { CardApiResponse, CardVariant, PokemonSet, SetApiResponse, SortMode, UserCardRow } from './types';
-import { buildSetList, buildVariants, compareCardNumbers, groupSetsBySeries, LEGACY_SET_ID, variantSuffix } from './utils';
+import { buildSetList, buildVariants, compareCardNumbers, groupSetsBySeries, LEGACY_SET_ID } from './utils';
+import { NO_REVERSE_HOLO_SETS, normalizeVariantForSet, variantToSlug } from '../../lib/constants/cardVariants';
 
 export function useBinder() {
   const { user, supabaseDisabled } = useAuth();
@@ -179,7 +180,9 @@ export function useBinder() {
         const entry = row as UserCardRow;
 
         if (entry.owned) {
-          accumulator[`${entry.card_id}-${variantSuffix(entry.variant)}`] = true;
+          const setId = entry.set_id ?? selectedSetId;
+          const normalized = normalizeVariantForSet(setId, entry.variant);
+          accumulator[`${entry.card_id}-${variantToSlug(normalized)}`] = true;
         }
 
         return accumulator;
@@ -244,7 +247,12 @@ export function useBinder() {
         .delete()
         .eq('user_id', user.id)
         .eq('card_id', card.baseCardId)
-        .eq('variant', card.variant);
+
+      if (card.variant === 'Unlimited' && NO_REVERSE_HOLO_SETS.has(selectedSetId)) {
+        deleteQuery = deleteQuery.in('variant', ['Unlimited', 'Normal', 'Reverse Holo']);
+      } else {
+        deleteQuery = deleteQuery.eq('variant', card.variant);
+      }
 
       if (selectedSetId === LEGACY_SET_ID) {
         deleteQuery = deleteQuery.or(`set_id.eq.${LEGACY_SET_ID},set_id.is.null`);

@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import type { CardApiResponse, CardVariant, UserCardRow } from '../binder/types';
-import { buildVariants, LEGACY_SET_ID, variantSuffix } from '../binder/utils';
+import { buildVariants, LEGACY_SET_ID } from '../binder/utils';
+import { normalizeVariantForSet, variantToSlug } from '../../lib/constants/cardVariants';
 
 type Params = {
   selectedSetId: string | null;
@@ -28,7 +29,11 @@ export function useSetOwnedVariants({ selectedSetId, ownedRows }: Params) {
 
           return row.set_id === selectedSetId;
         })
-        .map((row) => `${row.card_id}-${variantSuffix(row.variant)}`)
+        .map((row) => {
+          const setId = row.set_id ?? selectedSetId;
+          const normalized = normalizeVariantForSet(setId, row.variant);
+          return `${row.card_id}-${variantToSlug(normalized)}`;
+        })
     );
   }, [ownedRows, selectedSetId]);
 
@@ -69,4 +74,3 @@ export function useSetOwnedVariants({ selectedSetId, ownedRows }: Params) {
 
   return { loading, error, cards };
 }
-

@@ -4,9 +4,10 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
+import { getVariantsForSet } from '../../lib/constants/cardVariants';
 import { useAuth } from '../auth';
 
-type ListingVariant = 'Normal' | 'Reverse Holo';
+type ListingVariant = 'Normal' | 'Reverse Holo' | '1st Edition' | 'Shadowless' | 'Unlimited';
 type ListingCondition =
   | 'Mint'
   | 'Near Mint'
@@ -359,6 +360,14 @@ export default function TradeBoardPage() {
   }, [conditionFilter, listings, postcodeFilter, searchText, setFilter, typeFilter]);
 
   const ownedCardIdSet = useMemo(() => new Set(ownedCards.map((card) => card.id)), [ownedCards]);
+
+  const availableVariants = useMemo<ListingVariant[]>(() => {
+    const setId = selectedCard?.set?.id;
+    if (!setId) {
+      return ['Normal', 'Reverse Holo'];
+    }
+    return getVariantsForSet(setId) as ListingVariant[];
+  }, [selectedCard]);
 
   useEffect(() => {
     async function searchCards() {
@@ -1157,7 +1166,11 @@ export default function TradeBoardPage() {
                               <button
                                 key={card.id}
                                 type="button"
-                                onClick={() => setSelectedCard(card)}
+                                onClick={() => {
+                                  setSelectedCard(card);
+                                  const next = getVariantsForSet(card.set?.id ?? '') as ListingVariant[];
+                                  setVariant(next[0] ?? 'Normal');
+                                }}
                                 className="flex w-full items-center gap-3 border-b border-white/10 p-3 text-left transition-colors last:border-b-0 hover:bg-white/[0.05]"
                               >
                                 <div className="relative h-16 w-12 overflow-hidden rounded-xl bg-stone-950/80 ring-1 ring-white/5">
@@ -1223,7 +1236,7 @@ export default function TradeBoardPage() {
                     <div className="space-y-2">
                       <p className="text-sm font-medium text-stone-200">Variant</p>
                       <div className="flex items-center gap-2">
-                        {(['Normal', 'Reverse Holo'] as const).map((value) => {
+                        {availableVariants.map((value) => {
                           const reverseDisabled =
                             value === 'Reverse Holo' && !canReverseHolo(selectedCard?.rarity);
 

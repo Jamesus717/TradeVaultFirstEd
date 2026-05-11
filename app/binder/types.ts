@@ -28,7 +28,12 @@ export type CardApiResponse = {
   data?: PokemonCard[];
 };
 
-export type CardVariantType = 'Normal' | 'Reverse Holo';
+export type CardVariantType =
+  | 'Normal'
+  | 'Reverse Holo'
+  | '1st Edition'
+  | 'Shadowless'
+  | 'Unlimited';
 
 export type CardVariant = {
   id: string;
@@ -49,4 +54,3 @@ export type UserCardRow = {
 };
 
 export type SortMode = 'binder' | 'number-desc' | 'name-asc' | 'owned-first';
-
