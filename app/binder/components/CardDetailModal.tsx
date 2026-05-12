@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import type { CardVariant, CardPrice } from '../types';
+import type { CardVariant } from '../types';
+import { usePriceData } from '../hooks/usePriceData';
 
 type Props = {
   card: CardVariant | null;
@@ -10,19 +11,6 @@ type Props = {
   isOwned: boolean;
   onToggleOwned: () => void;
   isSaving: boolean;
-};
-
-const MOCK_PRICE: CardPrice = {
-  priceLow: 4.99,
-  priceMid: 7.50,
-  priceHigh: 12.00,
-  currency: 'GBP',
-  sampleSize: 23,
-  source: 'mock',
-  fetchedAt: new Date().toISOString(),
-  lowConfidence: false,
-  loading: false,
-  error: null,
 };
 
 export function CardDetailModal({ card, isOpen, onClose, isOwned, onToggleOwned, isSaving }: Props) {
@@ -44,9 +32,15 @@ export function CardDetailModal({ card, isOpen, onClose, isOwned, onToggleOwned,
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen || !card) return null;
+  const price = usePriceData(
+    card?.baseCardId ?? '',
+    card?.name ?? '',
+    card?.setName ?? '',
+    card?.variant ?? '',
+    isOpen && card !== null
+  );
 
-  const price = MOCK_PRICE;
+  if (!isOpen || !card) return null;
 
   const variantColors: Record<string, string> = {
     'Normal': 'bg-stone-500/10 border-stone-500/20 text-stone-300',

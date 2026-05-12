@@ -1,7 +1,9 @@
 'use client';
 
+import { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
 import type { CardVariant } from './types';
+import { usePriceData } from './hooks/usePriceData';
 
 type Props = {
   cards: CardVariant[];
@@ -64,9 +66,7 @@ export function BinderGrid({ cards, owned, savingId, bulkSaving, canEdit, onTogg
                   <h2 className="line-clamp-2 text-sm font-semibold text-white leading-snug">
                     {card.name}
                   </h2>
-                  <span className="shrink-0 text-[11px] font-semibold text-emerald-400 leading-snug pt-[1px]">
-                    £7.50
-                  </span>
+                  <CardPriceBadge card={card} />
                 </div>
                 <p className="text-xs text-stone-300">{card.variant}</p>
               </div>
@@ -91,5 +91,69 @@ export function BinderGrid({ cards, owned, savingId, bulkSaving, canEdit, onTogg
         );
       })}
     </div>
+  );
+}
+
+function CardPriceBadge({ 
+  card 
+}: { 
+  card: CardVariant 
+}) {
+  const [visible, setVisible] = useState(false);
+  const ref = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '100px' }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const price = usePriceData(
+    card.baseCardId,
+    card.name,
+    card.setName,
+    card.variant,
+    visible
+  );
+
+  if (price.loading) {
+    return (
+      <span 
+        ref={ref}
+        className="shrink-0 text-[11px] font-semibold text-stone-600 leading-snug pt-[1px]"
+      >
+        ...
+      </span>
+    );
+  }
+
+  if (price.error || price.priceMid === null) {
+    return (
+      <span 
+        ref={ref}
+        className="shrink-0 text-[11px] text-stone-600 leading-snug pt-[1px]"
+      >
+        —
+      </span>
+    );
+  }
+
+  return (
+    <span
+      ref={ref}
+      className="shrink-0 text-[11px] font-semibold text-emerald-400 leading-snug pt-[1px]"
+    >
+      {price.lowConfidence ? '~' : ''}£{price.priceMid.toFixed(2)}
+    </span>
   );
 }
