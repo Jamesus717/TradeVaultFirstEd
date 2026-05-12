@@ -47,7 +47,7 @@ export default function Page() {
                     Pokemon TCG Master Set Tracker
                   </p>
                   <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-5xl">
-                    TradeVault
+                    TradeBinder
                   </h1>
                   <p className="max-w-2xl text-sm leading-6 text-stone-300 sm:text-base">
                     Track Normal and Reverse Holo variants across multiple eras and

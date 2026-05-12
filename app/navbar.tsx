@@ -221,7 +221,7 @@ export default function Navbar() {
         <div className="flex items-center gap-3">
           <div className="h-2 w-2 rounded-full bg-emerald-400" />
           <Link href="/" className="text-lg font-semibold tracking-tight text-white">
-            TradeVault
+            TradeBinder
           </Link>
         </div>
 
@@ -526,7 +526,7 @@ export default function Navbar() {
                     ? "We've sent you a verification link."
                     : authMode === 'signup'
                       ? 'Sign up to start tracking and trading.'
-                      : 'Log in to your TradeVault account.'}
+                      : 'Log in to your TradeBinder account.'}
                 </p>
               </div>
               <button

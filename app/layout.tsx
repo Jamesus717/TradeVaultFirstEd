@@ -5,7 +5,7 @@ import { AuthProvider } from './auth';
 import Navbar from './navbar';
 
 export const metadata: Metadata = {
-  title: 'TradeVault — Pokémon TCG collection tracker & trading platform',
+  title: 'TradeBinder — Pokémon TCG collection tracker & trading platform',
   description:
     'Track Pokémon TCG collections, completion, variants, and wishlist, plus manage trades with other collectors.',
 };

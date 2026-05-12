@@ -1,6 +1,6 @@
-# TradeVault
+# TradeBinder
 
-TradeVault is a full-stack web app for Pokémon TCG collecting and trading.
+TradeBinder is a full-stack web app for Pokémon TCG collecting and trading.
 
 I built this project to get hands-on, end-to-end experience shipping a real product: authentication, database design with RLS, API integration, realtime updates, and a consistent UI system.
 
@@ -108,7 +108,7 @@ npm run deploy
 ## About Me
 
 I’m James Burt — a Computer Science graduate (UWE, 2025 expected 2:1) focused on junior full-stack roles.
-TradeVault is one of my main portfolio projects alongside other personal builds like SecretShop Dota and my dissertation project (full-stack scraping + local LLM recommendations).
+TradeBinder is one of my main portfolio projects alongside other personal builds like SecretShop Dota and my dissertation project (full-stack scraping + local LLM recommendations).
 
 ## Notes / Next Improvements
 
