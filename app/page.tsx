@@ -1,12 +1,16 @@
 'use client';
 
+import { useState } from 'react';
 import { BinderGrid } from './binder/BinderGrid';
 import { MissingCards } from './binder/MissingCards';
 import { SetPicker } from './binder/SetPicker';
 import { useBinder } from './binder/useBinder';
-import type { SortMode } from './binder/types';
+import { CardDetailModal } from './binder/components/CardDetailModal';
+import type { SortMode, CardVariant } from './binder/types';
 
 export default function Page() {
+  const [selectedCard, setSelectedCard] = useState<CardVariant | null>(null);
+
   const {
     user,
     groupedSets,
@@ -156,6 +160,7 @@ export default function Page() {
                 bulkSaving={bulkSaving}
                 canEdit={Boolean(user)}
                 onToggleOwned={toggleOwned}
+                onCardClick={setSelectedCard}
               />
             </section>
 
@@ -166,6 +171,15 @@ export default function Page() {
           </div>
         )}
       </div>
+
+      <CardDetailModal 
+        card={selectedCard} 
+        isOpen={selectedCard !== null} 
+        onClose={() => setSelectedCard(null)} 
+        isOwned={selectedCard ? (owned[selectedCard.id] ?? false) : false} 
+        onToggleOwned={() => selectedCard && toggleOwned(selectedCard)} 
+        isSaving={selectedCard ? savingId === selectedCard.id : false} 
+      />
     </main>
   );
 }

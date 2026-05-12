@@ -54,3 +54,16 @@ export type UserCardRow = {
 };
 
 export type SortMode = 'binder' | 'number-desc' | 'name-asc' | 'owned-first';
+
+export type CardPrice = {
+  priceLow: number | null;
+  priceMid: number | null;
+  priceHigh: number | null;
+  currency: 'GBP';
+  sampleSize: number | null;
+  source: 'ebay_uk' | 'mock';
+  fetchedAt: string | null;
+  lowConfidence: boolean;
+  loading: boolean;
+  error: string | null;
+};

@@ -10,9 +10,10 @@ type Props = {
   bulkSaving: boolean;
   canEdit: boolean;
   onToggleOwned: (card: CardVariant) => void;
+  onCardClick: (card: CardVariant) => void;
 };
 
-export function BinderGrid({ cards, owned, savingId, bulkSaving, canEdit, onToggleOwned }: Props) {
+export function BinderGrid({ cards, owned, savingId, bulkSaving, canEdit, onToggleOwned, onCardClick }: Props) {
   if (cards.length === 0) {
     return (
       <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-10 text-center text-stone-300">
@@ -30,7 +31,8 @@ export function BinderGrid({ cards, owned, savingId, bulkSaving, canEdit, onTogg
         return (
           <article
             key={card.id}
-            className={`group overflow-hidden rounded-[1.5rem] border transition-all duration-200 ${
+            onClick={() => onCardClick(card)}
+            className={`group cursor-pointer overflow-hidden rounded-[1.5rem] border transition-all duration-200 ${
               isOwned
                 ? 'border-emerald-400/40 bg-emerald-500/10 shadow-lg shadow-emerald-950/30'
                 : 'border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.05]'
@@ -58,13 +60,23 @@ export function BinderGrid({ cards, owned, savingId, bulkSaving, canEdit, onTogg
                 <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-stone-400">
                   #{card.number}
                 </p>
-                <h2 className="line-clamp-2 text-sm font-semibold text-white">{card.name}</h2>
+                <div className="flex items-start justify-between gap-1">
+                  <h2 className="line-clamp-2 text-sm font-semibold text-white leading-snug">
+                    {card.name}
+                  </h2>
+                  <span className="shrink-0 text-[11px] font-semibold text-emerald-400 leading-snug pt-[1px]">
+                    £7.50
+                  </span>
+                </div>
                 <p className="text-xs text-stone-300">{card.variant}</p>
               </div>
 
               <button
                 type="button"
-                onClick={() => onToggleOwned(card)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleOwned(card);
+                }}
                 disabled={!canEdit || isSaving || bulkSaving}
                 className={`mt-3 w-full rounded-[0.9rem] px-3 py-2 text-xs font-medium transition-colors ${
                   isOwned
@@ -81,4 +93,3 @@ export function BinderGrid({ cards, owned, savingId, bulkSaving, canEdit, onTogg
     </div>
   );
 }
-
