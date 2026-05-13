@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabasePublishableKey =
@@ -6,10 +6,5 @@ const supabasePublishableKey =
 
 export const supabase =
   supabaseUrl && supabasePublishableKey
-    ? createClient(supabaseUrl, supabasePublishableKey, {
-        auth: {
-          flowType: 'pkce',
-          detectSessionInUrl: true,
-        },
-      })
+    ? createBrowserClient(supabaseUrl, supabasePublishableKey)
     : null;
