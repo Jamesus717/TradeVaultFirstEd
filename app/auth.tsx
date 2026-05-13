@@ -12,6 +12,10 @@ type AuthContextValue = {
   signIn: (email: string, password: string) => Promise<string | null>;
   signUp: (email: string, password: string) => Promise<string | null>;
   signOut: () => Promise<string | null>;
+  signInWithGoogle: () => Promise<string | null>;
+  resetPassword: (email: string) => Promise<string | null>;
+  resendVerification: (email: string) => Promise<string | null>;
+  signUpWithUsername: (email: string, password: string, username: string) => Promise<string | null>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -101,6 +105,82 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return error ? error.message : null;
     }
 
+    async function signInWithGoogle() {
+      if (!supabase) return 'Supabase not configured';
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: typeof window !== 'undefined'
+            ? `${window.location.origin}/auth/callback`
+            : undefined,
+        },
+      });
+      return error ? error.message : null;
+    }
+
+    async function resetPassword(email: string) {
+      if (!supabase) return 'Supabase not configured';
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        email,
+        {
+          redirectTo: typeof window !== 'undefined'
+            ? `${window.location.origin}/auth/callback?type=recovery`
+            : undefined,
+        }
+      );
+      return error ? error.message : null;
+    }
+
+    async function resendVerification(email: string) {
+      if (!supabase) return 'Supabase not configured';
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+      });
+      return error ? error.message : null;
+    }
+
+    async function signUpWithUsername(
+      email: string,
+      password: string,
+      username: string
+    ) {
+      if (!supabase) return 'Supabase not configured';
+
+      const emailRedirectTo = typeof window !== 'undefined'
+        ? `${window.location.origin}/auth/callback`
+        : undefined;
+
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: emailRedirectTo ? { emailRedirectTo } : undefined,
+      });
+
+      if (error) return error.message;
+      if (!data.user) return 'Sign up failed';
+
+      // Create profile with chosen username
+      const { error: profileError } = await supabase
+        .from('public_profiles')
+        .update({
+          username: username.toLowerCase().trim(),
+          display_name: username,
+          profile_slug: username.toLowerCase().trim(),
+        })
+        .eq('user_id', data.user.id);
+
+      // If username already taken (23505 = unique violation)
+      if (profileError?.code === '23505') {
+        // Sign up succeeded but username taken —
+        // user still needs to pick another username
+        // Return specific message so UI can handle it
+        return 'USERNAME_TAKEN';
+      }
+
+      return null;
+    }
+
     return {
       user,
       authLoading,
@@ -108,6 +188,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signIn,
       signUp,
       signOut,
+      signInWithGoogle,
+      resetPassword,
+      resendVerification,
+      signUpWithUsername,
     };
   }, [authLoading, supabaseDisabled, user]);
 

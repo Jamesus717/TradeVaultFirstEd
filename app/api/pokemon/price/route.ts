@@ -15,6 +15,16 @@ function median(arr: number[]): number {
     : (sorted[mid - 1] + sorted[mid]) / 2;
 }
 
+// In-memory cache: cardId -> { data, expiresAt }
+const memoryCache = new Map<string, {
+  data: object;
+  expiresAt: number;
+}>();
+
+const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+const DEV_MODE = process.env.NEXT_PUBLIC_DEV_PRICES === 'true';
+
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const cardId = url.searchParams.get('cardId');
@@ -26,6 +36,28 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Missing required params' }, { status: 400 });
   }
 
+  // Check in-memory cache first (fastest, no DB round trip)
+  const memoryCached = memoryCache.get(cardId);
+  if (memoryCached && memoryCached.expiresAt > Date.now()) {
+    return NextResponse.json(memoryCached.data);
+  }
+
+  if (DEV_MODE) {
+    // Return realistic mock data without calling eBay
+    return NextResponse.json({
+      cardId,
+      cardName,
+      priceLow: 4.99,
+      priceMid: 7.50,
+      priceHigh: 12.00,
+      currency: 'GBP',
+      sampleSize: 23,
+      source: 'mock',
+      fetchedAt: new Date().toISOString(),
+      lowConfidence: false,
+    });
+  }
+
   try {
     // STEP A — Check Supabase for a cached price first
     if (supabase) {
@@ -33,12 +65,12 @@ export async function GET(request: Request) {
         .from('card_prices')
         .select('*')
         .eq('card_id', cardId)
-        .gte('fetched_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+        .gte('fetched_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
         .limit(1)
         .maybeSingle();
 
       if (cachedPrice && !cacheError) {
-        return NextResponse.json({
+        const responseData = {
           cardId: cachedPrice.card_id,
           cardName: cachedPrice.card_name,
           priceLow: cachedPrice.price_low,
@@ -49,7 +81,12 @@ export async function GET(request: Request) {
           source: cachedPrice.source,
           fetchedAt: cachedPrice.fetched_at,
           lowConfidence: cachedPrice.sample_size < 3,
+        };
+        memoryCache.set(cardId, {
+          data: responseData,
+          expiresAt: new Date(cachedPrice.fetched_at).getTime() + CACHE_TTL_MS,
         });
+        return NextResponse.json(responseData);
       }
     }
 
@@ -92,6 +129,32 @@ export async function GET(request: Request) {
     }
 
     const data = await response.json();
+
+    // Check for eBay API errors in the response body
+    const ebayErrors = data
+      ?.errorMessage?.[0]
+      ?.error ?? [];
+
+    if (ebayErrors.length > 0) {
+      const errorMsg = ebayErrors[0]?.message?.[0] ?? 'Unknown eBay error';
+      const errorId = ebayErrors[0]?.errorId?.[0] ?? '';
+      
+      console.error('eBay API error:', errorId, errorMsg);
+      
+      // Rate limit error - return specific message
+      if (errorId === '10001') {
+        return NextResponse.json(
+          { error: 'eBay rate limit reached. Try again tomorrow.' },
+          { status: 429 }
+        );
+      }
+      
+      return NextResponse.json(
+        { error: `eBay error: ${errorMsg}` },
+        { status: 503 }
+      );
+    }
+
     const items = data
       ?.findCompletedItemsResponse?.[0]
       ?.searchResult?.[0]
@@ -147,8 +210,7 @@ export async function GET(request: Request) {
         }, { onConflict: 'card_id' });
     }
 
-    // STEP F — Return response
-    return NextResponse.json({
+    const responseData = {
       cardId,
       cardName,
       priceLow,
@@ -159,7 +221,15 @@ export async function GET(request: Request) {
       source: 'ebay_uk',
       fetchedAt: new Date().toISOString(),
       lowConfidence
+    };
+
+    memoryCache.set(cardId, {
+      data: responseData,
+      expiresAt: Date.now() + CACHE_TTL_MS,
     });
+
+    // STEP F — Return response
+    return NextResponse.json(responseData);
 
   } catch (err) {
     console.error('eBay API route error:', err);

@@ -132,6 +132,10 @@ function CardPriceBadge({
     return <span ref={ref} />;
   }
 
+  if (price.error === 'Rate limit reached') {
+    return <span ref={ref} />;
+  }
+
   if (price.loading) {
     return (
       <span 

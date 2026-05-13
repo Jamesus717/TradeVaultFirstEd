@@ -8,6 +8,19 @@ export async function GET() {
     next: { revalidate },
   });
 
-  const json = await response.json();
-  return NextResponse.json(json, { status: response.status });
+  const text = await response.text();
+  try {
+    const json = JSON.parse(text);
+    return NextResponse.json(json, { status: response.status });
+  } catch {
+    return NextResponse.json(
+      {
+        error: {
+          message: 'Upstream response was not valid JSON.',
+          status: response.status,
+        },
+      },
+      { status: 502 }
+    );
+  }
 }
