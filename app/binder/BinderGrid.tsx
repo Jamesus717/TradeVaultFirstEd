@@ -66,7 +66,7 @@ export function BinderGrid({ cards, owned, savingId, bulkSaving, canEdit, onTogg
                   <h2 className="line-clamp-2 text-sm font-semibold text-white leading-snug">
                     {card.name}
                   </h2>
-                  <CardPriceBadge card={card} />
+                  <CardPriceBadge card={card} isOwned={isOwned} />
                 </div>
                 <p className="text-xs text-stone-300">{card.variant}</p>
               </div>
@@ -95,9 +95,11 @@ export function BinderGrid({ cards, owned, savingId, bulkSaving, canEdit, onTogg
 }
 
 function CardPriceBadge({ 
-  card 
+  card,
+  isOwned,
 }: { 
-  card: CardVariant 
+  card: CardVariant;
+  isOwned: boolean;
 }) {
   const [visible, setVisible] = useState(false);
   const ref = useRef<HTMLSpanElement>(null);
@@ -123,8 +125,12 @@ function CardPriceBadge({
     card.name,
     card.setName,
     card.variant,
-    visible
+    visible && isOwned
   );
+
+  if (!isOwned) {
+    return <span ref={ref} />;
+  }
 
   if (price.loading) {
     return (
