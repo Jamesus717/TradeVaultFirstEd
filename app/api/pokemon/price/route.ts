@@ -58,6 +58,8 @@ export async function GET(request: Request) {
     });
   }
 
+  console.log('[price route] card:', cardId, cardName);
+
   try {
     // STEP A — Check Supabase for a cached price first
     if (supabase) {
@@ -70,6 +72,7 @@ export async function GET(request: Request) {
         .maybeSingle();
 
       if (cachedPrice && !cacheError) {
+        console.log('[price route] cache hit for', cardId);
         const responseData = {
           cardId: cachedPrice.card_id,
           cardName: cachedPrice.card_name,
@@ -172,6 +175,8 @@ export async function GET(request: Request) {
       )
       .filter((p: number) => p > 0 && !isNaN(p));
 
+    console.log('[price route] eBay returned', prices.length, 'prices for', cardId);
+
     // STEP D — Calculate statistics
     if (prices.length === 0) {
       return NextResponse.json({ error: 'No price data found', cardId }, { status: 404 });
@@ -193,6 +198,7 @@ export async function GET(request: Request) {
 
     // STEP E — Upsert into Supabase
     if (supabase) {
+      console.log('[price route] cached price for', cardId, 'mid:', priceMid);
       // Check if table exists implicitly by trying to upsert and ignoring errors
       await supabase
         .from('card_prices')

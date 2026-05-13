@@ -93,7 +93,7 @@ function statusBadge(status: ConversationStatus) {
   }
 
   if (status === 'accepted' || status === 'completed') {
-    return { label: status.toUpperCase(), className: 'border-emerald-300/20 bg-emerald-400/10 text-emerald-200' };
+    return { label: status.toUpperCase(), className: 'border-primary-300/20 bg-primary-400/10 text-primary-200' };
   }
 
   return { label: status.toUpperCase(), className: 'border-rose-300/20 bg-rose-500/10 text-rose-200' };
@@ -229,7 +229,7 @@ export default function InboxPage() {
 
   const hero = (
     <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] shadow-2xl shadow-black/20 backdrop-blur">
-      <div className="bg-[radial-gradient(circle_at_top_right,rgba(52,211,153,0.16),transparent_30%),linear-gradient(135deg,rgba(28,25,23,0.96),rgba(10,10,10,0.96))] p-6 sm:p-8">
+      <div className="bg-[radial-gradient(circle_at_top_right,var(--hero-gradient-color),transparent_30%),linear-gradient(135deg,rgba(28,25,23,0.96),rgba(10,10,10,0.96))] p-6 sm:p-8">
         <h1 className="text-4xl font-semibold text-white">Inbox</h1>
         <p className="mt-2 text-sm text-stone-400">Your trade conversations and offers.</p>
       </div>
@@ -275,7 +275,7 @@ export default function InboxPage() {
             </p>
             <Link
               href="/trade"
-              className="mt-6 inline-flex rounded-2xl bg-emerald-400 px-6 py-3 text-sm font-semibold text-emerald-950 hover:bg-emerald-300"
+              className="mt-6 inline-flex rounded-2xl bg-primary-400 px-6 py-3 text-sm font-semibold text-primary-950 hover:bg-primary-300"
             >
               Browse Trade Board
             </Link>
@@ -347,7 +347,7 @@ export default function InboxPage() {
                           {badge.label}
                         </span>
                       ) : null}
-                      {unread ? <span className="h-2 w-2 rounded-full bg-emerald-400" /> : null}
+                      {unread ? <span className="h-2 w-2 rounded-full bg-primary-400" /> : null}
                     </div>
                   </div>
                 </Link>

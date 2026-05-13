@@ -88,7 +88,7 @@ function formatTimeAgo(iso: string, nowMs: number | null) {
 
 function conditionBadgeClass(condition: ListingCondition) {
   if (condition === 'Mint' || condition === 'Near Mint') {
-    return 'bg-emerald-400/90 text-emerald-950';
+    return 'bg-primary-400/90 text-primary-950';
   }
 
   if (condition === 'Lightly Played') {
@@ -104,7 +104,7 @@ function listingTypeBadge(listingType: ListingType) {
   }
 
   if (listingType === 'sale') {
-    return { label: 'SALE', className: 'bg-emerald-400/90 text-emerald-950' };
+    return { label: 'SALE', className: 'bg-primary-400/90 text-primary-950' };
   }
 
   return { label: 'TRADE OR SALE', className: 'bg-purple-400/90 text-purple-950' };
@@ -726,7 +726,7 @@ export default function TradeBoardPage() {
     <main className="min-h-screen bg-transparent text-stone-100">
       <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] shadow-2xl shadow-black/20 backdrop-blur">
-          <div className="bg-[radial-gradient(circle_at_top_right,rgba(52,211,153,0.16),transparent_30%),linear-gradient(135deg,rgba(28,25,23,0.96),rgba(10,10,10,0.96))] p-6 sm:p-8">
+          <div className="bg-[radial-gradient(circle_at_top_right,var(--hero-gradient-color),transparent_30%),linear-gradient(135deg,rgba(28,25,23,0.96),rgba(10,10,10,0.96))] p-6 sm:p-8">
             <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <h1 className="text-4xl font-semibold text-white">Trade Board</h1>
@@ -758,7 +758,7 @@ export default function TradeBoardPage() {
                   className={classNames(
                     'rounded-2xl px-6 py-3 text-sm font-semibold transition-colors',
                     user
-                      ? 'bg-emerald-400 text-emerald-950 hover:bg-emerald-300'
+                      ? 'bg-primary-400 text-primary-950 hover:bg-primary-300'
                       : 'cursor-not-allowed border border-white/10 bg-white/[0.03] text-stone-400'
                   )}
                 >
@@ -821,7 +821,7 @@ export default function TradeBoardPage() {
                   className={classNames(
                     'rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.25em] transition-colors',
                     typeFilter === value
-                      ? 'border-emerald-300/20 bg-emerald-400/10 text-emerald-200'
+                      ? 'border-primary-300/20 bg-primary-400/10 text-primary-200'
                       : 'border-white/10 bg-white/[0.03] text-stone-400 hover:text-stone-200'
                   )}
                 >
@@ -891,7 +891,7 @@ export default function TradeBoardPage() {
                 className={classNames(
                   'mt-2 rounded-2xl px-6 py-3 text-sm font-semibold transition-colors',
                   user
-                    ? 'bg-emerald-400 text-emerald-950 hover:bg-emerald-300'
+                    ? 'bg-primary-400 text-primary-950 hover:bg-primary-300'
                     : 'cursor-not-allowed border border-white/10 bg-white/[0.03] text-stone-400'
                 )}
               >
@@ -965,12 +965,12 @@ export default function TradeBoardPage() {
                           {listing.trade_description ?? 'Open to offers'}
                         </p>
                       ) : listing.listing_type === 'sale' ? (
-                        <p className="text-lg font-semibold text-emerald-400">
+                        <p className="text-lg font-semibold text-primary-400">
                           {listing.price ? formatMoneyGBP(listing.price) : 'Price on request'}
                         </p>
                       ) : (
                         <div className="space-y-1">
-                          <p className="text-lg font-semibold text-emerald-400">
+                          <p className="text-lg font-semibold text-primary-400">
                             {listing.price ? formatMoneyGBP(listing.price) : 'Price on request'}
                           </p>
                           {listing.trade_description ? (
@@ -990,7 +990,7 @@ export default function TradeBoardPage() {
 
                       <div className="flex items-center justify-between pt-2">
                         <div className="flex items-center gap-2">
-                          <div className="flex h-7 w-7 items-center justify-center rounded-full border border-emerald-400/30 bg-emerald-400/20 text-xs font-semibold text-emerald-300">
+                          <div className="flex h-7 w-7 items-center justify-center rounded-full border border-primary-400/30 bg-primary-400/20 text-xs font-semibold text-primary-300">
                             {sellerInitial}
                           </div>
                           <p className="text-xs text-stone-400">{formatTimeAgo(listing.created_at, nowMs)}</p>
@@ -1032,8 +1032,8 @@ export default function TradeBoardPage() {
                             className={classNames(
                               'rounded-xl px-3 py-1.5 text-xs font-medium transition-colors',
                               showOpenChat
-                                ? 'bg-emerald-400/20 text-emerald-200 hover:bg-emerald-400/30'
-                                : 'bg-stone-800 text-stone-100 hover:bg-emerald-400 hover:text-emerald-950',
+                                ? 'bg-primary-400/20 text-primary-200 hover:bg-primary-400/30'
+                                : 'bg-stone-800 text-stone-100 hover:bg-primary-400 hover:text-primary-950',
                               !user ? 'cursor-not-allowed opacity-60' : ''
                             )}
                           >
@@ -1102,7 +1102,7 @@ export default function TradeBoardPage() {
                           setSelectedCard(null);
                           setVariant('Normal');
                         }}
-                        className="text-sm font-medium text-emerald-300 hover:text-emerald-200"
+                        className="text-sm font-medium text-primary-300 hover:text-primary-200"
                       >
                         Change
                       </button>
@@ -1116,7 +1116,7 @@ export default function TradeBoardPage() {
                           className={classNames(
                             'rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] transition-colors',
                             cardSearchMode === 'collection'
-                              ? 'border-emerald-300/20 bg-emerald-400/10 text-emerald-200'
+                              ? 'border-primary-300/20 bg-primary-400/10 text-primary-200'
                               : 'border-white/10 bg-white/[0.03] text-stone-300 hover:bg-white/[0.06]'
                           )}
                         >
@@ -1128,7 +1128,7 @@ export default function TradeBoardPage() {
                           className={classNames(
                             'rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] transition-colors',
                             cardSearchMode === 'all'
-                              ? 'border-emerald-300/20 bg-emerald-400/10 text-emerald-200'
+                              ? 'border-primary-300/20 bg-primary-400/10 text-primary-200'
                               : 'border-white/10 bg-white/[0.03] text-stone-300 hover:bg-white/[0.06]'
                           )}
                         >
@@ -1192,7 +1192,7 @@ export default function TradeBoardPage() {
                                   <div className="flex items-center gap-2">
                                     <p className="truncate text-sm font-semibold text-white">{card.name}</p>
                                     {cardSearchMode === 'all' && isOwned ? (
-                                      <span className="rounded-full border border-emerald-300/20 bg-emerald-400/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-200">
+                                      <span className="rounded-full border border-primary-300/20 bg-primary-400/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary-200">
                                         Owned
                                       </span>
                                     ) : null}
@@ -1212,7 +1212,7 @@ export default function TradeBoardPage() {
                             <button
                               type="button"
                               onClick={() => setCardSearchMode('all')}
-                              className="rounded-2xl bg-emerald-400 px-4 py-2 text-sm font-semibold text-emerald-950 hover:bg-emerald-300"
+                              className="rounded-2xl bg-primary-400 px-4 py-2 text-sm font-semibold text-primary-950 hover:bg-primary-300"
                             >
                               Search All Cards
                             </button>
@@ -1249,7 +1249,7 @@ export default function TradeBoardPage() {
                               className={classNames(
                                 'rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] transition-colors',
                                 variant === value
-                                  ? 'border-emerald-300/20 bg-emerald-400/10 text-emerald-200'
+                                  ? 'border-primary-300/20 bg-primary-400/10 text-primary-200'
                                   : 'border-white/10 bg-white/[0.03] text-stone-300 hover:bg-white/[0.06]',
                                 !selectedCard || reverseDisabled ? 'cursor-not-allowed opacity-50' : ''
                               )}
@@ -1295,7 +1295,7 @@ export default function TradeBoardPage() {
                             className={classNames(
                               'rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] transition-colors',
                               listingType === entry.value
-                                ? 'border-emerald-300/20 bg-emerald-400/10 text-emerald-200'
+                                ? 'border-primary-300/20 bg-primary-400/10 text-primary-200'
                                 : 'border-white/10 bg-white/[0.03] text-stone-300 hover:bg-white/[0.06]',
                               !selectedCard ? 'cursor-not-allowed opacity-50' : ''
                             )}
@@ -1356,7 +1356,7 @@ export default function TradeBoardPage() {
 
                     <div className="space-y-2">
                       <p className="text-sm font-medium text-stone-200">Photo upload (optional)</p>
-                      <label className="block cursor-pointer rounded-2xl border-2 border-dashed border-white/10 p-6 text-center transition-colors hover:border-emerald-400/40">
+                      <label className="block cursor-pointer rounded-2xl border-2 border-dashed border-white/10 p-6 text-center transition-colors hover:border-primary-400/40">
                         <input
                           type="file"
                           accept="image/*"
@@ -1400,7 +1400,7 @@ export default function TradeBoardPage() {
                       className={classNames(
                         'w-full rounded-2xl py-3 text-sm font-semibold transition-colors',
                         modalCanSubmit
-                          ? 'bg-emerald-400 text-emerald-950 hover:bg-emerald-300'
+                          ? 'bg-primary-400 text-primary-950 hover:bg-primary-300'
                           : 'cursor-not-allowed border border-white/10 bg-white/[0.03] text-stone-400',
                         submitting ? 'opacity-70' : ''
                       )}

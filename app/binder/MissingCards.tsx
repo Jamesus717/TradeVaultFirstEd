@@ -24,7 +24,7 @@ export function MissingCards({ missingCards, selectedSetName }: Props) {
       </div>
 
       {missingCards.length === 0 ? (
-        <div className="rounded-[1.5rem] border border-emerald-300/20 bg-emerald-400/10 p-6 text-sm text-emerald-50">
+        <div className="rounded-[1.5rem] border border-primary-300/20 bg-primary-400/10 p-6 text-sm text-primary-50">
           Complete set for the currently loaded variants.
         </div>
       ) : (

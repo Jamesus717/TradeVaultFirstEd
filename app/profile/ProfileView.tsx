@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../auth';
+import { buildVariants } from '../binder/utils';
 
 type PokemonSet = {
   id: string;
@@ -167,15 +168,16 @@ export default function ProfileView({ userId }: Props) {
         const totalsResults = await Promise.all(
           nextSetIds.map(async (setId) => {
             try {
-              const response = await fetch(`/api/pokemon/sets/${encodeURIComponent(setId)}`);
+              const response = await fetch(`/api/pokemon/cards?setId=${encodeURIComponent(setId)}&pageSize=250`);
 
               if (!response.ok) {
                 return [setId, null] as const;
               }
 
-              const json = (await response.json()) as SetDetailResponse;
-              const totalCount = json.data?.totalCount;
-              return [setId, typeof totalCount === 'number' ? totalCount : null] as const;
+              const json = await response.json();
+              const cards = json.data ?? [];
+              const variants = buildVariants(cards);
+              return [setId, variants.length] as const;
             } catch {
               return [setId, null] as const;
             }
@@ -245,8 +247,7 @@ export default function ProfileView({ userId }: Props) {
   const totalVariantsOwned = totalOwned;
   const setsTracked = groupedRows.length;
   const completeSets = groupedRows.filter((group) => {
-    const totalCount = setTotals[group.setId];
-    const totalVariants = typeof totalCount === 'number' ? totalCount * 2 : null;
+    const totalVariants = setTotals[group.setId];
 
     if (!totalVariants) {
       return false;
@@ -272,10 +273,10 @@ export default function ProfileView({ userId }: Props) {
     <main className="min-h-screen bg-transparent text-stone-100">
       <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
         <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] shadow-2xl shadow-black/20 backdrop-blur">
-          <div className="bg-[radial-gradient(circle_at_top_right,rgba(52,211,153,0.16),transparent_30%),linear-gradient(135deg,rgba(28,25,23,0.96),rgba(10,10,10,0.96))] p-6 sm:p-8">
+          <div className="bg-[radial-gradient(circle_at_top_right,var(--hero-gradient-color),transparent_30%),linear-gradient(135deg,rgba(28,25,23,0.96),rgba(10,10,10,0.96))] p-6 sm:p-8">
             <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-5">
-                <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-emerald-400/40 bg-emerald-400/20 text-3xl font-semibold text-emerald-300">
+                <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-primary-400/40 bg-primary-400/20 text-3xl font-semibold text-primary-300">
                   {avatarInitial}
                 </div>
                 <div className="space-y-2">
@@ -298,7 +299,7 @@ export default function ProfileView({ userId }: Props) {
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    <div className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 text-sm shadow-lg shadow-emerald-950/50">
+                    <div className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 text-sm shadow-lg shadow-primary-950/50">
                       <span className="text-stone-400">Total Variants Owned:</span>{' '}
                       <span className="font-semibold text-white">{totalVariantsOwned}</span>
                     </div>
@@ -328,7 +329,7 @@ export default function ProfileView({ userId }: Props) {
         ) : (
           <>
             <section className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 backdrop-blur">
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-300/80">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary-300/80">
                 Variant Breakdown
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-stone-300">
@@ -343,7 +344,7 @@ export default function ProfileView({ userId }: Props) {
               <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
                 <div className="flex h-full w-full">
                   <div
-                    className="h-full bg-emerald-400 transition-all duration-300"
+                    className="h-full bg-primary-400 transition-all duration-300"
                     style={{ width: `${normalPercent}%` }}
                   />
                   <div
@@ -373,7 +374,7 @@ export default function ProfileView({ userId }: Props) {
                   </p>
                   <Link
                     href="/"
-                    className="mt-6 inline-block rounded-xl bg-emerald-400 px-5 py-2.5 text-sm font-medium text-emerald-950 hover:bg-emerald-300"
+                    className="mt-6 inline-block rounded-xl bg-primary-400 px-5 py-2.5 text-sm font-medium text-primary-950 hover:bg-primary-300"
                   >
                     Go to Binder
                   </Link>
@@ -382,8 +383,7 @@ export default function ProfileView({ userId }: Props) {
             ) : (
               <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {groupedRows.map((group) => {
-                  const totalCount = setTotals[group.setId];
-                  const totalVariants = typeof totalCount === 'number' ? totalCount * 2 : null;
+                  const totalVariants = setTotals[group.setId];
                   const completionRatio =
                     totalVariants && totalVariants > 0 ? group.total / totalVariants : null;
                   const completionPercent = completionRatio
@@ -394,11 +394,11 @@ export default function ProfileView({ userId }: Props) {
                     <article
                       key={group.setId}
                       className={`relative rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5 transition-all hover:bg-white/[0.05] ${
-                        completionRatio && completionRatio > 0.5 ? 'border-l-2 border-l-emerald-400/40' : ''
+                        completionRatio && completionRatio > 0.5 ? 'border-l-2 border-l-primary-400/40' : ''
                       }`}
                     >
                       {completionPercent === 100 ? (
-                        <div className="absolute right-4 top-4 rounded-full border border-emerald-300/20 bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-200">
+                        <div className="absolute right-4 top-4 rounded-full border border-primary-300/20 bg-primary-400/10 px-3 py-1 text-xs font-medium text-primary-200">
                           ✦ Complete
                         </div>
                       ) : null}
@@ -410,7 +410,7 @@ export default function ProfileView({ userId }: Props) {
 
                       <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/10">
                         <div
-                          className="h-full rounded-full bg-emerald-400 transition-all duration-300"
+                          className="h-full rounded-full bg-primary-400 transition-all duration-300"
                           style={{ width: `${completionPercent}%` }}
                         />
                       </div>

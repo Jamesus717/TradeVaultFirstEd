@@ -47,7 +47,7 @@ export function CardDetailModal({ card, isOpen, onClose, isOwned, onToggleOwned,
     'Reverse Holo': 'bg-purple-500/10 border-purple-500/20 text-purple-300',
     '1st Edition': 'bg-amber-500/10 border-amber-500/20 text-amber-300',
     'Shadowless': 'bg-sky-500/10 border-sky-500/20 text-sky-300',
-    'Unlimited': 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300',
+    'Unlimited': 'bg-primary-500/10 border-primary-500/20 text-primary-300',
   };
 
   const badgeColor = variantColors[card.variant] || variantColors['Normal'];
@@ -118,8 +118,8 @@ export function CardDetailModal({ card, isOpen, onClose, isOwned, onToggleOwned,
               disabled={isSaving}
               className={`flex w-full items-center justify-center gap-2 rounded-[1rem] px-4 py-3 font-medium transition-colors ${
                 isOwned
-                  ? 'bg-emerald-400 text-emerald-950 hover:bg-emerald-300'
-                  : 'border border-emerald-400/50 text-emerald-400 hover:bg-emerald-400/10'
+                  ? 'bg-primary-400 text-primary-950 hover:bg-primary-300'
+                  : 'border border-primary-400/50 text-primary-400 hover:bg-primary-400/10'
               } ${isSaving ? 'cursor-not-allowed opacity-70' : ''}`}
             >
               {isSaving && (

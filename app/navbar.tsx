@@ -250,7 +250,7 @@ export default function Navbar() {
       <header className="sticky top-0 z-50 border-b border-white/10 bg-stone-950/75 backdrop-blur-md">
         <nav className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
         <div className="flex items-center gap-3">
-          <div className="h-2 w-2 rounded-full bg-emerald-400" />
+          <div className="h-2 w-2 rounded-full bg-primary-400" />
           <Link href="/" className="text-lg font-semibold tracking-tight text-white">
             TradeBinder
           </Link>
@@ -267,7 +267,7 @@ export default function Navbar() {
           >
             Binder
             {pathname === '/' ? (
-              <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-emerald-400" />
+              <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-primary-400" />
             ) : null}
           </Link>
           <Link
@@ -280,7 +280,7 @@ export default function Navbar() {
           >
             Trade Board
             {pathname === '/trade' ? (
-              <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-emerald-400" />
+              <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-primary-400" />
             ) : null}
           </Link>
           <Link
@@ -293,7 +293,7 @@ export default function Navbar() {
           >
             My Collection
             {pathname === '/collection' ? (
-              <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-emerald-400" />
+              <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-primary-400" />
             ) : null}
           </Link>
           <Link
@@ -306,7 +306,7 @@ export default function Navbar() {
           >
             Wishlist
             {pathname === '/wishlist' ? (
-              <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-emerald-400" />
+              <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-primary-400" />
             ) : null}
           </Link>
           {user ? (
@@ -320,7 +320,7 @@ export default function Navbar() {
             >
               Profile
               {profileActive ? (
-                <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-emerald-400" />
+                <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-primary-400" />
               ) : null}
             </Link>
           ) : null}
@@ -346,7 +346,7 @@ export default function Navbar() {
                 <path d="M13.73 21a2 2 0 0 1-3.46 0" />
               </svg>
               {unreadBadgeText ? (
-                <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-400 px-1 text-[10px] font-bold text-emerald-950">
+                <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary-400 px-1 text-[10px] font-bold text-primary-950">
                   {unreadBadgeText}
                 </span>
               ) : null}
@@ -386,7 +386,7 @@ export default function Navbar() {
                 <button
                   type="button"
                   onClick={() => openAuthModal('signup')}
-                  className="rounded-xl bg-emerald-400 px-4 py-2 text-sm font-semibold text-emerald-950 hover:bg-emerald-300"
+                  className="rounded-xl bg-primary-400 px-4 py-2 text-sm font-semibold text-primary-950 hover:bg-primary-300"
                 >
                   Sign Up
                 </button>
@@ -426,7 +426,7 @@ export default function Navbar() {
                 onClick={() => setMobileOpen(false)}
                 className={`rounded-xl border border-white/10 px-4 py-3 text-sm font-medium ${
                   inboxActive
-                    ? 'bg-emerald-400 text-emerald-950'
+                    ? 'bg-primary-400 text-primary-950'
                     : 'bg-white/[0.03] text-stone-200 hover:bg-white/[0.06]'
                 }`}
               >
@@ -438,7 +438,7 @@ export default function Navbar() {
               onClick={() => setMobileOpen(false)}
               className={`rounded-xl border border-white/10 px-4 py-3 text-sm font-medium ${
                 pathname === '/'
-                  ? 'bg-emerald-400 text-emerald-950'
+                  ? 'bg-primary-400 text-primary-950'
                   : 'bg-white/[0.03] text-stone-200 hover:bg-white/[0.06]'
               }`}
             >
@@ -449,7 +449,7 @@ export default function Navbar() {
               onClick={() => setMobileOpen(false)}
               className={`rounded-xl border border-white/10 px-4 py-3 text-sm font-medium ${
                 pathname === '/trade'
-                  ? 'bg-emerald-400 text-emerald-950'
+                  ? 'bg-primary-400 text-primary-950'
                   : 'bg-white/[0.03] text-stone-200 hover:bg-white/[0.06]'
               }`}
             >
@@ -460,7 +460,7 @@ export default function Navbar() {
               onClick={() => setMobileOpen(false)}
               className={`rounded-xl border border-white/10 px-4 py-3 text-sm font-medium ${
                 pathname === '/collection'
-                  ? 'bg-emerald-400 text-emerald-950'
+                  ? 'bg-primary-400 text-primary-950'
                   : 'bg-white/[0.03] text-stone-200 hover:bg-white/[0.06]'
               }`}
             >
@@ -471,7 +471,7 @@ export default function Navbar() {
               onClick={() => setMobileOpen(false)}
               className={`rounded-xl border border-white/10 px-4 py-3 text-sm font-medium ${
                 pathname === '/wishlist'
-                  ? 'bg-emerald-400 text-emerald-950'
+                  ? 'bg-primary-400 text-primary-950'
                   : 'bg-white/[0.03] text-stone-200 hover:bg-white/[0.06]'
               }`}
             >
@@ -483,7 +483,7 @@ export default function Navbar() {
                 onClick={() => setMobileOpen(false)}
                 className={`rounded-xl border border-white/10 px-4 py-3 text-sm font-medium ${
                   profileActive
-                    ? 'bg-emerald-400 text-emerald-950'
+                    ? 'bg-primary-400 text-primary-950'
                     : 'bg-white/[0.03] text-stone-200 hover:bg-white/[0.06]'
                 }`}
               >
@@ -519,7 +519,7 @@ export default function Navbar() {
                     setMobileOpen(false);
                     openAuthModal('signin');
                   }}
-                  className="w-full rounded-xl bg-emerald-400 px-4 py-3 text-left text-sm font-medium text-emerald-950 hover:bg-emerald-300"
+                  className="w-full rounded-xl bg-primary-400 px-4 py-3 text-left text-sm font-medium text-primary-950 hover:bg-primary-300"
                 >
                   Login / Sign Up
                 </button>
@@ -576,7 +576,7 @@ export default function Navbar() {
 
             {authView === 'verify' ? (
               <div className="mt-6 space-y-4">
-                <div className="rounded-[1.5rem] border border-emerald-300/20 bg-emerald-400/10 p-5 text-sm text-stone-100">
+                <div className="rounded-[1.5rem] border border-primary-300/20 bg-primary-400/10 p-5 text-sm text-stone-100">
                   <p className="font-semibold text-white">Check your email!</p>
                   <p className="mt-2 text-stone-200">
                     We&apos;ve sent you a verification link. You must verify your email before you can log in.
@@ -588,11 +588,11 @@ export default function Navbar() {
                     type="button"
                     onClick={handleResend}
                     disabled={resendDisabled}
-                    className="text-emerald-400 hover:text-emerald-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="text-primary-400 hover:text-primary-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Resend verification email
                   </button>
-                  {resetSuccess ? <p className="mt-2 text-xs text-emerald-400">{resetSuccess}</p> : null}
+                  {resetSuccess ? <p className="mt-2 text-xs text-primary-400">{resetSuccess}</p> : null}
                   {authError ? <p className="mt-2 text-xs text-rose-400">{authError}</p> : null}
                 </div>
                 <button
@@ -602,7 +602,7 @@ export default function Navbar() {
                     setAuthError('');
                     setResetSuccess('');
                   }}
-                  className="w-full rounded-2xl bg-emerald-400 px-4 py-3 text-sm font-semibold text-emerald-950 hover:bg-emerald-300"
+                  className="w-full rounded-2xl bg-primary-400 px-4 py-3 text-sm font-semibold text-primary-950 hover:bg-primary-300"
                 >
                   Back to Login
                 </button>
@@ -616,7 +616,7 @@ export default function Navbar() {
                     setAuthError('');
                     setResetSuccess('');
                   }}
-                  className="text-xs text-stone-400 hover:text-emerald-400 transition-colors"
+                  className="text-xs text-stone-400 hover:text-primary-400 transition-colors"
                 >
                   ← Back to sign in
                 </button>
@@ -638,7 +638,7 @@ export default function Navbar() {
                 ) : null}
 
                 {resetSuccess ? (
-                  <div className="rounded-[1.5rem] border border-emerald-300/20 bg-emerald-500/10 p-4 text-sm text-emerald-100 backdrop-blur">
+                  <div className="rounded-[1.5rem] border border-primary-300/20 bg-primary-500/10 p-4 text-sm text-primary-100 backdrop-blur">
                     {resetSuccess}
                   </div>
                 ) : null}
@@ -651,7 +651,7 @@ export default function Navbar() {
                     'w-full rounded-2xl px-4 py-3 text-sm font-semibold transition-colors',
                     submitting || !email
                       ? 'cursor-not-allowed border border-white/10 bg-white/[0.03] text-stone-400'
-                      : 'bg-emerald-400 text-emerald-950 hover:bg-emerald-300'
+                      : 'bg-primary-400 text-primary-950 hover:bg-primary-300'
                   )}
                 >
                   {submitting ? '...' : 'Send reset link'}
@@ -670,7 +670,7 @@ export default function Navbar() {
                     className={classNames(
                       'rounded-xl px-3 py-2 text-sm',
                       authView === 'signin'
-                        ? 'bg-emerald-400 text-emerald-950'
+                        ? 'bg-primary-400 text-primary-950'
                         : 'border border-white/10 bg-white/[0.03] text-stone-200 hover:bg-white/[0.06]'
                     )}
                   >
@@ -686,7 +686,7 @@ export default function Navbar() {
                     className={classNames(
                       'rounded-xl px-3 py-2 text-sm',
                       authView === 'signup'
-                        ? 'bg-emerald-400 text-emerald-950'
+                        ? 'bg-primary-400 text-primary-950'
                         : 'border border-white/10 bg-white/[0.03] text-stone-200 hover:bg-white/[0.06]'
                     )}
                   >
@@ -775,7 +775,7 @@ export default function Navbar() {
                         setAuthError('');
                         setResetSuccess('');
                       }}
-                      className="text-xs text-stone-400 hover:text-emerald-400 transition-colors"
+                      className="text-xs text-stone-400 hover:text-primary-400 transition-colors"
                     >
                       Forgot password?
                     </button>
@@ -815,7 +815,7 @@ export default function Navbar() {
                     'w-full rounded-2xl px-4 py-3 text-sm font-semibold transition-colors',
                     submitting || !email || !password || (authView === 'signup' && (!username || username.length < 3 || username.length > 30 || !/^[a-zA-Z0-9_]+$/.test(username) || !confirmPassword || password !== confirmPassword))
                       ? 'cursor-not-allowed border border-white/10 bg-white/[0.03] text-stone-400'
-                      : 'bg-emerald-400 text-emerald-950 hover:bg-emerald-300'
+                      : 'bg-primary-400 text-primary-950 hover:bg-primary-300'
                   )}
                 >
                   {submitting ? '...' : authView === 'signup' ? 'Create account' : 'Login'}

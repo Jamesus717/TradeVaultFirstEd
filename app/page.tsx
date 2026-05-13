@@ -37,17 +37,19 @@ export default function Page() {
     bulkSaving,
     toggleOwned,
     toggleAllOwned,
+    ownershipFilter,
+    setOwnershipFilter,
   } = useBinder();
 
   return (
     <main className="min-h-screen bg-transparent text-stone-100">
       <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
         <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] shadow-2xl shadow-black/20 backdrop-blur">
-          <div className="bg-[radial-gradient(circle_at_top_right,rgba(52,211,153,0.16),transparent_30%),linear-gradient(135deg,rgba(28,25,23,0.96),rgba(10,10,10,0.96))] p-6 sm:p-8">
+          <div className="bg-[radial-gradient(circle_at_top_right,var(--hero-gradient-color),transparent_30%),linear-gradient(135deg,rgba(28,25,23,0.96),rgba(10,10,10,0.96))] p-6 sm:p-8">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-[0.35em] text-emerald-300/80">
+                  <p className="text-xs font-semibold uppercase tracking-[0.35em] text-primary-300/80">
                     Pokemon TCG Master Set Tracker
                   </p>
                   <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-5xl">
@@ -75,17 +77,17 @@ export default function Page() {
               </div>
 
               <div className="flex flex-col gap-4 lg:items-end">
-                <div className="min-w-[240px] rounded-[1.5rem] border border-emerald-300/20 bg-emerald-400/10 p-5">
-                  <p className="text-xs font-medium uppercase tracking-[0.28em] text-emerald-100/75">
+                <div className="min-w-[240px] rounded-[1.5rem] border border-primary-300/20 bg-primary-400/10 p-5">
+                  <p className="text-xs font-medium uppercase tracking-[0.28em] text-primary-100/75">
                     Collection Progress
                   </p>
                   <p className="mt-3 text-3xl font-semibold text-white">
                     {ownedCount} / {total || '--'}
                   </p>
-                  <p className="mt-1 text-sm text-emerald-50/75">{completion}% complete</p>
+                  <p className="mt-1 text-sm text-primary-50/75">{completion}% complete</p>
                   <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
                     <div
-                      className="h-full rounded-full bg-emerald-400 transition-all duration-300"
+                      className="h-full rounded-full bg-primary-400 transition-all duration-300"
                       style={{ width: `${completion}%` }}
                     />
                   </div>
@@ -107,7 +109,7 @@ export default function Page() {
           <div className="space-y-8">
             <section className="space-y-4">
               <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-300/80">
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary-300/80">
                   Set Binder
                 </p>
                 <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -123,7 +125,7 @@ export default function Page() {
                         ? 'cursor-not-allowed bg-stone-800 text-stone-400'
                         : allOwned
                           ? 'bg-rose-400 text-rose-950 hover:bg-rose-300'
-                          : 'bg-emerald-400 text-emerald-950 hover:bg-emerald-300'
+                          : 'bg-primary-400 text-primary-950 hover:bg-primary-300'
                     }`}
                   >
                     {bulkSaving ? 'Saving...' : allOwned ? 'Unmark all as owned' : 'Mark all as owned'}
@@ -148,6 +150,32 @@ export default function Page() {
                     <option value="owned-first">Owned first</option>
                   </select>
                 </div>
+
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {(
+                    [
+                      { value: 'all', label: 'All Cards' },
+                      { value: 'owned', label: '✓ Owned' },
+                      { value: 'unowned', label: 'Missing' },
+                    ] as const
+                  ).map(({ value, label }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setOwnershipFilter(value)}
+                      className={`rounded-full border px-4 py-1.5 
+                        text-xs font-semibold uppercase tracking-[0.22em] 
+                        transition-colors ${
+                        ownershipFilter === value
+                          ? 'border-primary-300/20 bg-primary-400/10 text-primary-200'
+                          : 'border-white/10 bg-white/[0.03] text-stone-300 hover:bg-white/[0.06]'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+
                 <p className="mt-1 text-sm text-stone-400">
                   {binderSummary}
                 </p>

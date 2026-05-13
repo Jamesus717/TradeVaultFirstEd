@@ -106,15 +106,15 @@ function formatTimeAgo(iso: string) {
 
 function statusBadge(status: ConversationStatus) {
   if (status === 'active') {
-    return { label: 'ACTIVE', className: 'border-emerald-300/20 bg-emerald-400/10 text-emerald-200' };
+    return { label: 'ACTIVE', className: 'border-primary-300/20 bg-primary-400/10 text-primary-200' };
   }
 
   if (status === 'accepted') {
-    return { label: 'ACCEPTED', className: 'border-emerald-300/20 bg-emerald-400/10 text-emerald-200' };
+    return { label: 'ACCEPTED', className: 'border-primary-300/20 bg-primary-400/10 text-primary-200' };
   }
 
   if (status === 'completed') {
-    return { label: 'COMPLETED', className: 'border-emerald-300/20 bg-emerald-400/10 text-emerald-200' };
+    return { label: 'COMPLETED', className: 'border-primary-300/20 bg-primary-400/10 text-primary-200' };
   }
 
   if (status === 'declined') {
@@ -126,7 +126,7 @@ function statusBadge(status: ConversationStatus) {
 
 function conditionBadgeClass(condition: ListingCondition) {
   if (condition === 'Mint' || condition === 'Near Mint') {
-    return 'bg-emerald-400/90 text-emerald-950';
+    return 'bg-primary-400/90 text-primary-950';
   }
 
   if (condition === 'Lightly Played') {
@@ -142,7 +142,7 @@ function listingTypeBadge(listingType: ListingType) {
   }
 
   if (listingType === 'sale') {
-    return { label: 'SALE', className: 'bg-emerald-400/90 text-emerald-950' };
+    return { label: 'SALE', className: 'bg-primary-400/90 text-primary-950' };
   }
 
   return { label: 'TRADE OR SALE', className: 'bg-purple-400/90 text-purple-950' };
@@ -694,7 +694,7 @@ export default function ConversationPage() {
                                   <button
                                     type="button"
                                     onClick={() => handleOfferDecision(message, 'accepted')}
-                                    className="rounded-2xl bg-emerald-400 px-3 py-2 text-xs font-semibold text-emerald-950 hover:bg-emerald-300"
+                                    className="rounded-2xl bg-primary-400 px-3 py-2 text-xs font-semibold text-primary-950 hover:bg-primary-300"
                                   >
                                     Accept
                                   </button>
@@ -737,7 +737,7 @@ export default function ConversationPage() {
                             bubbleBase,
                             'rounded-[1.25rem] border',
                             own
-                              ? 'rounded-br-sm border-emerald-400/20 bg-emerald-400/20 text-white'
+                              ? 'rounded-br-sm border-primary-400/20 bg-primary-400/20 text-white'
                               : 'rounded-bl-sm border-white/10 bg-white/[0.05] text-stone-100'
                           )}
                         >
@@ -833,7 +833,7 @@ export default function ConversationPage() {
                           'rounded-2xl px-4 py-3 text-sm font-semibold transition-colors',
                           sending || !draft.trim()
                             ? 'cursor-not-allowed border border-white/10 bg-white/[0.03] text-stone-400'
-                            : 'bg-emerald-400 text-emerald-950 hover:bg-emerald-300'
+                            : 'bg-primary-400 text-primary-950 hover:bg-primary-300'
                         )}
                       >
                         Send
@@ -848,7 +848,7 @@ export default function ConversationPage() {
                         <button
                           type="button"
                           onClick={markCompleted}
-                          className="inline-flex rounded-2xl bg-emerald-400 px-4 py-3 text-sm font-semibold text-emerald-950 hover:bg-emerald-300"
+                          className="inline-flex rounded-2xl bg-primary-400 px-4 py-3 text-sm font-semibold text-primary-950 hover:bg-primary-300"
                         >
                           Mark as Completed
                         </button>
@@ -910,7 +910,7 @@ export default function ConversationPage() {
               ) : null}
 
               {activeListing?.listing_type !== 'trade' && activeListing?.price ? (
-                <p className="text-lg font-semibold text-emerald-400">
+                <p className="text-lg font-semibold text-primary-400">
                   {formatMoneyGBP(activeListing.price)}
                 </p>
               ) : null}

@@ -36,7 +36,7 @@ export function BinderGrid({ cards, owned, savingId, bulkSaving, canEdit, onTogg
             onClick={() => onCardClick(card)}
             className={`group cursor-pointer overflow-hidden rounded-[1.5rem] border transition-all duration-200 ${
               isOwned
-                ? 'border-emerald-400/40 bg-emerald-500/10 shadow-lg shadow-emerald-950/30'
+                ? 'border-primary-400/40 bg-primary-500/10 shadow-lg shadow-primary-950/30'
                 : 'border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.05]'
             }`}
           >
@@ -80,7 +80,7 @@ export function BinderGrid({ cards, owned, savingId, bulkSaving, canEdit, onTogg
                 disabled={!canEdit || isSaving || bulkSaving}
                 className={`mt-3 w-full rounded-[0.9rem] px-3 py-2 text-xs font-medium transition-colors ${
                   isOwned
-                    ? 'bg-emerald-400 text-emerald-950 hover:bg-emerald-300'
+                    ? 'bg-primary-400 text-primary-950 hover:bg-primary-300'
                     : 'bg-stone-800 text-stone-100 hover:bg-stone-700'
                 } ${!canEdit || isSaving || bulkSaving ? 'cursor-not-allowed opacity-60' : ''}`}
               >
@@ -161,7 +161,7 @@ function CardPriceBadge({
   return (
     <span
       ref={ref}
-      className="shrink-0 text-[11px] font-semibold text-emerald-400 leading-snug pt-[1px]"
+      className="shrink-0 text-[11px] font-semibold text-primary-400 leading-snug pt-[1px]"
     >
       {price.lowConfidence ? '~' : ''}£{price.priceMid.toFixed(2)}
     </span>

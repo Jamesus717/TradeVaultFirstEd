@@ -61,9 +61,9 @@ export default function BortyTestPage() {
     <main className="min-h-screen bg-transparent text-stone-100">
       <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
         <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] shadow-2xl shadow-black/20 backdrop-blur">
-          <div className="bg-[radial-gradient(circle_at_top_right,rgba(52,211,153,0.16),transparent_30%),linear-gradient(135deg,rgba(28,25,23,0.96),rgba(10,10,10,0.96))] p-6 sm:p-8">
+          <div className="bg-[radial-gradient(circle_at_top_right,var(--hero-gradient-color),transparent_30%),linear-gradient(135deg,rgba(28,25,23,0.96),rgba(10,10,10,0.96))] p-6 sm:p-8">
             <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-emerald-300/80">
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-primary-300/80">
                 Test Page
               </p>
               <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
@@ -100,7 +100,7 @@ export default function BortyTestPage() {
                 className={`mt-5 w-full rounded-[1rem] px-4 py-3 text-sm font-semibold transition-colors ${
                   status === 'loading'
                     ? 'cursor-not-allowed bg-stone-800 text-stone-400'
-                    : 'bg-emerald-400 text-emerald-950 hover:bg-emerald-300'
+                    : 'bg-primary-400 text-primary-950 hover:bg-primary-300'
                 }`}
               >
                 {status === 'loading' ? 'Fetching…' : 'Find card price'}

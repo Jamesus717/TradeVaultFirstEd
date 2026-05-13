@@ -7,6 +7,8 @@ import type { CardApiResponse, CardVariant, PokemonSet, SetApiResponse, SortMode
 import { buildSetList, buildVariants, compareCardNumbers, groupSetsBySeries, LEGACY_SET_ID } from './utils';
 import { NO_REVERSE_HOLO_SETS, normalizeVariantForSet, variantToSlug } from '../../lib/constants/cardVariants';
 
+type OwnershipFilter = 'all' | 'owned' | 'unowned';
+
 export function useBinder() {
   const { user, supabaseDisabled } = useAuth();
   const [sets, setSets] = useState<PokemonSet[]>([]);
@@ -15,6 +17,7 @@ export function useBinder() {
   const [owned, setOwned] = useState<Record<string, boolean>>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [sortMode, setSortMode] = useState<SortMode>('binder');
+  const [ownershipFilter, setOwnershipFilter] = useState<OwnershipFilter>('all');
   const [loadingSets, setLoadingSets] = useState(true);
   const [loadingCards, setLoadingCards] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
@@ -28,68 +31,89 @@ export function useBinder() {
   const groupedSets = useMemo(() => groupSetsBySeries(sets), [sets]);
 
   const visibleCards = useMemo(() => {
-    const trimmedQuery = searchQuery.trim().toLowerCase();
-    const filtered = trimmedQuery
-      ? cards.filter((card) => card.name.toLowerCase().includes(trimmedQuery))
+    if (!cards || cards.length === 0) return [];
+
+    const query = searchQuery.trim().toLowerCase();
+    const filtered = query
+      ? cards.filter((card) => card.name.toLowerCase().includes(query))
       : cards;
 
-    const sorted = filtered.slice();
+    const ownershipFiltered =
+      ownershipFilter === 'owned'
+        ? filtered.filter((card) => Boolean(owned[card.id]))
+        : ownershipFilter === 'unowned'
+          ? filtered.filter((card) => !owned[card.id])
+          : filtered;
 
-    sorted.sort((left, right) => {
-      if (sortMode === 'name-asc') {
-        const nameCompare = left.name.localeCompare(right.name);
-        if (nameCompare !== 0) {
-          return nameCompare;
-        }
-
-        return compareCardNumbers(left.number, right.number);
+    return [...ownershipFiltered].sort((a, b) => {
+      if (sortMode === 'binder') {
+        const numA = Number.parseInt(a.number.replace(/\D/g, ''), 10) || 0;
+        const numB = Number.parseInt(b.number.replace(/\D/g, ''), 10) || 0;
+        if (numA !== numB) return numA - numB;
+        if (a.name !== b.name) return a.name.localeCompare(b.name);
+        return a.variant.localeCompare(b.variant);
       }
 
       if (sortMode === 'number-desc') {
-        return compareCardNumbers(right.number, left.number);
+        const numA = Number.parseInt(a.number.replace(/\D/g, ''), 10) || 0;
+        const numB = Number.parseInt(b.number.replace(/\D/g, ''), 10) || 0;
+        if (numA !== numB) return numB - numA;
+        if (a.name !== b.name) return a.name.localeCompare(b.name);
+        return a.variant.localeCompare(b.variant);
+      }
+
+      if (sortMode === 'name-asc') {
+        if (a.name !== b.name) return a.name.localeCompare(b.name);
+        return a.variant.localeCompare(b.variant);
       }
 
       if (sortMode === 'owned-first') {
-        const leftOwned = owned[left.id] ? 1 : 0;
-        const rightOwned = owned[right.id] ? 1 : 0;
-
-        if (leftOwned !== rightOwned) {
-          return rightOwned - leftOwned;
-        }
-
-        return compareCardNumbers(left.number, right.number);
+        const aOwned = Boolean(owned[a.id]);
+        const bOwned = Boolean(owned[b.id]);
+        if (aOwned && !bOwned) return -1;
+        if (!aOwned && bOwned) return 1;
+        const numA = Number.parseInt(a.number.replace(/\D/g, ''), 10) || 0;
+        const numB = Number.parseInt(b.number.replace(/\D/g, ''), 10) || 0;
+        return numA - numB;
       }
 
-      return compareCardNumbers(left.number, right.number);
+      return 0;
     });
-
-    return sorted;
-  }, [cards, owned, searchQuery, sortMode]);
+  }, [cards, searchQuery, sortMode, ownershipFilter, owned]);
 
   const missingCards = useMemo(
     () => visibleCards.filter((card) => !owned[card.id]),
     [owned, visibleCards]
   );
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setOwnershipFilter('all');
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [selectedSetId]);
+
   const binderSummary = useMemo(() => {
-    const trimmedQuery = searchQuery.trim();
+    if (!cards || cards.length === 0) {
+      return '';
+    }
+
+    const filterLabel =
+      ownershipFilter === 'owned'
+        ? ' owned'
+        : ownershipFilter === 'unowned'
+          ? ' missing'
+          : '';
+
     const shownPart =
       visibleCards.length === cards.length
-        ? `${cards.length} cards`
-        : `${visibleCards.length} of ${cards.length} cards`;
+        ? `${cards.length}${filterLabel} cards`
+        : `${visibleCards.length} of ${cards.length}${filterLabel} cards`;
 
-    const sortPart =
-      sortMode === 'binder'
-        ? 'Number ↑'
-        : sortMode === 'number-desc'
-          ? 'Number ↓'
-          : sortMode === 'name-asc'
-            ? 'Name A → Z'
-            : 'Owned first';
+    const searchQueryPart = searchQuery.trim() ? ` matching "${searchQuery.trim()}"` : '';
 
-    const searchPart = trimmedQuery ? ` · Search: ${trimmedQuery}` : '';
-    return `Showing ${shownPart} · Sorted: ${sortPart}${searchPart}`;
-  }, [cards.length, searchQuery, sortMode, visibleCards.length]);
+    return `Showing ${shownPart}${searchQueryPart}`;
+  }, [cards, visibleCards.length, searchQuery, ownershipFilter]);
 
   useEffect(() => {
     async function loadSets() {
@@ -406,5 +430,7 @@ export function useBinder() {
     bulkSaving,
     toggleOwned,
     toggleAllOwned,
+    ownershipFilter,
+    setOwnershipFilter,
   };
 }
