@@ -3,6 +3,15 @@ import { pokemonFetch } from '../../../../../lib/pokemonServer';
 
 export const revalidate = 300;
 
+// Search results are public card data — nothing user-specific — so let the
+// browser and CDN serve repeats. `stale-while-revalidate` matters more than
+// the 5-minute freshness window here: typing back over a search term, or
+// reopening the listing modal, now answers from cache instantly and
+// refreshes in the background.
+const CACHE_HEADERS = {
+  'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=86400',
+};
+
 const OPTIONAL_TOKENS = new Set([
   'ex',
   'gx',
@@ -50,7 +59,7 @@ export async function GET(request: Request) {
   const pageSizeRaw = url.searchParams.get('pageSize') ?? '20';
 
   if (!name) {
-    return NextResponse.json({ data: [] }, { status: 200 });
+    return NextResponse.json({ data: [] }, { status: 200, headers: CACHE_HEADERS });
   }
 
   if (name.length > 60) {
@@ -62,7 +71,7 @@ export async function GET(request: Request) {
 
   const tokens = tokenizeSearch(name);
   if (tokens.length === 0) {
-    return NextResponse.json({ data: [] }, { status: 200 });
+    return NextResponse.json({ data: [] }, { status: 200, headers: CACHE_HEADERS });
   }
 
   const primary = buildContainsQuery(tokens);
@@ -77,5 +86,8 @@ export async function GET(request: Request) {
   });
 
   const json = await response.json();
-  return NextResponse.json(json, { status: response.status });
+  return NextResponse.json(json, {
+    status: response.status,
+    headers: response.ok ? CACHE_HEADERS : undefined,
+  });
 }

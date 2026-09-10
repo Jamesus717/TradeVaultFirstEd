@@ -130,7 +130,22 @@ export default function InboxPage() {
       setLoading(true);
       setError('');
 
-      await supabase.from('notifications').update({ read: true }).eq('user_id', user.id).eq('read', false);
+      // Clearing the notification badge is housekeeping — the list does not
+      // read the result, so it should not sit in front of the query that
+      // actually fills the page.
+      //
+      // The `.then()` is load-bearing: a Postgrest builder only issues its
+      // request when it is awaited or thenned, so dropping it on the floor
+      // would silently stop marking notifications read.
+      void supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('user_id', user.id)
+        .eq('read', false)
+        .then(
+          () => {},
+          () => {}
+        );
 
       const { data: convData, error: convError } = await supabase
         .from('conversations')

@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../auth';
 import type { UserCardRow } from '../binder/types';
-import { buildVariants } from '../binder/utils';
+import { fetchSetVariants } from '../../lib/setCardsCache';
 
 export type OwnedSetSummary = {
   setId: string;
@@ -110,8 +110,13 @@ export function useCollection() {
     loadSets();
   }, []);
 
-  // Fetch true variant totals for sets we own cards in
+  // Fetch true variant totals for sets we own cards in.
+  // Goes through the shared set-cards cache, so the payload each expandable
+  // set card needs is fetched and parsed once for the whole page rather than
+  // once here and again per card.
   useEffect(() => {
+    let active = true;
+
     async function loadVariantTotals() {
       const setIds = [...new Set(ownedRows.map((r) => r.set_id).filter((id): id is string => Boolean(id)))];
       if (setIds.length === 0) return;
@@ -121,11 +126,7 @@ export function useCollection() {
       await Promise.all(
         setIds.map(async (setId) => {
           try {
-            const res = await fetch(`/api/pokemon/cards?setId=${encodeURIComponent(setId)}&pageSize=250`);
-            if (!res.ok) return;
-            const json = await res.json();
-            const cards = json.data ?? [];
-            const variants = buildVariants(cards);
+            const variants = await fetchSetVariants(setId);
             totals[setId] = variants.length;
           } catch {
             // Ignore failure for individual sets
@@ -133,14 +134,36 @@ export function useCollection() {
         })
       );
 
+      if (!active) return;
+
       setSetVariantTotals(prev => ({ ...prev, ...totals }));
     }
     loadVariantTotals();
+
+    return () => {
+      active = false;
+    };
   }, [ownedRows]);
+
+  // Sparkline data for portfolio value chart
+  // Uses fetched_at from card_prices to build
+  // approximate historical snapshots
+  const [sparklineData, setSparklineData] = useState<
+    { date: string; value: number }[]
+  >([]);
 
   // Fetch prices from Supabase card_prices cache
   // (reads cached prices only — does NOT call eBay)
+  //
+  // Prices and the sparkline are derived from the same rows, so they share
+  // one pass. Previously they were two effects issuing two near-identical
+  // queries, and the sparkline's re-ran whenever `totalValue` changed —
+  // which it always does once prices land, so it fetched twice on every
+  // load. Its query was also unchunked, so a large collection built an
+  // `.in()` list long enough to risk the URL length limit.
   useEffect(() => {
+    let active = true;
+
     async function loadPrices() {
       if (!supabase || ownedRows.length === 0) return;
 
@@ -152,24 +175,73 @@ export function useCollection() {
 
       const chunkSize = 100;
       const prices: Record<string, number> = {};
+      const byDay = new Map<string, number>();
 
       for (let i = 0; i < cardIds.length; i += chunkSize) {
         const chunk = cardIds.slice(i, i + chunkSize);
         const { data } = await supabase
           .from('card_prices')
-          .select('card_id, price_mid')
+          .select('card_id, price_mid, fetched_at')
           .in('card_id', chunk);
 
         for (const row of data ?? []) {
           if (row.card_id && row.price_mid) {
             prices[row.card_id] = Number(row.price_mid);
           }
+
+          if (row.fetched_at) {
+            const day = row.fetched_at.split('T')[0];
+            byDay.set(day, (byDay.get(day) ?? 0) + Number(row.price_mid ?? 0));
+          }
         }
       }
 
+      if (!active) return;
+
       setCardPrices(prices);
+
+      if (byDay.size === 0) {
+        // No historical data yet — generate flat mock line at the value we
+        // just computed (the old code read `totalValue`, which is the same
+        // sum, one render later).
+        const flatValue = ownedRows.reduce(
+          (sum, row) => sum + (prices[row.card_id] ?? 0),
+          0
+        );
+        const today = new Date();
+        setSparklineData(
+          Array.from({ length: 7 }, (_, i) => {
+            const d = new Date(today);
+            d.setDate(d.getDate() - (6 - i));
+            return {
+              date: d.toLocaleDateString('en-GB', {
+                day: 'numeric',
+                month: 'short'
+              }),
+              value: flatValue,
+            };
+          })
+        );
+        return;
+      }
+
+      setSparklineData(
+        [...byDay.entries()]
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([dateStr, value]) => ({
+            date: new Date(dateStr).toLocaleDateString('en-GB', {
+              day: 'numeric',
+              month: 'short',
+            }),
+            value: Math.round(value * 100) / 100,
+          }))
+      );
     }
     loadPrices();
+
+    return () => {
+      active = false;
+    };
   }, [ownedRows]);
 
   // Derive set summaries
@@ -247,69 +319,6 @@ export function useCollection() {
     ).sort((a, b) => b.completionPct - a.completionPct),
     [ownedSets]
   );
-
-  // Sparkline data for portfolio value chart
-  // Uses fetched_at from card_prices to build
-  // approximate historical snapshots
-  const [sparklineData, setSparklineData] = useState<
-    { date: string; value: number }[]
-  >([]);
-
-  useEffect(() => {
-    async function loadSparkline() {
-      if (!supabase || ownedRows.length === 0) return;
-
-      const cardIds = [...new Set(
-        ownedRows.map((r) => r.card_id).filter(Boolean)
-      )];
-      if (cardIds.length === 0) return;
-
-      const { data } = await supabase
-        .from('card_prices')
-        .select('card_id, price_mid, fetched_at')
-        .in('card_id', cardIds)
-        .order('fetched_at', { ascending: true });
-
-      if (!data || data.length === 0) {
-        // No historical data yet — generate flat mock line
-        const today = new Date();
-        const points = Array.from({ length: 7 }, (_, i) => {
-          const d = new Date(today);
-          d.setDate(d.getDate() - (6 - i));
-          return {
-            date: d.toLocaleDateString('en-GB', {
-              day: 'numeric',
-              month: 'short'
-            }),
-            value: totalValue,
-          };
-        });
-        setSparklineData(points);
-        return;
-      }
-
-      // Group by day and sum prices
-      const byDay = new Map<string, number>();
-      for (const row of data) {
-        const day = row.fetched_at.split('T')[0];
-        const current = byDay.get(day) ?? 0;
-        byDay.set(day, current + Number(row.price_mid ?? 0));
-      }
-
-      const points = [...byDay.entries()]
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([dateStr, value]) => ({
-          date: new Date(dateStr).toLocaleDateString('en-GB', {
-            day: 'numeric',
-            month: 'short',
-          }),
-          value: Math.round(value * 100) / 100,
-        }));
-
-      setSparklineData(points);
-    }
-    loadSparkline();
-  }, [ownedRows, totalValue]);
 
   return {
     user,

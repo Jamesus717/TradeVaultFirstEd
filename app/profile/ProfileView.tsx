@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../auth';
-import { buildVariants } from '../binder/utils';
+import { fetchSetVariants } from '../../lib/setCardsCache';
 
 type PokemonSet = {
   id: string;
@@ -168,15 +168,7 @@ export default function ProfileView({ userId }: Props) {
         const totalsResults = await Promise.all(
           nextSetIds.map(async (setId) => {
             try {
-              const response = await fetch(`/api/pokemon/cards?setId=${encodeURIComponent(setId)}&pageSize=250`);
-
-              if (!response.ok) {
-                return [setId, null] as const;
-              }
-
-              const json = await response.json();
-              const cards = json.data ?? [];
-              const variants = buildVariants(cards);
+              const variants = await fetchSetVariants(setId);
               return [setId, variants.length] as const;
             } catch {
               return [setId, null] as const;

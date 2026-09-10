@@ -222,13 +222,28 @@ export default function ConversationPage() {
       setLoading(true);
       setError('');
 
-      const { data: conv, error: convError } = await client
-        .from('conversations')
-        .select(
-          'id,listing_id,buyer_id,seller_id,status,created_at,updated_at,trade_listings(id,user_id,card_name,set_name,set_id,card_number,variant,condition,listing_type,price,trade_description,postcode_prefix,image_url,card_image_url,is_active)'
-        )
-        .eq('id', conversationId)
-        .maybeSingle();
+      // The messages query is keyed on the conversation id from the URL, so
+      // it never needed the conversation row first. Running the two together
+      // takes a round trip off the critical path. Access is still enforced
+      // by the "Participants can view messages" RLS policy, and the client
+      // check below still runs before anything is shown.
+      const [
+        { data: conv, error: convError },
+        { data: msgData, error: msgError },
+      ] = await Promise.all([
+        client
+          .from('conversations')
+          .select(
+            'id,listing_id,buyer_id,seller_id,status,created_at,updated_at,trade_listings(id,user_id,card_name,set_name,set_id,card_number,variant,condition,listing_type,price,trade_description,postcode_prefix,image_url,card_image_url,is_active)'
+          )
+          .eq('id', conversationId)
+          .maybeSingle(),
+        client
+          .from('messages')
+          .select('id,conversation_id,sender_id,content,message_type,offer_amount,offer_status,created_at,read_at')
+          .eq('conversation_id', conversationId)
+          .order('created_at', { ascending: true }),
+      ]);
 
       if (!active) {
         return;
@@ -252,16 +267,6 @@ export default function ConversationPage() {
       }
 
       setConversation(typedConv);
-
-      const { data: msgData, error: msgError } = await client
-        .from('messages')
-        .select('id,conversation_id,sender_id,content,message_type,offer_amount,offer_status,created_at,read_at')
-        .eq('conversation_id', conversationId)
-        .order('created_at', { ascending: true });
-
-      if (!active) {
-        return;
-      }
 
       if (msgError) {
         setError(msgError.message);
@@ -292,7 +297,10 @@ export default function ConversationPage() {
         }
       }
 
-      await Promise.all([
+      // Marking things read is housekeeping — nothing on screen depends on
+      // it, and awaiting it held the loading state open for a whole extra
+      // round trip. Fire it off and carry on.
+      void Promise.all([
         client
           .from('messages')
           .update({ read_at: new Date().toISOString() })
@@ -305,7 +313,10 @@ export default function ConversationPage() {
           .eq('user_id', user.id)
           .eq('conversation_id', conversationId)
           .eq('read', false),
-      ]);
+      ]).catch(() => {
+        // Best effort: a failed read receipt must not surface as an
+        // unhandled rejection now that nothing awaits it.
+      });
 
       channel = client
         .channel(`conversation-${conversationId}`)

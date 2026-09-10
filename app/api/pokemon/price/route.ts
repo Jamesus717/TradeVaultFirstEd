@@ -25,6 +25,21 @@ const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 const DEV_MODE = process.env.NEXT_PUBLIC_DEV_PRICES === 'true';
 
+// A price is public, slow-moving data keyed entirely by the query string —
+// nothing user-specific in the response — so the browser and CDN can serve
+// repeats. The binder asks for one of these per owned card as it scrolls,
+// so this is the difference between a cold grid and a warm one.
+// Applied to successful responses only; errors and rate limits must not
+// stick around.
+const PRICE_CACHE_HEADERS = {
+  'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=604800',
+};
+
+// Every column the response below reads. `select('*')` also pulled `id` and
+// `set_name`, which nothing here uses.
+const PRICE_COLUMNS =
+  'card_id, card_name, price_low, price_mid, price_high, currency, sample_size, source, fetched_at';
+
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const cardId = url.searchParams.get('cardId');
@@ -39,7 +54,7 @@ export async function GET(request: Request) {
   // Check in-memory cache first (fastest, no DB round trip)
   const memoryCached = memoryCache.get(cardId);
   if (memoryCached && memoryCached.expiresAt > Date.now()) {
-    return NextResponse.json(memoryCached.data);
+    return NextResponse.json(memoryCached.data, { headers: PRICE_CACHE_HEADERS });
   }
 
   if (DEV_MODE) {
@@ -65,7 +80,7 @@ export async function GET(request: Request) {
     if (supabase) {
       const { data: cachedPrice, error: cacheError } = await supabase
         .from('card_prices')
-        .select('*')
+        .select(PRICE_COLUMNS)
         .eq('card_id', cardId)
         .gte('fetched_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
         .limit(1)
@@ -89,7 +104,7 @@ export async function GET(request: Request) {
           data: responseData,
           expiresAt: new Date(cachedPrice.fetched_at).getTime() + CACHE_TTL_MS,
         });
-        return NextResponse.json(responseData);
+        return NextResponse.json(responseData, { headers: PRICE_CACHE_HEADERS });
       }
     }
 
@@ -235,7 +250,7 @@ export async function GET(request: Request) {
     });
 
     // STEP F — Return response
-    return NextResponse.json(responseData);
+    return NextResponse.json(responseData, { headers: PRICE_CACHE_HEADERS });
 
   } catch (err) {
     console.error('eBay API route error:', err);

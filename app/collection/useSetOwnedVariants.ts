@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import type { CardApiResponse, CardVariant, UserCardRow } from '../binder/types';
-import { buildVariants, LEGACY_SET_ID } from '../binder/utils';
+import type { CardVariant, UserCardRow } from '../binder/types';
+import { LEGACY_SET_ID } from '../binder/utils';
 import { normalizeVariantForSet, variantToSlug } from '../../lib/constants/cardVariants';
+import { fetchSetVariants } from '../../lib/setCardsCache';
 
 type Params = {
   selectedSetId: string | null;
@@ -38,6 +39,8 @@ export function useSetOwnedVariants({ selectedSetId, ownedRows }: Params) {
   }, [ownedRows, selectedSetId]);
 
   useEffect(() => {
+    let active = true;
+
     async function loadCards() {
       if (!selectedSetId) {
         setCards([]);
@@ -50,26 +53,32 @@ export function useSetOwnedVariants({ selectedSetId, ownedRows }: Params) {
         setLoading(true);
         setError('');
 
-        const response = await fetch(
-          `/api/pokemon/cards?setId=${encodeURIComponent(selectedSetId)}&pageSize=250`
-        );
+        const variants = await fetchSetVariants(selectedSetId);
 
-        if (!response.ok) {
-          throw new Error('Failed to load cards for this set.');
+        if (!active) {
+          return;
         }
 
-        const json = (await response.json()) as CardApiResponse;
-        const variants = buildVariants(json.data ?? []);
         setCards(variants.filter((variant) => ownedMap.has(variant.id)));
       } catch (cause) {
+        if (!active) {
+          return;
+        }
+
         setError(cause instanceof Error ? cause.message : 'Failed to load cards for this set.');
         setCards([]);
       } finally {
-        setLoading(false);
+        if (active) {
+          setLoading(false);
+        }
       }
     }
 
     loadCards();
+
+    return () => {
+      active = false;
+    };
   }, [ownedMap, selectedSetId]);
 
   return { loading, error, cards };

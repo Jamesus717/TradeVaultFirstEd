@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../auth';
-import type { CardApiResponse, CardVariant, PokemonSet, SetApiResponse, SortMode, UserCardRow } from './types';
-import { buildSetList, buildVariants, compareCardNumbers, groupSetsBySeries, LEGACY_SET_ID } from './utils';
+import type { CardVariant, PokemonSet, SetApiResponse, SortMode, UserCardRow } from './types';
+import { buildSetList, compareCardNumbers, groupSetsBySeries, LEGACY_SET_ID } from './utils';
 import { NO_REVERSE_HOLO_SETS, normalizeVariantForSet, variantToSlug } from '../../lib/constants/cardVariants';
+import { fetchSetVariants, SetCardsRequestError } from '../../lib/setCardsCache';
 
 type OwnershipFilter = 'all' | 'owned' | 'unowned';
 
@@ -147,27 +148,45 @@ export function useBinder() {
       return;
     }
 
+    // Guards against an earlier, slower set landing after a later one. Now
+    // that cached sets resolve immediately, switching from an uncached set
+    // to a cached one would otherwise let the stale response win.
+    let active = true;
+
     async function loadCards() {
       try {
         setLoadingCards(true);
         setError('');
 
-        const response = await fetch(`/api/pokemon/cards?setId=${encodeURIComponent(selectedSetId)}&pageSize=250`);
+        const variants = await fetchSetVariants(selectedSetId);
 
-        if (!response.ok) {
-          throw new Error('Failed to load cards from the Pokemon TCG API.');
+        if (!active) {
+          return;
         }
 
-        const json = (await response.json()) as CardApiResponse;
-        setCards(buildVariants(json.data ?? []));
+        setCards(variants);
       } catch (cause) {
-        setError(cause instanceof Error ? cause.message : 'Something went wrong loading cards.');
+        if (!active) {
+          return;
+        }
+
+        if (cause instanceof SetCardsRequestError) {
+          setError('Failed to load cards from the Pokemon TCG API.');
+        } else {
+          setError(cause instanceof Error ? cause.message : 'Something went wrong loading cards.');
+        }
       } finally {
-        setLoadingCards(false);
+        if (active) {
+          setLoadingCards(false);
+        }
       }
     }
 
     loadCards();
+
+    return () => {
+      active = false;
+    };
   }, [selectedSetId]);
 
   useEffect(() => {
@@ -219,11 +238,19 @@ export function useBinder() {
   }, [selectedSetId, supabaseDisabled, user]);
 
   const total = cards.length;
-  const ownedCount = cards.filter((card) => owned[card.id]).length;
-  const completion = total === 0 ? 0 : Math.round((ownedCount / total) * 100);
-  const allOwned = cards.length > 0 && cards.every((card) => owned[card.id]);
 
-  async function toggleOwned(card: CardVariant) {
+  // One pass instead of two full scans of the set on every render — a set is
+  // up to ~500 variants and this ran on each keystroke in the search box.
+  const ownedCount = useMemo(
+    () => cards.reduce((count, card) => (owned[card.id] ? count + 1 : count), 0),
+    [cards, owned]
+  );
+  const completion = total === 0 ? 0 : Math.round((ownedCount / total) * 100);
+  const allOwned = total > 0 && ownedCount === total;
+
+  // Stable across renders that do not change ownership, so the memoised
+  // binder cards can skip re-rendering while you type.
+  const toggleOwned = useCallback(async function toggleOwned(card: CardVariant) {
     if (!supabase || !user || !selectedSetId) {
       return;
     }
@@ -296,7 +323,7 @@ export function useBinder() {
     }
 
     setSavingId(null);
-  }
+  }, [owned, selectedSetId, user]);
 
   async function markAllAsOwned() {
     if (!supabase || !user || !selectedSetId) {
