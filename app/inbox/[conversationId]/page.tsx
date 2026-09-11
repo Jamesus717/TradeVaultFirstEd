@@ -5,6 +5,7 @@ import { supabase } from '../../../lib/supabaseClient';
 import { useAuth } from '../../auth';
 import ClosedConversationNotice from './components/ClosedConversationNotice';
 import ConversationHeader from './components/ConversationHeader';
+import ConversationSkeleton from './components/ConversationSkeleton';
 import ListingSidebar from './components/ListingSidebar';
 import MessageComposer from './components/MessageComposer';
 import MessageList from './components/MessageList';
@@ -42,9 +43,13 @@ export default function ConversationPage() {
     offerSending,
     sendOffer,
     handleOfferDecision,
+    offerDecisionPending,
     startCounterOffer,
     markCompleted,
+    completing,
     markListingSold,
+    markingSold,
+    listingSold,
   } = useConversationActions({
     conversationId,
     user,
@@ -75,9 +80,7 @@ export default function ConversationPage() {
             {error}
           </section>
         ) : loading ? (
-          <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-6 text-sm text-stone-300 backdrop-blur">
-            Loading conversation...
-          </section>
+          <ConversationSkeleton />
         ) : !conversation || !isParticipant ? (
           <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-6 text-sm text-stone-300 backdrop-blur">
             Conversation unavailable.
@@ -95,6 +98,7 @@ export default function ConversationPage() {
                   otherName={otherName}
                   onOfferDecision={handleOfferDecision}
                   onCounterOffer={startCounterOffer}
+                  offerDecisionPending={offerDecisionPending}
                 />
 
                 {conversation.status === 'active' ? (
@@ -114,6 +118,7 @@ export default function ConversationPage() {
                   <ClosedConversationNotice
                     status={conversation.status}
                     onMarkCompleted={markCompleted}
+                    completing={completing}
                   />
                 )}
               </section>
@@ -125,6 +130,8 @@ export default function ConversationPage() {
               userId={user.id}
               otherName={otherName}
               onMarkListingSold={markListingSold}
+              markingSold={markingSold}
+              listingSold={listingSold}
             />
           </div>
         )}

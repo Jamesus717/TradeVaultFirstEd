@@ -75,7 +75,12 @@ const BinderCard = memo(function BinderCard({
   return (
     <article
       onClick={() => onCardClick(card)}
-      className={`group cursor-pointer overflow-hidden rounded-[1.5rem] border transition-all duration-200 ${
+      // Explicit property list rather than transition-all. These three are the
+      // only things that change between the owned and unowned states, so the
+      // animation is identical -- but a set can be ~500 cards, and transition-all
+      // makes every one of them diff every animatable property on each style
+      // recalculation.
+      className={`group cursor-pointer overflow-hidden rounded-[1.5rem] border transition-[background-color,border-color,box-shadow] duration-200 ${
         isOwned
           ? 'border-primary-400/40 bg-primary-500/10 shadow-lg shadow-primary-950/30'
           : 'border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.05]'

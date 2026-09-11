@@ -27,6 +27,19 @@ export function useConversationActions({
   const [offerAmount, setOfferAmount] = useState('');
   const [offerSending, setOfferSending] = useState(false);
 
+  // Accept/Decline, Mark as Completed and Mark as Sold each run several
+  // sequential writes. They previously ran with no UI feedback at all, so the
+  // button sat there looking untouched for the whole round trip and a second
+  // click would start the work again. These flags drive the disabled state and
+  // the in-flight label; they are UI only and change no write order.
+  const [offerDecisionPending, setOfferDecisionPending] = useState<{
+    messageId: string;
+    decision: OfferStatus;
+  } | null>(null);
+  const [completing, setCompleting] = useState(false);
+  const [markingSold, setMarkingSold] = useState(false);
+  const [listingSold, setListingSold] = useState(false);
+
   async function notifyOther(type: string, message: string) {
     if (!user || !otherUserId || !supabase) {
       return;
@@ -133,28 +146,38 @@ export function useConversationActions({
       return;
     }
 
+    if (offerDecisionPending) {
+      return;
+    }
+
     const nextConversationStatus: ConversationStatus =
       decision === 'accepted' ? 'accepted' : decision === 'declined' ? 'declined' : 'active';
 
-    await supabase.from('messages').update({ offer_status: decision }).eq('id', message.id);
+    setOfferDecisionPending({ messageId: message.id, decision });
 
-    if (decision === 'accepted' || decision === 'declined') {
-      await supabase.from('conversations').update({ status: nextConversationStatus }).eq('id', conversationId);
-    }
+    try {
+      await supabase.from('messages').update({ offer_status: decision }).eq('id', message.id);
 
-    if (decision === 'accepted') {
-      await insertSystemMessage('Offer accepted');
-      await notifyOther('offer_accepted', 'Offer accepted');
-    } else if (decision === 'declined') {
-      await insertSystemMessage('Offer declined');
-      await notifyOther('offer_declined', 'Offer declined');
-    } else {
-      await insertSystemMessage('Offer countered');
-      await notifyOther('offer_countered', 'Offer countered');
-    }
+      if (decision === 'accepted' || decision === 'declined') {
+        await supabase.from('conversations').update({ status: nextConversationStatus }).eq('id', conversationId);
+      }
 
-    if (decision === 'accepted' || decision === 'declined') {
-      setConversation((current) => (current ? { ...current, status: nextConversationStatus } : current));
+      if (decision === 'accepted') {
+        await insertSystemMessage('Offer accepted');
+        await notifyOther('offer_accepted', 'Offer accepted');
+      } else if (decision === 'declined') {
+        await insertSystemMessage('Offer declined');
+        await notifyOther('offer_declined', 'Offer declined');
+      } else {
+        await insertSystemMessage('Offer countered');
+        await notifyOther('offer_countered', 'Offer countered');
+      }
+
+      if (decision === 'accepted' || decision === 'declined') {
+        setConversation((current) => (current ? { ...current, status: nextConversationStatus } : current));
+      }
+    } finally {
+      setOfferDecisionPending(null);
     }
   }
 
@@ -174,10 +197,20 @@ export function useConversationActions({
       return;
     }
 
-    await supabase.from('conversations').update({ status: 'completed' }).eq('id', conversationId);
-    await insertSystemMessage('Trade marked as completed');
-    await notifyOther('trade_completed', 'Trade completed');
-    setConversation((current) => (current ? { ...current, status: 'completed' } : current));
+    if (completing) {
+      return;
+    }
+
+    setCompleting(true);
+
+    try {
+      await supabase.from('conversations').update({ status: 'completed' }).eq('id', conversationId);
+      await insertSystemMessage('Trade marked as completed');
+      await notifyOther('trade_completed', 'Trade completed');
+      setConversation((current) => (current ? { ...current, status: 'completed' } : current));
+    } finally {
+      setCompleting(false);
+    }
   }
 
   async function markListingSold() {
@@ -190,12 +223,43 @@ export function useConversationActions({
       return;
     }
 
-    await supabase.from('trade_listings').update({ is_active: false }).eq('id', listing.id);
+    if (markingSold || listingSold) {
+      return;
+    }
+
+    setMarkingSold(true);
+
+    try {
+      await markListingSoldInner(listing.id);
+    } finally {
+      setMarkingSold(false);
+    }
+  }
+
+  async function markListingSoldInner(listingId: string) {
+    if (!user || !supabase) {
+      return;
+    }
+
+    const { error: soldError } = await supabase
+      .from('trade_listings')
+      .update({ is_active: false })
+      .eq('id', listingId);
+
+    // Previously this button wrote and then showed nothing at all, so there was
+    // no way to tell it had worked. Only latch the "sold" label when the write
+    // that matters actually succeeded, so a rejected write leaves the button
+    // enabled to retry rather than lying about the outcome.
+    if (soldError) {
+      return;
+    }
+
+    setListingSold(true);
 
     const { data: affectedConversations } = await supabase
       .from('conversations')
       .select('id,buyer_id,seller_id')
-      .eq('listing_id', listing.id)
+      .eq('listing_id', listingId)
       .eq('status', 'active');
 
     const affected = (affectedConversations ?? []) as Array<{ id: string; buyer_id: string; seller_id: string }>;
@@ -242,8 +306,12 @@ export function useConversationActions({
     offerSending,
     sendOffer,
     handleOfferDecision,
+    offerDecisionPending,
     startCounterOffer,
     markCompleted,
+    completing,
     markListingSold,
+    markingSold,
+    listingSold,
   };
 }

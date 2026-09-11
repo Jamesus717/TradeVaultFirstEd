@@ -11,6 +11,7 @@ export default function MessageList({
   otherName,
   onOfferDecision,
   onCounterOffer,
+  offerDecisionPending,
 }: {
   scrollRef: RefObject<HTMLDivElement | null>;
   messages: Message[];
@@ -18,6 +19,7 @@ export default function MessageList({
   otherName: string;
   onOfferDecision: (message: Message, decision: OfferStatus) => void;
   onCounterOffer: (message: Message) => void;
+  offerDecisionPending: { messageId: string; decision: OfferStatus } | null;
 }) {
   return (
     <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto p-5">
@@ -29,6 +31,7 @@ export default function MessageList({
           otherName={otherName}
           onOfferDecision={onOfferDecision}
           onCounterOffer={onCounterOffer}
+          offerDecisionPending={offerDecisionPending}
         />
       ))}
     </div>

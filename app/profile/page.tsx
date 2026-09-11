@@ -46,6 +46,7 @@ export default function ProfileEditorPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [avatarError, setAvatarError] = useState<string | null>(null);
   const [resetMessage, setResetMessage] = useState<string | null>(null);
+  const [sendingReset, setSendingReset] = useState(false);
 
   const [displayNameDraft, setDisplayNameDraft] = useState('');
   const [usernameDraft, setUsernameDraft] = useState('');
@@ -118,22 +119,28 @@ export default function ProfileEditorPage() {
   }
 
   async function sendPasswordReset() {
-    if (!user?.email || !supabase) {
+    if (!user?.email || !supabase || sendingReset) {
       return;
     }
 
     setResetMessage(null);
-    const { error: err } = await supabase.auth.resetPasswordForEmail(user.email, {
-      redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/reset-password` : undefined,
-    });
+    setSendingReset(true);
 
-    if (err) {
-      setResetMessage(err.message);
-      return;
+    try {
+      const { error: err } = await supabase.auth.resetPasswordForEmail(user.email, {
+        redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/reset-password` : undefined,
+      });
+
+      if (err) {
+        setResetMessage(err.message);
+        return;
+      }
+
+      setResetMessage('Reset email sent! Check your inbox.');
+      window.setTimeout(() => setResetMessage(null), 5000);
+    } finally {
+      setSendingReset(false);
     }
-
-    setResetMessage('Reset email sent! Check your inbox.');
-    window.setTimeout(() => setResetMessage(null), 5000);
   }
 
   const [currentTheme, setCurrentTheme] = useState('emerald');
@@ -399,13 +406,13 @@ export default function ProfileEditorPage() {
                 <p className="text-sm text-stone-300">Send a password reset email to your account address.</p>
                 <button
                   type="button"
-                  disabled={!supabase}
+                  disabled={!supabase || sendingReset}
                   onClick={sendPasswordReset}
                   className={`rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2 text-sm font-semibold text-stone-200 hover:bg-white/[0.06] ${
-                    !supabase ? 'cursor-not-allowed opacity-60' : ''
+                    !supabase || sendingReset ? 'cursor-not-allowed opacity-60' : ''
                   }`}
                 >
-                  Send password reset email
+                  {sendingReset ? 'Sending…' : 'Send password reset email'}
                 </button>
               </div>
               {resetMessage ? <p className="mt-3 text-sm text-primary-200">{resetMessage}</p> : null}

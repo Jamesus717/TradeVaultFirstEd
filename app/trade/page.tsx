@@ -25,8 +25,13 @@ export default function TradeBoardPage() {
           onOpenModal={form.openModal}
         />
 
+        {/*
+          The sign-in notice is mt-6 to match its three siblings in this stack
+          (the filter bar, the error panel and the grid); it was the only mt-4
+          of the four.
+        */}
         {!user && !authLoading ? (
-          <div className="mt-4 rounded-[1.5rem] border border-amber-300/15 bg-amber-400/5 p-4 text-center text-sm text-amber-200/80">
+          <div className="mt-6 rounded-[1.5rem] border border-amber-300/15 bg-amber-400/5 p-4 text-center text-sm text-amber-200/80">
             Sign in to list cards and express interest in trades
           </div>
         ) : null}
@@ -48,6 +53,8 @@ export default function TradeBoardPage() {
           interestedIds={board.interestedIds}
           conversationByListingId={board.conversationByListingId}
           manageOpenFor={board.manageOpenFor}
+          pendingInterestId={board.pendingInterestId}
+          pendingManageId={board.pendingManageId}
           onToggleManage={(listingId) =>
             board.setManageOpenFor((current) => (current === listingId ? null : listingId))
           }

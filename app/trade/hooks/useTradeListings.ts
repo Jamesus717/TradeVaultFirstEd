@@ -21,6 +21,14 @@ export function useTradeListings() {
 
   const [manageOpenFor, setManageOpenFor] = useState<string | null>(null);
 
+  // "I'm Interested" runs up to five sequential writes and then navigates, and
+  // Mark as sold / Delete each run one. None of them showed anything while in
+  // flight, so the board looked frozen and a second click could insert a
+  // duplicate interest row. These hold the listing id being worked on; they are
+  // UI state only and do not change what gets written or in what order.
+  const [pendingInterestId, setPendingInterestId] = useState<string | null>(null);
+  const [pendingManageId, setPendingManageId] = useState<string | null>(null);
+
   useEffect(() => {
     const init = setTimeout(() => setNowMs(Date.now()), 0);
     const handle = setInterval(() => setNowMs(Date.now()), 60_000);
@@ -179,10 +187,38 @@ export function useTradeListings() {
       return;
     }
 
+    if (pendingInterestId) {
+      return;
+    }
+
+    setPendingInterestId(listingId);
+
+    try {
+      const navigated = await expressInterest(listingId, listing);
+
+      // On a successful path this navigates to the conversation. Keep the
+      // button in its in-flight state across that transition rather than
+      // snapping back to "I'm Interested" for the frame before the route
+      // changes; the component unmounts on arrival. Only a path that gave up
+      // without navigating hands control back to the user.
+      if (!navigated) {
+        setPendingInterestId(null);
+      }
+    } catch (interestError) {
+      setPendingInterestId(null);
+      throw interestError;
+    }
+  }
+
+  async function expressInterest(listingId: string, listing: TradeListing): Promise<boolean> {
+    if (!user || !supabase) {
+      return false;
+    }
+
     const existingConversationId = conversationByListingId[listingId];
     if (existingConversationId) {
       router.push(`/inbox/${existingConversationId}`);
-      return;
+      return true;
     }
 
     const { data: existing, error: existingError } = await supabase
@@ -195,7 +231,7 @@ export function useTradeListings() {
     if (!existingError && existing?.id) {
       setConversationByListingId((current) => ({ ...current, [listingId]: existing.id }));
       router.push(`/inbox/${existing.id}`);
-      return;
+      return true;
     }
 
     await supabase.from('trade_interests').insert({
@@ -225,8 +261,10 @@ export function useTradeListings() {
       if (fallback?.id) {
         setConversationByListingId((current) => ({ ...current, [listingId]: fallback.id }));
         router.push(`/inbox/${fallback.id}`);
+        return true;
       }
-      return;
+
+      return false;
     }
 
     const conversationId = created.id as string;
@@ -252,26 +290,39 @@ export function useTradeListings() {
     });
     setConversationByListingId((current) => ({ ...current, [listingId]: conversationId }));
     router.push(`/inbox/${conversationId}`);
+    return true;
   }
 
   async function handleMarkSold(listingId: string) {
-    if (!user || !supabase) {
+    if (!user || !supabase || pendingManageId) {
       return;
     }
 
-    await supabase.from('trade_listings').update({ is_active: false }).eq('id', listingId);
-    setListings((current) => current.filter((listing) => listing.id !== listingId));
-    setManageOpenFor(null);
+    setPendingManageId(listingId);
+
+    try {
+      await supabase.from('trade_listings').update({ is_active: false }).eq('id', listingId);
+      setListings((current) => current.filter((listing) => listing.id !== listingId));
+      setManageOpenFor(null);
+    } finally {
+      setPendingManageId(null);
+    }
   }
 
   async function handleDeleteListing(listingId: string) {
-    if (!user || !supabase) {
+    if (!user || !supabase || pendingManageId) {
       return;
     }
 
-    await supabase.from('trade_listings').delete().eq('id', listingId);
-    setListings((current) => current.filter((listing) => listing.id !== listingId));
-    setManageOpenFor(null);
+    setPendingManageId(listingId);
+
+    try {
+      await supabase.from('trade_listings').delete().eq('id', listingId);
+      setListings((current) => current.filter((listing) => listing.id !== listingId));
+      setManageOpenFor(null);
+    } finally {
+      setPendingManageId(null);
+    }
   }
 
   function addListing(listing: TradeListing) {
@@ -287,6 +338,8 @@ export function useTradeListings() {
     conversationByListingId,
     manageOpenFor,
     setManageOpenFor,
+    pendingInterestId,
+    pendingManageId,
     stats,
     setOptions,
     addListing,

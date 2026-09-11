@@ -459,3 +459,327 @@ same code it did before.
    `app/inbox/page.tsx` has its own copies again. Same reasoning as above.
 9. **`app/profile/page.tsx` (425) and `app/profile/ProfileView.tsx` (431)**
    are the next-largest files and split the same way if you want a run 5.
+
+---
+
+# Run 4 — Responsiveness pass ("feels clunky")
+
+**Status: done. `npx next build` passes (17 routes, same as runs 1–3).
+`npx tsc --noEmit` clean. `npx eslint .` — 0 errors, 3 warnings, the same 3
+run 3 reported.**
+
+Dependencies installed fine (`npm ci`, exit 0). I took a baseline build before
+touching anything so I could tell my own breakage from inherited breakage; it
+passed, so everything below is measured against a green start.
+
+**No colour, font, layout or overall look was changed.** Every edit is either
+invisible until something is loading, invisible until a button is mid-flight,
+or provably identical in rendered output. The look-changing ideas are in
+"Suggested but not done" below for you to approve or reject.
+
+---
+
+## 1. No feedback on actions
+
+This was the biggest single cause. Several buttons ran **three to five
+sequential network writes** and showed nothing at all while doing it — no
+disable, no label change. You click "Accept", the button looks untouched for a
+second or two, and a second click starts the whole thing again.
+
+Every fix below is the same shape: a flag that drives `disabled` plus an
+in-flight label, using the `'Submitting…'` / `'Saving...'` wording already
+used elsewhere in the app. **No write order changed anywhere.**
+
+| Button | Where | Writes it was running silently | Now |
+| --- | --- | ---: | --- |
+| **Accept** / **Decline** | offer in a conversation | 4 | disabled + "Accepting…" / "Declining…" |
+| **Counter** | offer in a conversation | 0 (opens the composer) | disabled while a decision is in flight |
+| **Mark as Completed** | closed-conversation footer | 3 | disabled + "Marking…" |
+| **Mark as Sold** | conversation listing sidebar | up to 5 | disabled + "Marking…", then "Marked as Sold" |
+| **I'm Interested** | trade board card | up to 5, then navigates | disabled + "Opening…" |
+| **Mark as sold** / **Delete listing** | trade board Manage menu | 1 each | disabled + "Working…" |
+| **Send password reset email** | profile | 1 | disabled + "Sending…" |
+
+Four details worth knowing:
+
+- **A decision anywhere in a thread locks every offer's buttons**, not just
+  the one clicked. The writes are sequential and they touch the shared
+  conversation status, so a second decision landing mid-flight is exactly
+  what wants preventing.
+- **"I'm Interested" deliberately stays in its in-flight state through the
+  navigation.** Clearing it on success would snap the button back to
+  "I'm Interested" for the frame before the route changes. Only a path that
+  gives up without navigating hands control back. To do that cleanly I split
+  the body into an inner function returning "did it navigate"; the six return
+  paths are otherwise untouched and the write order is identical.
+- **"Mark as Sold" gave no feedback of any kind, ever** — it wrote and then
+  changed nothing on screen, so there was no way to tell whether it had
+  worked. It now latches to "Marked as Sold".
+- ⚠️ **One real behaviour change, flagged deliberately.** `markListingSold`
+  now checks the error on its first write (`trade_listings.is_active = false`)
+  and stops if it failed. Previously that error was ignored and the code went
+  on to cancel every conversation on the listing and post "Listing marked as
+  sold" into each — for a listing that was in fact still active. On the normal
+  path nothing differs. I judged "don't cascade off a failed write" the safer
+  side, but it is the one thing in this run that is not purely cosmetic, so
+  it is the one thing to look at first if something seems off.
+
+## 2. `prefers-reduced-motion` was not handled at all
+
+There was no `prefers-reduced-motion` block anywhere in the app. Added one to
+`app/globals.css`. It collapses animation and transition durations **only for
+users whose OS already asks for reduced motion** — if you have not turned that
+on, nothing about the app changes.
+
+One detail: it sets `animation-iteration-count: 1` alongside the near-zero
+duration, so animations land on their *final* keyframe instead of freezing
+part-way. For Tailwind's `animate-pulse` (`0%,100% { opacity: 1 }`) that end
+state is fully opaque, so loading skeletons stay clearly visible rather than
+stalling half-faded. Getting this wrong is the usual way a reduced-motion
+block makes skeletons look broken.
+
+Also added `button:disabled { cursor: not-allowed }`, so the many buttons that
+now disable mid-flight say so on hover without each needing the class.
+
+## 3. Layout shift
+
+**The inbox list skeleton was the wrong height — a measurable 180px jump.**
+Rows were `h-[92px]` placeholders, but a real row is **122px**: `p-5` top and
+bottom (40) + the `h-20` thumbnail that sets the row height (80) + 1px border
+each edge. Every one of the six rows was 30px short, so the list shifted
+~180px upward as it loaded. Now `h-[122px]`, with the arithmetic in a comment
+so it does not silently rot.
+
+**Three text-only loading states replaced with skeletons that match the real
+geometry.** Each was a small centred line of text that then snapped to a full
+page layout, moving everything:
+
+| Page | Was | Now |
+| --- | --- | --- |
+| Binder (`/`) | a 10-rem "Loading set data..." card | `BinderGridSkeleton` — same grid columns and gap as `BinderGrid`, same `p-3` / `aspect-[5/7]` / footer-button geometry per card, plus the filter panel above it |
+| Conversation (`/inbox/[id]`) | "Loading conversation..." in a small box | `ConversationSkeleton` — the 72px header bar, the `h-[60vh]` message panel, the 320px sidebar column |
+| Collection (`/collection`) | a vertically-centred "Loading collection..." | hero + four-up stats row + 106px set rows, top-aligned like the real page |
+
+**Expanded set cards on the collection page** showed "Loading cards..." and
+then filled with a 3/4/6-column grid, resizing the card. Now placeholder tiles
+in that same grid at the same `aspect-[5/7]`.
+
+All the skeletons reuse the existing `border-white/10` / `bg-white/[0.03]` /
+`bg-white/[0.06]` tokens. No new colours, no new spacing values, and the
+106px / 122px / 72px numbers are derived from the real markup, not eyeballed.
+
+**Images: checked, nothing to fix.** Every image in the app already goes
+through `next/image` with either `fill` inside an `aspect-[…]` box or an
+explicit `width`/`height`, so none of them can shift as they load.
+
+**Price badges: checked, nothing to fix.** `CardPriceBadge` already renders a
+`shrink-0` "..." placeholder inline while loading, so the card name does not
+reflow when a price arrives.
+
+## 4. Inconsistent spacing
+
+**Trade board: the sign-in notice was `mt-4` where its three siblings are
+`mt-6`.** The filter bar, the error panel and the grid all sit at `mt-6` in
+the same stack; the notice was the only `mt-4` of the four. Now `mt-6`.
+
+This is the one change in the run that moves a pixel of the signed-out view —
+8px — and I made it because "inconsistent spacing between components that
+should match" cannot be fixed without changing spacing. If you would rather
+it stayed, it is a one-word revert.
+
+## 5. Janky transitions
+
+**Narrowed three `transition-all` declarations to the properties that
+actually change.** `transition-all` makes the browser diff every animatable
+property on every style recalculation of the element. The rendered animation
+is identical in all three cases — same properties, same durations:
+
+| Element | Was | Now | Why it is identical |
+| --- | --- | --- | --- |
+| Binder card (`BinderGrid`) | `transition-all duration-200` | `transition-[background-color,border-color,box-shadow] duration-200` | those three are the only differences between the owned and unowned states |
+| Trade listing card | `transition-all duration-200` | `transition-colors duration-200` | hover only changes border-color and background-color |
+| Inbox list row | `transition-all` | `transition-colors` | hover only changes background-color |
+
+The binder card is the one that matters: a set can be ~500 cards, so this is
+~500 elements that stop diffing every property. The other two are tidiness by
+the same argument.
+
+I left the remaining `transition-all`s alone — they are on progress bars and
+theme swatches, a handful of elements each, where there is nothing measurable
+to win.
+
+## How I checked I did not change the look
+
+- Build, typecheck and lint: all clean, same 17 routes, no new lint warnings.
+- The three narrowed transitions were each checked property-by-property
+  against the classes that actually toggle on that element, which is why two
+  became `transition-colors` and one needed an explicit list including
+  `box-shadow` — `transition-colors` alone would have dropped the owned
+  card's shadow animation.
+- Every skeleton's dimensions are derived from the real component's padding,
+  border and content box rather than guessed, and each carries the arithmetic
+  in a comment.
+- Nothing outside a loading branch or a mid-flight branch had its classes
+  touched, with the single deliberate exception of the `mt-4` → `mt-6` in
+  section 4.
+
+### What I could not measure
+
+Still no browser and no real Supabase credentials here, same as run 2. The
+round-trip counts and the 30px-per-row skeleton error are read off the code
+and the box model and are certain. "Feels faster" I cannot put a number on —
+the fixes are the ones the brief named, but you are the one who can tell me
+whether it stopped feeling clunky.
+
+---
+
+## SUGGESTED BUT NOT DONE
+
+All of these change how something looks or behaves, so they are yours to
+approve or reject. Roughly most-worth-doing first.
+
+1. **Escape key does not close the auth modal or the listing modal.**
+   `CardDetailModal` already closes on Escape and locks background scroll;
+   the other two modals do neither, so the app is inconsistent about it.
+   I did not add it because both are *forms* — an Escape press meant for a
+   dropdown would bin a part-filled listing, and losing a form to a stray
+   keypress is worse than the missing shortcut. Needs a decision from you:
+   Escape always, Escape only when the form is untouched, or a confirm.
+
+2. **Background scroll-lock on those same two modals.** Same inconsistency
+   with `CardDetailModal`. The catch: `overflow: hidden` on `body` removes
+   the scrollbar, which shifts the page sideways on any platform with classic
+   scrollbars — i.e. fixing one shift by adding another. `scrollbar-gutter:
+   stable` on `html` would fix it properly *and* fix the existing shift that
+   `CardDetailModal` already causes, but it reserves gutter space, which is a
+   real (small) look change on pages that do not scroll.
+
+3. **🐛 The collection page's expandable set card clips its own contents.**
+   It animates `max-height` to a hard-coded `max-h-[800px]`, the panel has no
+   `overflow-y-auto`, and the `<article>` around it is `overflow-hidden` — so
+   anything past 800px is cut off with **no way to scroll to it**.
+
+   I worked the numbers rather than guessing: at desktop width the sets
+   column is ~800px, so the 6-column grid gives ~116px tiles, ~163px tall at
+   `aspect-[5/7]`, ~175px per row with the gap. After the panel's `p-5` and
+   the "View in Binder" footer there is room for about **4 rows — roughly 24
+   cards**. Own more than that in one set and the rest are invisible. That is
+   a low enough bar that I would expect you to hit it, so check your biggest
+   set first.
+
+   I did not fix it because every fix is visible: `overflow-y-auto` adds a
+   scrollbar inside the card, a bigger `max-h` is still an arbitrary cutoff,
+   and the clean fix (`grid-template-rows: 0fr → 1fr`, or measuring the
+   content height) changes how the expand animates. Your call which.
+
+   Related and cosmetic: because the range is fixed at 800px, a set with few
+   cards animates across the full 800px and so appears to rush and stop
+   early. The `grid-template-rows` fix solves both at once.
+
+4. **Profile page uses `py-10` where every other page uses `py-8`.** An 8px
+   inconsistency in the top-level page padding. One word to change, but it
+   moves the whole profile page, which is why it is here and not above.
+
+5. **The binder hero renders `0 / --` and `0%` before data arrives, then
+   jumps to the real numbers.** It sits outside the loading gate, so it
+   always flashes zeros first. No layout shift (the box is fixed height), just
+   a value jump. A skeleton in the three hero fields would fix it, at the cost
+   of changing what you see for the first moment of every load.
+
+6. **The profile edit form renders empty inputs and then populates them.**
+   The drafts start as `''` and are filled from a `setTimeout(…, 0)` once the
+   profile arrives, so the fields visibly fill in. Fixing it means either a
+   skeleton or disabling the fields until loaded — both change the first
+   moment of the page.
+
+7. **Trade listing cards use `aspect-[3/4]` where binder cards use
+   `aspect-[5/7]`.** Real cards are 5:7, so trade board images are very
+   slightly cropped by `object-cover`. Aligning them is a visible change to
+   every card on the board.
+
+8. **Skeleton counts are fixed** — 8 trade cards, 12 binder cards, 6 inbox
+   rows, 5 set rows. If your real counts are usually much larger or smaller
+   there is still a small shift when the data lands. Remembering the last
+   count per view would remove it, but it needs somewhere to persist.
+
+9. **The trade board's Manage dropdown still has no outside-click or Escape
+   handler, and "Delete listing" still fires with no confirmation** (run 1,
+   note 7). The missing confirmation is the one I would take: deleting a
+   listing on a single mis-click is unrecoverable. It adds a dialog, so it is
+   a look change.
+
+10. **🐛 The read-receipt bug is still there** (run 2 note 1, run 3 note 6).
+    In `hooks/useConversation.ts` the realtime INSERT handler's
+    `client.from('messages').update({read_at: …})` is a bare statement, so
+    **the request is never issued** and a message arriving while you have the
+    conversation open is never marked read. Still a one-word fix
+    (`.then(() => {})`). Three runs have now declined to touch it because it
+    is a behaviour fix rather than the thing that run was for — but it is a
+    genuine bug and it is the one I would do first tomorrow.
+
+---
+
+# All four runs — summary
+
+| Run | Brief | Result |
+| --- | --- | --- |
+| 1 | Split `app/trade/page.tsx` | 1,419-line file → 64-line composition root + 12 focused modules. Pure move, no behaviour change. |
+| 2 | Performance | One shared set-cards cache (collection page went from 2N requests to N); inbox conversation page 4 sequential round trips → 2; API cache headers made consistent; a duplicated `card_prices` query removed; binder grid memoised. |
+| 3 | Refactor navbar + inbox conversation page | `navbar.tsx` 831 → 385 lines with auth lifted into `app/auth/`; conversation page 962 → 134 lines. Pure move, run 2's perf work carried across intact. |
+| 4 | "Feels clunky" | 7 button groups now show in-flight state; `prefers-reduced-motion` handled; a 180px inbox skeleton error fixed; 4 text-only loading states replaced with geometry-matched skeletons; one spacing inconsistency; 3 `transition-all` narrowed. |
+
+Every run ended with `npx next build` passing, `npx tsc --noEmit` clean, and
+eslint at 0 errors. Lint warnings went 5 → 5 → 3 → 3. Route count stayed at 17
+throughout, so nothing was added or lost at the routing level.
+
+**The one thing no run did:** any of it in a browser against a real database.
+There were no Supabase credentials in this environment on any of the four
+runs, so all four are verified by build, typecheck, lint and reading the code
+— not by using the app. That is the gap your morning fills.
+
+## Suggested order to test in the morning
+
+Fastest way to find a problem, worst-case first. Runs 1 and 3 were pure
+refactors of exactly these screens, so a smoke test doubles as their check.
+
+1. **Trade board loads and lists** (`/trade`). Run 1 rebuilt this page from
+   one file into thirteen, so start here. Filters, the set/condition/type
+   dropdowns, "Clear filters".
+2. **Create a listing.** The full modal: collection-vs-all search, pick a
+   card, variant/condition/type, price, photo, submit. Most moving parts of
+   any single flow in the app.
+3. **"I'm Interested" on someone else's listing.** ← *the change I would
+   most want confirmed.* The button should grey out and read "Opening…"
+   immediately, stay that way, and land you in the conversation. It should be
+   impossible to double-click into two conversations.
+4. **Send a message, then send an offer.** Check the conversation opens and
+   both send.
+5. **Accept an offer.** ← *second most important.* "Accepting…" on the button
+   you clicked, all three buttons greyed, then the conversation closes to the
+   accepted state. Then **Mark as Completed** ("Marking…").
+6. **Mark as Sold from the conversation sidebar.** ← *this is where my one
+   real behaviour change is* (section 1, last bullet). It should read
+   "Marking…" then latch to "Marked as Sold", and the other buyers'
+   conversations on that listing should be cancelled with a system message.
+   If anything in this run misbehaves, I would expect it here.
+7. **Log in / sign up / password reset / username picker.** Run 3 moved all
+   of this out of the navbar. Also click **Send password reset email** and
+   watch for "Sending…".
+8. **Binder** (`/`). Pick a set — you should get a skeleton grid, not a
+   "Loading set data..." box. Then search, sort, the owned filters, mark a
+   card owned, "Mark all as owned".
+9. **Collection** (`/collection`). Should come up as a skeleton dashboard,
+   not a centred line of text. Expand a set card — and if you have a set big
+   enough to overflow, check whether its cards are clipped (suggestion 3).
+10. **Inbox list** (`/inbox`). Watch the skeleton rows: they should be the
+    same height as the real rows, with no jump as it loads.
+11. **Profile** (`/profile`). Display name, username, bio, avatar, theme
+    swatches.
+12. **Optional, if you use "reduce motion"** (macOS: Accessibility → Display
+    → Reduce motion; Windows: Settings → Accessibility → Visual effects).
+    Animations should go instant and skeletons should stay solid, not
+    half-faded. If you do not use that setting, nothing should look different
+    from before — that is the point.
+
+If something is broken, `git log --oneline` on this branch gives you four
+commits to bisect, one per run, each self-contained.

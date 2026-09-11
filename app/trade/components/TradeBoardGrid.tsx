@@ -13,6 +13,8 @@ type Props = {
   interestedIds: Set<string>;
   conversationByListingId: Record<string, string>;
   manageOpenFor: string | null;
+  pendingInterestId: string | null;
+  pendingManageId: string | null;
   onToggleManage: (listingId: string) => void;
   onExpressInterest: (listingId: string) => void;
   onMarkSold: (listingId: string) => void;
@@ -29,6 +31,8 @@ export function TradeBoardGrid({
   interestedIds,
   conversationByListingId,
   manageOpenFor,
+  pendingInterestId,
+  pendingManageId,
   onToggleManage,
   onExpressInterest,
   onMarkSold,
@@ -85,6 +89,8 @@ export function TradeBoardGrid({
               interested={interestedIds.has(listing.id)}
               conversationId={conversationByListingId[listing.id] ?? null}
               manageOpen={manageOpenFor === listing.id}
+              interestPending={pendingInterestId === listing.id}
+              managePending={pendingManageId === listing.id}
               onToggleManage={() => onToggleManage(listing.id)}
               onMarkSold={() => onMarkSold(listing.id)}
               onDeleteListing={() => onDeleteListing(listing.id)}

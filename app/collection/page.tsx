@@ -84,7 +84,19 @@ function SetExpandableCard({
       >
         <div className="p-5 bg-stone-950/30">
           {loading ? (
-            <p className="text-sm text-stone-400 text-center py-4">Loading cards...</p>
+            /*
+             * Placeholder tiles in the same 3/4/6-column grid as the real
+             * cards below, so an expanded set does not resize once its cards
+             * arrive. Same aspect-[5/7] and ring tokens as the real tiles.
+             */
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+              {Array.from({ length: 12 }).map((_, index) => (
+                <div
+                  key={`set-card-skeleton-${index}`}
+                  className="relative aspect-[5/7] animate-pulse rounded-xl bg-stone-900 ring-1 ring-white/10"
+                />
+              ))}
+            </div>
           ) : (
             <>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
@@ -132,6 +144,84 @@ function SetExpandableCard({
   );
 }
 
+/*
+ * Loading placeholder for the collection dashboard.
+ *
+ * The page used to render a single vertically-centred "Loading collection..."
+ * line and then swap to a top-aligned multi-section dashboard, so everything
+ * on screen moved. This mirrors the real page's outer container, hero,
+ * four-up stats row and set rows, using the same tokens the real sections use
+ * — no new colours or spacing values.
+ *
+ * The 106px set rows are the real height: a w-16 h-16 logo (64) inside p-5
+ * (40) plus the 1px border on each edge.
+ */
+function CollectionSkeleton() {
+  return (
+    <main className="min-h-screen bg-transparent text-stone-100 pb-20">
+      <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
+        <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] shadow-2xl shadow-black/20 backdrop-blur">
+          <div className="bg-[radial-gradient(circle_at_top_right,var(--hero-gradient-color),transparent_30%),linear-gradient(135deg,rgba(28,25,23,0.96),rgba(10,10,10,0.96))] p-6 sm:p-8 md:p-10">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+              <div className="space-y-2">
+                <div className="h-4 w-36 animate-pulse rounded bg-white/[0.06]" />
+                <div className="h-14 w-56 animate-pulse rounded bg-white/[0.06] md:h-16" />
+                <div className="h-5 w-48 animate-pulse rounded bg-white/[0.06]" />
+                <div className="h-3 w-32 animate-pulse rounded bg-white/[0.06]" />
+              </div>
+              <div className="h-[120px] w-full flex-shrink-0 animate-pulse rounded-xl bg-white/[0.04] md:w-[400px]" />
+            </div>
+          </div>
+        </section>
+
+        <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div
+              key={`stat-skeleton-${index}`}
+              className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-6 backdrop-blur"
+            >
+              <div className="h-4 w-24 animate-pulse rounded bg-white/[0.06]" />
+              <div className="mt-2 h-8 w-20 animate-pulse rounded bg-white/[0.06]" />
+            </div>
+          ))}
+        </section>
+
+        <div className="grid lg:grid-cols-3 gap-8 items-start">
+          <section className="lg:col-span-2 space-y-4">
+            <div className="flex items-center justify-between px-2">
+              <div className="h-7 w-32 animate-pulse rounded bg-white/[0.06]" />
+              <div className="h-5 w-20 animate-pulse rounded bg-white/[0.06]" />
+            </div>
+            <div className="space-y-3">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <div
+                  key={`set-row-skeleton-${index}`}
+                  className="h-[106px] animate-pulse rounded-[1.5rem] border border-white/10 bg-white/[0.03]"
+                />
+              ))}
+            </div>
+          </section>
+
+          <section className="space-y-4">
+            <div className="h-7 w-40 animate-pulse rounded bg-white/[0.06] mx-2" />
+            <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5 backdrop-blur space-y-5">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <div key={`progress-skeleton-${index}`} className="space-y-2">
+                  <div className="flex justify-between items-end">
+                    <div className="h-5 w-32 animate-pulse rounded bg-white/[0.06]" />
+                    <div className="h-4 w-8 animate-pulse rounded bg-white/[0.06]" />
+                  </div>
+                  <div className="h-1.5 w-full rounded-full bg-white/5" />
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+  );
+}
+
 export default function CollectionPage() {
   const {
     user,
@@ -149,11 +239,7 @@ export default function CollectionPage() {
   const [sortMode, setSortMode] = useState<'value' | 'completion' | 'name' | 'recent'>('value');
 
   if (loading) {
-    return (
-      <main className="min-h-screen bg-transparent text-stone-100 flex items-center justify-center">
-        <p className="text-stone-400">Loading collection...</p>
-      </main>
-    );
+    return <CollectionSkeleton />;
   }
 
   if (!user) {

@@ -9,12 +9,14 @@ export default function MessageItem({
   otherName,
   onOfferDecision,
   onCounterOffer,
+  offerDecisionPending,
 }: {
   message: Message;
   userId: string;
   otherName: string;
   onOfferDecision: (message: Message, decision: OfferStatus) => void;
   onCounterOffer: (message: Message) => void;
+  offerDecisionPending: { messageId: string; decision: OfferStatus } | null;
 }) {
   if (message.message_type === 'system') {
     return (
@@ -29,6 +31,13 @@ export default function MessageItem({
   if (message.message_type === 'offer') {
     const pending = message.offer_status === 'pending';
     const recipient = !own;
+
+    // A decision anywhere in the thread locks every offer's buttons — the
+    // writes are sequential and touch the shared conversation status, so a
+    // second decision landing mid-flight is exactly what we want to prevent.
+    const decisionBusy = offerDecisionPending !== null;
+    const thisDecision =
+      offerDecisionPending?.messageId === message.id ? offerDecisionPending.decision : null;
 
     return (
       <div className={classNames('flex flex-col gap-1', align)}>
@@ -50,21 +59,33 @@ export default function MessageItem({
                 <button
                   type="button"
                   onClick={() => onOfferDecision(message, 'accepted')}
-                  className="rounded-2xl bg-primary-400 px-3 py-2 text-xs font-semibold text-primary-950 hover:bg-primary-300"
+                  disabled={decisionBusy}
+                  className={classNames(
+                    'rounded-2xl bg-primary-400 px-3 py-2 text-xs font-semibold text-primary-950 hover:bg-primary-300',
+                    decisionBusy ? 'cursor-not-allowed opacity-60' : ''
+                  )}
                 >
-                  Accept
+                  {thisDecision === 'accepted' ? 'Accepting…' : 'Accept'}
                 </button>
                 <button
                   type="button"
                   onClick={() => onOfferDecision(message, 'declined')}
-                  className="rounded-2xl border border-rose-300/20 bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-100 hover:bg-rose-500/15"
+                  disabled={decisionBusy}
+                  className={classNames(
+                    'rounded-2xl border border-rose-300/20 bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-100 hover:bg-rose-500/15',
+                    decisionBusy ? 'cursor-not-allowed opacity-60' : ''
+                  )}
                 >
-                  Decline
+                  {thisDecision === 'declined' ? 'Declining…' : 'Decline'}
                 </button>
                 <button
                   type="button"
                   onClick={() => onCounterOffer(message)}
-                  className="rounded-2xl border border-amber-300/30 bg-amber-400/10 px-3 py-2 text-xs font-semibold text-amber-200 hover:bg-amber-400/20"
+                  disabled={decisionBusy}
+                  className={classNames(
+                    'rounded-2xl border border-amber-300/30 bg-amber-400/10 px-3 py-2 text-xs font-semibold text-amber-200 hover:bg-amber-400/20',
+                    decisionBusy ? 'cursor-not-allowed opacity-60' : ''
+                  )}
                 >
                   Counter
                 </button>

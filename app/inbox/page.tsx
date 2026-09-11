@@ -275,9 +275,13 @@ export default function InboxPage() {
         ) : loading ? (
           <section className="mt-6 space-y-3">
             {Array.from({ length: 6 }).map((_, index) => (
+              // 122px is the real row's height, not a guess: p-5 top and
+              // bottom (40) + the h-20 thumbnail that sets the row height (80)
+              // + the 1px border on each edge. At the old 92px every row was
+              // 30px short, so the list shifted ~180px upward as it loaded.
               <div
                 key={`s-${index}`}
-                className="h-[92px] animate-pulse rounded-[1.5rem] border border-white/10 bg-white/[0.04]"
+                className="h-[122px] animate-pulse rounded-[1.5rem] border border-white/10 bg-white/[0.04]"
               />
             ))}
           </section>
@@ -318,7 +322,7 @@ export default function InboxPage() {
                 <Link
                   key={conversation.id}
                   href={`/inbox/${conversation.id}`}
-                  className="flex items-center gap-4 rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5 transition-all hover:bg-white/[0.05]"
+                  className="flex items-center gap-4 rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5 transition-colors hover:bg-white/[0.05]"
                 >
                   <div className="h-20 w-14 shrink-0 overflow-hidden rounded-xl bg-stone-900 ring-1 ring-white/5">
                     {image ? (

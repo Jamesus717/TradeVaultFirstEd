@@ -95,3 +95,30 @@ body {
 button {
   cursor: pointer;
 }
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+/*
+ * Respect the OS "reduce motion" setting. Nothing here changes how the app
+ * looks for anyone who has not asked for it — it only collapses durations for
+ * users whose system already requests less animation.
+ *
+ * animation-iteration-count: 1 with a near-zero duration lands each animation
+ * on its final keyframe rather than freezing it mid-way. For Tailwind's
+ * animate-pulse (0%,100% { opacity: 1 }) that end state is fully opaque, so
+ * loading skeletons stay clearly visible instead of stalling half-faded.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+}

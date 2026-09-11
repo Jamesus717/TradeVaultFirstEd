@@ -10,12 +10,16 @@ export default function ListingSidebar({
   userId,
   otherName,
   onMarkListingSold,
+  markingSold,
+  listingSold,
 }: {
   activeListing: Listing | null;
   conversation: Conversation;
   userId: string;
   otherName: string;
   onMarkListingSold: () => void;
+  markingSold: boolean;
+  listingSold: boolean;
 }) {
   return (
     <aside className="h-fit space-y-4 rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5 lg:sticky lg:top-24">
@@ -94,9 +98,13 @@ export default function ListingSidebar({
         <button
           type="button"
           onClick={onMarkListingSold}
-          className="w-full rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm font-semibold text-stone-100 hover:bg-white/[0.06]"
+          disabled={markingSold || listingSold}
+          className={classNames(
+            'w-full rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm font-semibold text-stone-100 hover:bg-white/[0.06]',
+            markingSold || listingSold ? 'cursor-not-allowed opacity-60' : ''
+          )}
         >
-          Mark as Sold
+          {listingSold ? 'Marked as Sold' : markingSold ? 'Marking…' : 'Mark as Sold'}
         </button>
       ) : null}
     </aside>

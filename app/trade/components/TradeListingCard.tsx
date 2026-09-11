@@ -12,6 +12,8 @@ type Props = {
   interested: boolean;
   conversationId: string | null;
   manageOpen: boolean;
+  interestPending: boolean;
+  managePending: boolean;
   onToggleManage: () => void;
   onMarkSold: () => void;
   onDeleteListing: () => void;
@@ -26,6 +28,8 @@ export function TradeListingCard({
   interested,
   conversationId,
   manageOpen,
+  interestPending,
+  managePending,
   onToggleManage,
   onMarkSold,
   onDeleteListing,
@@ -38,7 +42,13 @@ export function TradeListingCard({
 
   return (
     <article
-      className="group overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/[0.03] transition-all duration-200 hover:border-white/20 hover:bg-white/[0.05]"
+      /*
+       * transition-colors, not transition-all: border-color and
+       * background-color are the only things this card's hover changes, so the
+       * rendered result is identical while the browser stops diffing every
+       * animatable property on each style recalculation of every card.
+       */
+      className="group overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/[0.03] transition-colors duration-200 hover:border-white/20 hover:bg-white/[0.05]"
     >
       <div className="relative aspect-[3/4] bg-stone-900">
         {image ? (
@@ -136,14 +146,22 @@ export function TradeListingCard({
                   <button
                     type="button"
                     onClick={onMarkSold}
-                    className="w-full px-4 py-3 text-left text-sm text-stone-200 hover:bg-white/[0.06]"
+                    disabled={managePending}
+                    className={classNames(
+                      'w-full px-4 py-3 text-left text-sm text-stone-200 hover:bg-white/[0.06]',
+                      managePending ? 'cursor-not-allowed opacity-60' : ''
+                    )}
                   >
-                    Mark as sold
+                    {managePending ? 'Working…' : 'Mark as sold'}
                   </button>
                   <button
                     type="button"
                     onClick={onDeleteListing}
-                    className="w-full px-4 py-3 text-left text-sm text-rose-200 hover:bg-white/[0.06]"
+                    disabled={managePending}
+                    className={classNames(
+                      'w-full px-4 py-3 text-left text-sm text-rose-200 hover:bg-white/[0.06]',
+                      managePending ? 'cursor-not-allowed opacity-60' : ''
+                    )}
                   >
                     Delete listing
                   </button>
@@ -154,16 +172,16 @@ export function TradeListingCard({
             <button
               type="button"
               onClick={onExpressInterest}
-              disabled={!hasUser}
+              disabled={!hasUser || interestPending}
               className={classNames(
                 'rounded-xl px-3 py-1.5 text-xs font-medium transition-colors',
                 showOpenChat
                   ? 'bg-primary-400/20 text-primary-200 hover:bg-primary-400/30'
                   : 'bg-stone-800 text-stone-100 hover:bg-primary-400 hover:text-primary-950',
-                !hasUser ? 'cursor-not-allowed opacity-60' : ''
+                !hasUser || interestPending ? 'cursor-not-allowed opacity-60' : ''
               )}
             >
-              {showOpenChat ? 'Open Chat' : "I'm Interested"}
+              {interestPending ? 'Opening…' : showOpenChat ? 'Open Chat' : "I'm Interested"}
             </button>
           )}
         </div>
