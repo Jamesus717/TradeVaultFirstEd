@@ -301,3 +301,161 @@ not by a profiler. The request-count reductions are structural and certain.
 The rendering win is sound in principle but I could not put a number on it;
 if you want one, React DevTools' profiler on the binder search box is the
 place to look.
+
+---
+
+# Run 3 — Refactor: auth out of the navbar, and the inbox conversation page
+
+**Status: done. `npx next build` passes (17 routes, same as runs 1 and 2).
+`npx tsc --noEmit` clean. `npx eslint .` — 0 errors, 3 warnings (down from 5;
+the two that went were dead code in the navbar, see below).**
+
+Dependencies installed fine (`npm ci`, exit 0). Refactor only — no behaviour
+change, no restyling. Nothing was renamed, reordered or "improved" on the way
+through, and run 4 will find the UI exactly as it was.
+
+## Priority: `app/navbar.tsx`, 831 lines → 385
+
+Login, signup, password reset and the username picker all lived inside the
+navbar component. They now live in `app/auth/`, and the navbar imports and
+renders them.
+
+### Where it went
+
+It sits alongside the two things already called `auth`, rather than clashing
+with them. `app/auth.tsx` (the `AuthProvider` context) and
+`app/auth/callback/route.ts` are both untouched — the new files are the rest
+of `app/auth/`. The layout follows `app/binder/` and `app/trade/`: `types.ts`
+/ `utils.ts` at the top level, plus `components/` and `hooks/`.
+
+| File | Lines | What it holds |
+| --- | ---: | --- |
+| `app/navbar.tsx` | 385 | Nav links, mobile menu, the unread-notifications subscription, Logout |
+| `app/auth/hooks/useAuthForm.ts` | 193 | Every piece of modal state and all six handlers |
+| `app/auth/components/AuthModal.tsx` | 69 | Overlay, card, header, and the three-way view switch |
+| `app/auth/components/CredentialsView.tsx` | 149 | Login/Sign Up tabs, Google, the fields, submit |
+| `app/auth/components/ForgotPasswordView.tsx` | 57 | Reset-link request and its two banners |
+| `app/auth/components/VerifyEmailView.tsx` | 38 | "Check your email", resend, back to login |
+| `app/auth/components/UsernameField.tsx` | 28 | The username picker and its three validation messages |
+| `app/auth/components/GoogleSignInButton.tsx` | 19 | The button and its four-path SVG |
+| `app/auth/utils.ts` | 59 | `classNames`, `isUnverifiedEmailError`, the username rules, the submit-disabled test |
+| `app/auth/types.ts` | 3 | `AuthMode`, `AuthView` |
+
+831 lines in one file → 1,000 across 10 files. The growth is imports and prop
+type declarations; no logic was added.
+
+### Two couplings worth knowing about
+
+- **The Logout button shares `submitting` with the modal.** It always did —
+  `handleLogout` sets the same flag the login form uses. So `handleLogout`
+  stayed on `useAuthForm`, and the navbar reads `submitting` from the same
+  hook instance it passes to `AuthModal`. Giving logout its own flag would
+  have been tidier and would have been a behaviour change.
+- **`useAuth()` is now called twice per render** — once by the navbar for
+  `user` / `authLoading` / `supabaseDisabled`, once inside `useAuthForm`.
+  That is two `useContext` reads of one memoised value, not two subscriptions.
+
+### Three things I deduped, and why each is safe
+
+Everything else is a verbatim move. These three are not, so they are listed
+explicitly:
+
+1. **`showView(view)`.** Five buttons each ran the same three setters
+   (`setAuthView(x); setAuthError(''); setResetSuccess('')`). They now call
+   one function that runs the same three in the same order. React batches
+   them identically either way.
+2. **`isCredentialsSubmitDisabled(...)`.** The submit button's `disabled` and
+   its `className` each held a copy of the same long boolean expression,
+   character for character. One function, called once, feeds both.
+3. **`usernameValidationMessage(...)`.** The three-branch ternary in the JSX
+   became a function returning the message string, with the same precedence.
+   The `<p className="mt-1 pl-2 text-xs text-rose-400">` around it is
+   unchanged, so the rendered DOM is identical.
+
+## Secondary: `app/inbox/[conversationId]/page.tsx`, 962 lines → 134
+
+Navbar was finished and building before I started this. Same shape again.
+
+| File | Lines | What it holds |
+| --- | ---: | --- |
+| `page.tsx` | 134 | Composition root: the render gates and the two-column layout |
+| `hooks/useConversation.ts` | 247 | Load, participant check, profiles, read receipts, the realtime channel, the scroll-to-bottom effect |
+| `hooks/useConversationActions.ts` | 249 | Send message, send offer, offer decisions, mark completed, mark listing sold |
+| `components/MessageComposer.tsx` | 118 | The textarea, the offer box, Send |
+| `components/ListingSidebar.tsx` | 104 | Card image, badges, price, seller, Mark as Sold |
+| `components/MessageItem.tsx` | 104 | One message: system line, offer card, or text bubble |
+| `components/ConversationHeader.tsx` | 55 | Back link, thumbnail, status badge |
+| `components/MessageList.tsx` | 36 | The scroll container and the map |
+| `components/ClosedConversationNotice.tsx` | 30 | The non-active footer and Mark as Completed |
+| `utils.ts` | 96 | `classNames`, `formatMoneyGBP`, `formatTimeAgo`, the three badge helpers, `shortId`, the two column lists |
+| `types.ts` | 58 | `Conversation`, `Message`, `Listing`, `PublicProfile` and the status unions |
+
+**Run 2's performance work is carried across intact** — the parallel
+conversation/messages fetch, the fire-and-forget read receipts with their
+`.catch`, and the comments explaining both. I did not "tidy" the load-bearing
+`.then()` in `app/inbox/page.tsx`; that file is untouched.
+
+One dedupe here: the Counter button's two setState calls became
+`startCounterOffer(message)` on the actions hook, so the message list does
+not need the composer's setters passed down through it.
+
+## How I checked nothing changed
+
+Build, typecheck and lint all pass, but those only prove it compiles. For
+behaviour I diffed the old file against the new ones twice:
+
+- **Every string literal**, counted. For the navbar the only differences are
+  import paths, `'use client'`, the three username messages moving from JSX
+  into `utils.ts`, and the exact reductions the three dedupes above predict
+  (−8 empty strings from `showView`, +1 from the new function's fallback;
+  −1 `'signup'` from the deduped disabled test; −2 of the shared rose-400
+  className). For the inbox, import paths and `'use client'` and nothing
+  else.
+- **Every JSX text node**, counted. Identical on both files — no label,
+  placeholder, button text or sentence of copy differs.
+
+So: no className, copy, placeholder or `aria-label` changed anywhere, and
+every form, validation message, error state and redirect goes through the
+same code it did before.
+
+## Noticed but deliberately left alone
+
+1. **`app/auth.tsx` sits next to the `app/auth/` directory.** Importing
+   `'../../auth'` from inside `app/auth/hooks/` resolves to the *file*,
+   because TypeScript tries `auth.tsx` before `auth/index`. That is correct
+   today and the build proves it, but it reads as ambiguous. If you ever want
+   it unambiguous, moving the provider to `app/auth/AuthProvider.tsx` with a
+   re-export is a five-minute job — I did not do it because it would touch
+   the ten files that import `useAuth`, which is a wider blast radius than
+   this run was for.
+2. **The auth modal has no Escape handler and no focus trap.** Clicking the
+   backdrop closes it; Escape does not. Pre-existing, and a behaviour change
+   to fix, so not mine tonight. Run 4's territory if the UI pass wants it.
+3. **`AuthMode` (`'login' | 'signup'`) is dead.** Declared in the old navbar
+   and never used — `openAuthModal` takes an `AuthView`. Moved to
+   `app/auth/types.ts` rather than deleted, so this run stays a move.
+4. **`signUp` was being destructured from `useAuth()` and never called** —
+   only `signUpWithUsername` is. I dropped the unused binding. That plus
+   `AuthMode` becoming an export is why eslint went from 5 warnings to 3.
+5. **The navbar's nav links are five copies of the same markup**, twice over
+   (desktop and mobile), differing only in href, label and active class. A
+   `NavLink` component would take ~120 lines out of the 385. I left it —
+   the brief was auth, and run 4 is going to be editing exactly this markup,
+   so a restructure tonight would collide with it.
+6. **The read-receipt bug from run 2, note 1, is still there.** The bare
+   `client.from('messages').update(...)` in the realtime INSERT handler still
+   never issues its request; it is now at
+   `hooks/useConversation.ts`, in the INSERT handler. Still a one-word fix
+   (`.then(() => {})`), still a behaviour fix rather than a refactor, so
+   still yours to call.
+7. **`classNames` now exists in four places** — `app/trade/utils.ts`,
+   `app/binder/utils.ts`, `app/auth/utils.ts` and
+   `app/inbox/[conversationId]/utils.ts`. It was already duplicated before
+   tonight; I matched the existing pattern rather than introducing a shared
+   `lib/` helper, because that is a decision about the shape of the codebase
+   and not a mechanical move. Worth doing deliberately at some point.
+8. **`formatTimeAgo` and the badge helpers are duplicated** between
+   `app/trade/utils.ts` and `app/inbox/[conversationId]/utils.ts`, and
+   `app/inbox/page.tsx` has its own copies again. Same reasoning as above.
+9. **`app/profile/page.tsx` (425) and `app/profile/ProfileView.tsx` (431)**
+   are the next-largest files and split the same way if you want a run 5.
