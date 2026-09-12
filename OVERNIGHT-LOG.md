@@ -783,3 +783,37 @@ refactors of exactly these screens, so a smoke test doubles as their check.
 
 If something is broken, `git log --oneline` on this branch gives you four
 commits to bisect, one per run, each self-contained.
+
+---
+
+# Review — 2026-09-12 (interactive session, real browser + real database)
+
+All four runs verified: `npm ci`, `tsc`, `eslint` (0 errors), `next build` pass.
+Dev server run against the live Supabase project; every API route exercised.
+
+## Fixed on this branch
+
+| What | Detail |
+| --- | --- |
+| **Read receipts** | The bare `.update()` in `useConversation.ts` now has a `.then()`, so the request is actually sent. |
+| **Prices were fake in production** | eBay shut the Finding API down on 2025-02-05 (every call is now an empty HTTP 418), and `NEXT_PUBLIC_DEV_PRICES=true` in `.env.local` was baked into the deployed build — the live site showed £7.50 for every card. The route now uses TCGplayer market prices (Cardmarket fallback) from the Pokémon TCG API, converted to GBP at the ECB rate. Mock mode is compiled out of production builds (verified: built with the flag on, the mock branch is absent). |
+| **Reverse holos shared the base card's price** | Client dedupe and the route's memory cache are now keyed by variant. `card_prices` stores the base print only. |
+| **Pokémon TCG API flakiness** | ~65% of single-card requests returned 500/502 on 2026-09-12. `pokemonFetch` retries GET 5xx up to 4 times (failures return in ~200ms). 19/20 price lookups succeeded vs ~7/20 without. The price route also falls back to a stale `card_prices` row if upstream fails. |
+| **Security advisories** | `npm audit fix`: next 16.2.5 → 16.3.5 (critical), plus sharp, postcss, nanoid. `npm audit`: 0 vulnerabilities. |
+| **Migration order** | `006_card_prices_policies` / `007_rls_performance` collided with existing 006/007 and the policies file ran before `010_card_prices` creates the table. Renamed to 012 / 013. |
+
+## Written but NOT applied — needs James
+
+`supabase/migrations/014_messages_update_guard.sql`. The messages UPDATE
+policy lets either participant rewrite any column: edit the other person's
+text, change an offer amount after acceptance, or accept their own offer. The
+trigger allows only what the app does (recipient sets `read_at`; recipient
+decides a pending offer). Applying it to the live DB was blocked by the
+permission classifier, so run it in the SQL editor.
+
+## ⚠️ Strategic: the card catalogue has an expiry date
+
+The Pokémon TCG API is deprecated. Per dev.pokemontcg.io: *new registrations
+closed, existing keys work through 2027-03-01.* Successor is Scrydex (paid,
+credit-metered). Every set, card, image URL and now price in this app comes
+from it.

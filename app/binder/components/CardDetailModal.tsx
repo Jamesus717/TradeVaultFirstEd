@@ -1,8 +1,22 @@
 import { useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import type { CardVariant } from '../types';
+import type { CardPrice, CardVariant } from '../types';
 import { usePriceData } from '../hooks/usePriceData';
+
+const PRICE_SOURCE_LABEL: Record<CardPrice['source'], string> = {
+  tcgplayer: 'TCGplayer',
+  cardmarket: 'Cardmarket',
+  mock: 'Mock data',
+};
+
+// Both sources price in their own currency; the route converts to GBP at the
+// day's ECB rate, so say so rather than implying a UK sale price.
+const PRICE_SOURCE_NOTE: Record<CardPrice['source'], string> = {
+  tcgplayer: 'TCGplayer market price (US), converted to GBP',
+  cardmarket: 'Cardmarket trend price (EU), converted to GBP',
+  mock: 'Development mock price — not real',
+};
 
 type Props = {
   card: CardVariant | null;
@@ -140,7 +154,7 @@ export function CardDetailModal({ card, isOpen, onClose, isOwned, onToggleOwned,
           <div className="mt-8 rounded-[1.5rem] border border-white/5 bg-white/[0.02] p-5">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-medium uppercase tracking-widest text-stone-400">Market Price</h3>
-              <span className="text-xs text-stone-500">eBay UK</span>
+              <span className="text-xs text-stone-500">{PRICE_SOURCE_LABEL[price.source]}</span>
             </div>
 
             <div className="mt-4">
@@ -186,12 +200,12 @@ export function CardDetailModal({ card, isOpen, onClose, isOwned, onToggleOwned,
                 {price.lowConfidence && (
                   <p className="text-xs text-amber-500/80">Based on limited sales data</p>
                 )}
-                <p className="text-xs text-stone-500">
-                  Based on {price.sampleSize ?? 0} recent eBay UK sold listings
-                </p>
-                <p className="text-[11px] text-stone-600">
-                  Last updated: just now
-                </p>
+                <p className="text-xs text-stone-500">{PRICE_SOURCE_NOTE[price.source]}</p>
+                {price.fetchedAt && (
+                  <p className="text-[11px] text-stone-600">
+                    Last updated: {new Date(price.fetchedAt).toLocaleDateString('en-GB')}
+                  </p>
+                )}
               </div>
             )}
           </div>

@@ -176,11 +176,18 @@ export function useConversation(conversationId: string) {
             });
 
             if (next.sender_id && next.sender_id !== user.id) {
+              // A Postgrest builder only sends its request once it is
+              // awaited or .then()ed — without the .then() this read receipt
+              // was never issued at all.
               client
                 .from('messages')
                 .update({ read_at: new Date().toISOString() })
                 .eq('id', next.id)
-                .is('read_at', null);
+                .is('read_at', null)
+                .then(
+                  () => {},
+                  () => {}
+                );
             }
           }
         )

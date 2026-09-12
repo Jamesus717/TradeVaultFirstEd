@@ -19,7 +19,7 @@ export function usePriceData(
     priceHigh: null,
     currency: 'GBP',
     sampleSize: null,
-    source: 'ebay_uk',
+    source: 'tcgplayer',
     fetchedAt: null,
     lowConfidence: false,
     loading: true,
@@ -41,7 +41,9 @@ export function usePriceData(
       setPrice(prev => ({ ...prev, loading: true, error: null }));
       
       try {
-        const cacheKey = cardId; // baseCardId
+        // Keyed by variant too: a reverse holo has its own price, so sharing
+        // one in-flight request per card showed whichever variant asked first.
+        const cacheKey = `${cardId}|${variant === 'Reverse Holo' ? 'reverse' : 'base'}`;
         
         let requestPromise = pendingRequests.get(cacheKey);
         
@@ -92,7 +94,7 @@ export function usePriceData(
             priceHigh: data.priceHigh ?? null,
             currency: 'GBP',
             sampleSize: data.sampleSize ?? null,
-            source: 'ebay_uk',
+            source: data.source ?? 'tcgplayer',
             fetchedAt: data.fetchedAt ?? null,
             lowConfidence: data.lowConfidence ?? false,
             loading: false,
