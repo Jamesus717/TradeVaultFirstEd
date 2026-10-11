@@ -13,7 +13,7 @@
   "dependencies": {
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.103.3",
-    "next": "^16.0.0",
+    "next": "^16.4.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "recharts": "^3.8.1"
