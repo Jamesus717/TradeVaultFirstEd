@@ -45,11 +45,19 @@ export function useCardSearch({ enabled, query, mode, ownedCardIdSet, selectedCa
       const controller = new AbortController();
       cardSearchAbortRef.current = controller;
 
-      try {
-        const response = await fetch(
-          `/api/pokemon/search/cards?name=${encodeURIComponent(needle)}&pageSize=12`,
-          { signal: controller.signal }
+      const params = new URLSearchParams({ name: needle, pageSize: mode === 'collection' ? '36' : '12' });
+      if (mode === 'collection') {
+        // Card ids are `<setId>-<number>`, so the owned ids give the owned sets.
+        const ownedSetIds = new Set(
+          [...ownedCardIdSet].map((id) => id.slice(0, id.lastIndexOf('-'))).filter(Boolean)
         );
+        params.set('setIds', [...ownedSetIds].join(','));
+      }
+
+      try {
+        const response = await fetch(`/api/pokemon/search/cards?${params.toString()}`, {
+          signal: controller.signal,
+        });
 
         if (!response.ok) {
           throw new Error('Card search failed.');

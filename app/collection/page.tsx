@@ -3,17 +3,14 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 import { useCollection } from './useCollection';
 import { useSetOwnedVariants } from './useSetOwnedVariants';
 
 function SetExpandableCard({ 
   set, 
-  userId,
   ownedRows,
 }: { 
   set: ReturnType<typeof useCollection>['ownedSets'][0]; 
-  userId: string;
   ownedRows: ReturnType<typeof useCollection>['ownedRows'];
 }) {
   const [expanded, setExpanded] = useState(false);
@@ -233,7 +230,6 @@ export default function CollectionPage() {
     totalCards,
     grailCards,
     incompleteSets,
-    sparklineData,
   } = useCollection();
 
   const [sortMode, setSortMode] = useState<'value' | 'completion' | 'name' | 'recent'>('value');
@@ -317,39 +313,10 @@ export default function CollectionPage() {
                   across {ownedSets.length} sets · {totalCards} cards
                 </p>
                 <p className="text-[10px] text-stone-500 pt-1">
-                  Prices powered by eBay UK
+                  Market prices from TCGplayer, converted to GBP
                 </p>
               </div>
 
-              <div className="w-full md:w-[400px] h-[120px] flex-shrink-0">
-                {sparklineData.length > 1 ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={sparklineData}>
-                      <defs>
-                        <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#34d399" stopOpacity={0.3} />
-                          <stop offset="95%" stopColor="#34d399" stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <Area 
-                        type="monotone" 
-                        dataKey="value" 
-                        stroke="#34d399" 
-                        strokeWidth={2}
-                        fillOpacity={1} 
-                        fill="url(#colorValue)" 
-                        isAnimationActive={false}
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center border border-dashed border-white/10 rounded-xl">
-                    <p className="text-xs text-stone-500 text-center px-4">
-                      Price history will appear as data accumulates
-                    </p>
-                  </div>
-                )}
-              </div>
             </div>
           </div>
         </section>
@@ -422,7 +389,7 @@ export default function CollectionPage() {
             
             <div className="space-y-3">
               {sortedSets.map(set => (
-                <SetExpandableCard key={set.setId} set={set} userId={user.id} ownedRows={ownedRows} />
+                <SetExpandableCard key={set.setId} set={set} ownedRows={ownedRows} />
               ))}
             </div>
           </section>

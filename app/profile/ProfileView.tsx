@@ -17,13 +17,6 @@ type SetApiResponse = {
   data?: PokemonSet[];
 };
 
-type SetDetailResponse = {
-  data?: {
-    id: string;
-    totalCount?: number;
-  };
-};
-
 type UserCardRow = {
   card_id: string;
   set_id: string | null;

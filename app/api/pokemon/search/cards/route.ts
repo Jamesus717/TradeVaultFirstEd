@@ -78,7 +78,19 @@ export async function GET(request: Request) {
   const coreTokens = tokens.filter((token) => !OPTIONAL_TOKENS.has(token.norm));
   const core = coreTokens.length > 0 ? buildContainsQuery(coreTokens) : '';
 
-  const q = core && core !== primary ? `(${primary}) OR (${core})` : primary;
+  const nameQuery = core && core !== primary ? `(${primary}) OR (${core})` : primary;
+
+  // Optional `setIds` (comma separated) narrows the search to those sets. The
+  // listing modal's "My Collection" mode passes the sets the user owns cards
+  // in, so their cards are not crowded out of the page by everyone else's.
+  const setIds = (url.searchParams.get('setIds') ?? '')
+    .split(',')
+    .map((id) => id.trim())
+    .filter((id) => /^[a-z0-9.]+$/i.test(id))
+    .slice(0, 60);
+  const q = setIds.length > 0
+    ? `(${nameQuery}) AND (${setIds.map((id) => `set.id:${id}`).join(' OR ')})`
+    : nameQuery;
   const search = new URLSearchParams({ q, pageSize, orderBy: '-set.releaseDate' });
 
   const response = await pokemonFetch(`/cards?${search.toString()}`, {

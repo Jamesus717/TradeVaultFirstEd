@@ -128,7 +128,7 @@ export default function ProfileEditorPage() {
 
     try {
       const { error: err } = await supabase.auth.resetPasswordForEmail(user.email, {
-        redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/reset-password` : undefined,
+        redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback?type=recovery` : undefined,
       });
 
       if (err) {

@@ -59,12 +59,20 @@ Create `.env.local` with:
 - `NEXT_PUBLIC_SUPABASE_URL` — your Supabase Project URL (looks like `https://<ref>.supabase.co`)
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` — Supabase anon/publishable key
 - `POKEMON_TCG_API_KEY` — Pokémon TCG API key (server-side)
+- `SUPABASE_SERVICE_ROLE_KEY` — optional locally; lets the price route write the `card_prices` cache
 
 Do not commit secrets.
 
 ### Cloudflare
 
 Set the same variables in your Worker’s dashboard (no backticks/quotes/spaces/newlines in values).
+`SUPABASE_SERVICE_ROLE_KEY` must be a **secret**, never a `NEXT_PUBLIC_` variable:
+
+```bash
+npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+```
+
+Without it prices still show, but are not cached in `card_prices`.
 
 ## Database Setup (Supabase)
 
@@ -83,6 +91,16 @@ If you ever see errors like:
 > Could not find the table 'public.X' in the schema cache
 
 it usually means the migration wasn’t applied to the correct Supabase project yet, or PostgREST needs a schema cache reload.
+
+### How trades are enforced
+
+The browser only does user-level writes: start a conversation, send a message
+or offer, decide an offer sent to you, mark an accepted trade completed, and
+deactivate your own listing. System messages, notifications, offer outcomes
+and cancelling a sold listing's other conversations are written by database
+triggers (`016_server_side_trade_rules.sql`), and RLS plus guard triggers
+reject anything else. Don't add client-side inserts into `notifications` or
+system `messages`; they will be refused.
 
 ## Run Locally
 
@@ -114,7 +132,7 @@ TradeBinder is one of my main portfolio projects alongside other personal builds
 
 ## Notes / Next Improvements
 
+- **The Pokémon TCG API is deprecated and keys stop working on 2027-03-01.** Move to its successor (Scrydex) before then. All card data goes through `lib/pokemonServer.ts`, so that is the one place to change.
 - Add caching configuration for OpenNext (optional performance boost).
-- Add small “Settings” screen for username/display name/avatar.
-- Add moderation/abuse controls for messaging.
-- Expand trade flow (mark sold, completed trades, richer offer history).
+- Add moderation/abuse controls for messaging (report / block).
+- Price history: `card_prices` keeps one row per card, so there is no value-over-time chart yet. A daily snapshot table would enable one.

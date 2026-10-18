@@ -145,22 +145,9 @@ export function useCollection() {
     };
   }, [ownedRows]);
 
-  // Sparkline data for portfolio value chart
-  // Uses fetched_at from card_prices to build
-  // approximate historical snapshots
-  const [sparklineData, setSparklineData] = useState<
-    { date: string; value: number }[]
-  >([]);
-
-  // Fetch prices from Supabase card_prices cache
-  // (reads cached prices only — does NOT call eBay)
-  //
-  // Prices and the sparkline are derived from the same rows, so they share
-  // one pass. Previously they were two effects issuing two near-identical
-  // queries, and the sparkline's re-ran whenever `totalValue` changed —
-  // which it always does once prices land, so it fetched twice on every
-  // load. Its query was also unchunked, so a large collection built an
-  // `.in()` list long enough to risk the URL length limit.
+  // Fetch prices from the card_prices cache (reads only; the price route
+  // fills it). Chunked so a large collection's `.in()` list stays well under
+  // the URL length limit.
   useEffect(() => {
     let active = true;
 
@@ -175,23 +162,17 @@ export function useCollection() {
 
       const chunkSize = 100;
       const prices: Record<string, number> = {};
-      const byDay = new Map<string, number>();
 
       for (let i = 0; i < cardIds.length; i += chunkSize) {
         const chunk = cardIds.slice(i, i + chunkSize);
         const { data } = await supabase
           .from('card_prices')
-          .select('card_id, price_mid, fetched_at')
+          .select('card_id, price_mid')
           .in('card_id', chunk);
 
         for (const row of data ?? []) {
           if (row.card_id && row.price_mid) {
             prices[row.card_id] = Number(row.price_mid);
-          }
-
-          if (row.fetched_at) {
-            const day = row.fetched_at.split('T')[0];
-            byDay.set(day, (byDay.get(day) ?? 0) + Number(row.price_mid ?? 0));
           }
         }
       }
@@ -199,43 +180,6 @@ export function useCollection() {
       if (!active) return;
 
       setCardPrices(prices);
-
-      if (byDay.size === 0) {
-        // No historical data yet — generate flat mock line at the value we
-        // just computed (the old code read `totalValue`, which is the same
-        // sum, one render later).
-        const flatValue = ownedRows.reduce(
-          (sum, row) => sum + (prices[row.card_id] ?? 0),
-          0
-        );
-        const today = new Date();
-        setSparklineData(
-          Array.from({ length: 7 }, (_, i) => {
-            const d = new Date(today);
-            d.setDate(d.getDate() - (6 - i));
-            return {
-              date: d.toLocaleDateString('en-GB', {
-                day: 'numeric',
-                month: 'short'
-              }),
-              value: flatValue,
-            };
-          })
-        );
-        return;
-      }
-
-      setSparklineData(
-        [...byDay.entries()]
-          .sort(([a], [b]) => a.localeCompare(b))
-          .map(([dateStr, value]) => ({
-            date: new Date(dateStr).toLocaleDateString('en-GB', {
-              day: 'numeric',
-              month: 'short',
-            }),
-            value: Math.round(value * 100) / 100,
-          }))
-      );
     }
     loadPrices();
 
@@ -330,7 +274,6 @@ export function useCollection() {
     totalCards,
     grailCards,
     incompleteSets,
-    sparklineData,
     setMeta,
     cardPrices,
   };

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../auth';
 import type { CardVariant, PokemonSet, SetApiResponse, SortMode, UserCardRow } from './types';
-import { buildSetList, compareCardNumbers, groupSetsBySeries, LEGACY_SET_ID } from './utils';
+import { buildSetList, groupSetsBySeries, LEGACY_SET_ID } from './utils';
 import { NO_REVERSE_HOLO_SETS, normalizeVariantForSet, variantToSlug } from '../../lib/constants/cardVariants';
 import { fetchSetVariants, SetCardsRequestError } from '../../lib/setCardsCache';
 
