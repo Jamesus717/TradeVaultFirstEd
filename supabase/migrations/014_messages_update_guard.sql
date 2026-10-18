@@ -1,5 +1,5 @@
--- Run this in Supabase SQL Editor. (Already applied to the live project on
--- 2026-09-12 — this file exists so the repo and the database don't drift.)
+-- Run this in Supabase SQL Editor. (The note below said it was applied on
+-- 2026-09-12, but it was not live on 2026-10-18; 016 applies it.)
 --
 -- The "Participants can update messages in conversation (read receipts)"
 -- policy from 005 decides WHICH rows a participant may update, but RLS cannot

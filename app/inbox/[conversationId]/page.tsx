@@ -26,7 +26,6 @@ export default function ConversationPage() {
     setConversation,
     messages,
     isParticipant,
-    otherUserId,
     otherName,
     scrollRef,
   } = useConversation(conversationId);
@@ -55,7 +54,6 @@ export default function ConversationPage() {
     user,
     conversation,
     setConversation,
-    otherUserId,
   });
 
   const activeListing = conversation?.trade_listings?.[0] ?? null;

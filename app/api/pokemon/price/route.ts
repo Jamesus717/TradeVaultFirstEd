@@ -26,6 +26,20 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
 const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
 
+// card_prices is read-only to the public key (migration 016), so the cache is
+// written with the service role key. It is a Worker secret, read per request
+// because Cloudflare only exposes secrets once a request is being handled.
+// Without it prices are still served; they just are not stored.
+let cacheWriter: typeof supabase = null;
+function getCacheWriter() {
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !serviceRoleKey) return null;
+  cacheWriter ??= createClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  return cacheWriter;
+}
+
 // TCGplayer refreshes daily, so a day is the most a price should be reused.
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const FX_TTL_MS = 12 * 60 * 60 * 1000;
@@ -306,8 +320,9 @@ export async function GET(request: Request) {
     };
 
     // STEP C — Store the base print so the collection page can total it.
-    if (supabase && isBaseVariant(variant)) {
-      const { error: upsertError } = await supabase.from('card_prices').upsert(
+    const writer = getCacheWriter();
+    if (writer && isBaseVariant(variant)) {
+      const { error: upsertError } = await writer.from('card_prices').upsert(
         {
           card_id: cardId,
           card_name: cardName,

@@ -10,7 +10,6 @@ type UseConversationActionsParams = {
   user: User | null;
   conversation: Conversation | null;
   setConversation: React.Dispatch<React.SetStateAction<Conversation | null>>;
-  otherUserId: string | null;
 };
 
 export function useConversationActions({
@@ -18,7 +17,6 @@ export function useConversationActions({
   user,
   conversation,
   setConversation,
-  otherUserId,
 }: UseConversationActionsParams) {
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
@@ -40,29 +38,9 @@ export function useConversationActions({
   const [markingSold, setMarkingSold] = useState(false);
   const [listingSold, setListingSold] = useState(false);
 
-  async function notifyOther(type: string, message: string) {
-    if (!user || !otherUserId || !supabase) {
-      return;
-    }
-    await supabase.from('notifications').insert({
-      user_id: otherUserId,
-      type,
-      conversation_id: conversationId,
-      message,
-    });
-  }
-
-  async function insertSystemMessage(content: string) {
-    if (!supabase) {
-      return;
-    }
-    await supabase.from('messages').insert({
-      conversation_id: conversationId,
-      sender_id: null,
-      content,
-      message_type: 'system',
-    });
-  }
+  // System messages, notifications and the conversation status that follows
+  // an offer decision are written by database triggers (migration 016), so
+  // each action here is a single write.
 
   async function sendTextMessage() {
     if (!user || !supabase || !conversation) {
@@ -93,7 +71,6 @@ export function useConversationActions({
 
     if (!insertError) {
       setDraft('');
-      await notifyOther('new_message', 'New message');
     }
 
     setSending(false);
@@ -126,7 +103,6 @@ export function useConversationActions({
     if (!offerError) {
       setOfferAmount('');
       setOfferOpen(false);
-      await notifyOther('new_offer', 'New offer');
     }
 
     setOfferSending(false);
@@ -156,24 +132,12 @@ export function useConversationActions({
     setOfferDecisionPending({ messageId: message.id, decision });
 
     try {
-      await supabase.from('messages').update({ offer_status: decision }).eq('id', message.id);
+      const { error: decisionError } = await supabase
+        .from('messages')
+        .update({ offer_status: decision })
+        .eq('id', message.id);
 
-      if (decision === 'accepted' || decision === 'declined') {
-        await supabase.from('conversations').update({ status: nextConversationStatus }).eq('id', conversationId);
-      }
-
-      if (decision === 'accepted') {
-        await insertSystemMessage('Offer accepted');
-        await notifyOther('offer_accepted', 'Offer accepted');
-      } else if (decision === 'declined') {
-        await insertSystemMessage('Offer declined');
-        await notifyOther('offer_declined', 'Offer declined');
-      } else {
-        await insertSystemMessage('Offer countered');
-        await notifyOther('offer_countered', 'Offer countered');
-      }
-
-      if (decision === 'accepted' || decision === 'declined') {
+      if (!decisionError && (decision === 'accepted' || decision === 'declined')) {
         setConversation((current) => (current ? { ...current, status: nextConversationStatus } : current));
       }
     } finally {
@@ -204,10 +168,14 @@ export function useConversationActions({
     setCompleting(true);
 
     try {
-      await supabase.from('conversations').update({ status: 'completed' }).eq('id', conversationId);
-      await insertSystemMessage('Trade marked as completed');
-      await notifyOther('trade_completed', 'Trade completed');
-      setConversation((current) => (current ? { ...current, status: 'completed' } : current));
+      const { error: completeError } = await supabase
+        .from('conversations')
+        .update({ status: 'completed' })
+        .eq('id', conversationId);
+
+      if (!completeError) {
+        setConversation((current) => (current ? { ...current, status: 'completed' } : current));
+      }
     } finally {
       setCompleting(false);
     }
@@ -254,44 +222,9 @@ export function useConversationActions({
       return;
     }
 
+    // Deactivating the listing cancels its other open conversations and
+    // notifies those buyers in the database (on_listing_deactivated).
     setListingSold(true);
-
-    const { data: affectedConversations } = await supabase
-      .from('conversations')
-      .select('id,buyer_id,seller_id')
-      .eq('listing_id', listingId)
-      .eq('status', 'active');
-
-    const affected = (affectedConversations ?? []) as Array<{ id: string; buyer_id: string; seller_id: string }>;
-
-    if (affected.length > 0) {
-      await supabase.from('conversations').update({ status: 'cancelled' }).in(
-        'id',
-        affected.map((c) => c.id)
-      );
-
-      await supabase.from('messages').insert(
-        affected.map((c) => ({
-          conversation_id: c.id,
-          sender_id: null,
-          content: 'Listing marked as sold',
-          message_type: 'system',
-        }))
-      );
-
-      const notifyRows = affected
-        .filter((c) => c.buyer_id !== user.id)
-        .map((c) => ({
-          user_id: c.buyer_id,
-          type: 'trade_completed',
-          conversation_id: c.id,
-          message: 'Listing marked as sold',
-        }));
-
-      if (notifyRows.length > 0) {
-        await supabase.from('notifications').insert(notifyRows);
-      }
-    }
   }
 
   return {

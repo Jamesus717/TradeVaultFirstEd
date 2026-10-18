@@ -267,21 +267,9 @@ export function useTradeListings() {
       return false;
     }
 
+    // The "Conversation started" message and the seller's notification are
+    // written by the on_conversation_created trigger.
     const conversationId = created.id as string;
-
-    await supabase.from('messages').insert({
-      conversation_id: conversationId,
-      sender_id: null,
-      content: 'Conversation started',
-      message_type: 'system',
-    });
-
-    await supabase.from('notifications').insert({
-      user_id: listing.user_id,
-      type: 'new_message',
-      conversation_id: conversationId,
-      message: `New conversation about ${listing.card_name}`,
-    });
 
     setInterestedIds((current) => {
       const next = new Set(current);
