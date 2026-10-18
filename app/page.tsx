@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { BinderGrid } from './binder/BinderGrid';
+import { BinderGridSkeleton } from './binder/BinderGridSkeleton';
 import { MissingCards } from './binder/MissingCards';
 import { SetPicker } from './binder/SetPicker';
 import { useBinder } from './binder/useBinder';
@@ -98,9 +99,7 @@ export default function Page() {
         </section>
 
         {isLoading ? (
-          <section className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-10 text-center text-stone-300">
-            Loading set data...
-          </section>
+          <BinderGridSkeleton />
         ) : error ? (
           <section className="rounded-[2rem] border border-rose-400/20 bg-rose-500/10 p-10 text-center text-rose-100">
             {error}
