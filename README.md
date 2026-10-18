@@ -70,11 +70,13 @@ Set the same variables in your Worker’s dashboard (no backticks/quotes/spaces/
 
 Apply migrations in order:
 
+- `supabase/migrations/000_user_cards.sql`
 - `supabase/migrations/001_public_profiles.sql`
 - `supabase/migrations/002_public_profiles_backfill.sql`
 - `supabase/migrations/003_custom_binders.sql`
 - `supabase/migrations/004_trade_board.sql`
 - `supabase/migrations/005_messaging_offers.sql`
+- …and every later file in `supabase/migrations/` in filename order
 
 If you ever see errors like:
 
