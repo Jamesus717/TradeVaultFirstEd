@@ -252,7 +252,14 @@ export default function CollectionPage() {
     return (
       <main className="min-h-screen bg-transparent text-stone-100 p-8">
         <div className="max-w-7xl mx-auto rounded-[2rem] border border-rose-500/20 bg-rose-500/10 p-8 text-rose-200">
-          Error: {error}
+          <p>Couldn&apos;t load your collection: {error}</p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="mt-4 rounded-xl bg-primary-400 px-4 py-2 text-sm font-semibold text-primary-950 hover:bg-primary-300"
+          >
+            Try again
+          </button>
         </div>
       </main>
     );
@@ -349,11 +356,21 @@ export default function CollectionPage() {
               {grailCards.map((grail, i) => (
                 <div key={`${grail.cardId}-${i}`} className="snap-start shrink-0 w-[140px] space-y-3">
                   <div className="relative aspect-[5/7] rounded-[1rem] overflow-hidden border border-white/10 bg-stone-900 shadow-lg">
-                    {/* Placeholder image logic - would hook up to real images later */}
                     <div className="absolute inset-0 flex flex-col items-center justify-center p-3 text-center bg-gradient-to-br from-stone-800 to-stone-950">
                       <span className="text-[10px] text-stone-400 uppercase tracking-widest">{grail.setId}</span>
-                      <span className="text-xs font-bold text-stone-300 mt-1">{grail.cardId.split('-')[1]}</span>
+                      <span className="text-xs font-bold text-stone-300 mt-1">{grail.cardId.slice(grail.cardId.lastIndexOf('-') + 1)}</span>
                     </div>
+                    {/* Card art sits over the text fallback; hides itself if the image 404s. */}
+                    <Image
+                      src={`https://images.pokemontcg.io/${grail.setId}/${grail.cardId.slice(grail.cardId.lastIndexOf('-') + 1)}.png`}
+                      alt={grail.cardId}
+                      fill
+                      sizes="140px"
+                      className="object-cover"
+                      onError={(event) => {
+                        event.currentTarget.style.display = 'none';
+                      }}
+                    />
                   </div>
                   <div className="px-1">
                     <p className="text-sm font-semibold text-primary-400">£{grail.estimatedValue.toFixed(2)}</p>
