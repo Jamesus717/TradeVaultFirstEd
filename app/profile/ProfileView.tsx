@@ -1,5 +1,6 @@
 'use client';
 
+import { fetchSets } from '../../lib/fetchSets';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
@@ -113,7 +114,7 @@ export default function ProfileView({ userId }: Props) {
         setError('');
 
         const [setsResponse, cardsResponse] = await Promise.all([
-          fetch('/api/pokemon/sets'),
+          fetchSets(),
           supabaseDisabled || !supabase
             ? Promise.resolve(null)
             : supabase
