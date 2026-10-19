@@ -130,7 +130,22 @@ export default function InboxPage() {
       setLoading(true);
       setError('');
 
-      await supabase.from('notifications').update({ read: true }).eq('user_id', user.id).eq('read', false);
+      // Clearing the notification badge is housekeeping — the list does not
+      // read the result, so it should not sit in front of the query that
+      // actually fills the page.
+      //
+      // The `.then()` is load-bearing: a Postgrest builder only issues its
+      // request when it is awaited or thenned, so dropping it on the floor
+      // would silently stop marking notifications read.
+      void supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('user_id', user.id)
+        .eq('read', false)
+        .then(
+          () => {},
+          () => {}
+        );
 
       const { data: convData, error: convError } = await supabase
         .from('conversations')
@@ -260,9 +275,13 @@ export default function InboxPage() {
         ) : loading ? (
           <section className="mt-6 space-y-3">
             {Array.from({ length: 6 }).map((_, index) => (
+              // 122px is the real row's height, not a guess: p-5 top and
+              // bottom (40) + the h-20 thumbnail that sets the row height (80)
+              // + the 1px border on each edge. At the old 92px every row was
+              // 30px short, so the list shifted ~180px upward as it loaded.
               <div
                 key={`s-${index}`}
-                className="h-[92px] animate-pulse rounded-[1.5rem] border border-white/10 bg-white/[0.04]"
+                className="h-[122px] animate-pulse rounded-[1.5rem] border border-white/10 bg-white/[0.04]"
               />
             ))}
           </section>
@@ -303,7 +322,7 @@ export default function InboxPage() {
                 <Link
                   key={conversation.id}
                   href={`/inbox/${conversation.id}`}
-                  className="flex items-center gap-4 rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5 transition-all hover:bg-white/[0.05]"
+                  className="flex items-center gap-4 rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5 transition-colors hover:bg-white/[0.05]"
                 >
                   <div className="h-20 w-14 shrink-0 overflow-hidden rounded-xl bg-stone-900 ring-1 ring-white/5">
                     {image ? (

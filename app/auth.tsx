@@ -147,36 +147,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ) {
       if (!supabase) return 'Supabase not configured';
 
+      const desired = username.toLowerCase().trim();
+
+      // Check first: once auth.signUp succeeds the account exists, so a taken
+      // name has to be caught before it.
+      const { data: existing } = await supabase
+        .from('public_profiles')
+        .select('user_id')
+        .eq('username', desired)
+        .maybeSingle();
+      if (existing) return 'USERNAME_TAKEN';
+
       const emailRedirectTo = typeof window !== 'undefined'
         ? `${window.location.origin}/auth/callback`
         : undefined;
 
+      // The username travels as user metadata and the new-user trigger
+      // (migration 017) creates the profile with it. Updating the profile from
+      // here did not work: with email confirmation on there is no session yet,
+      // so RLS silently matched zero rows and everyone kept `user_xxxxxxxx`.
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: emailRedirectTo ? { emailRedirectTo } : undefined,
+        options: {
+          ...(emailRedirectTo ? { emailRedirectTo } : {}),
+          data: { username: desired, display_name: username.trim() },
+        },
       });
 
       if (error) return error.message;
       if (!data.user) return 'Sign up failed';
-
-      // Create profile with chosen username
-      const { error: profileError } = await supabase
-        .from('public_profiles')
-        .update({
-          username: username.toLowerCase().trim(),
-          display_name: username,
-          profile_slug: username.toLowerCase().trim(),
-        })
-        .eq('user_id', data.user.id);
-
-      // If username already taken (23505 = unique violation)
-      if (profileError?.code === '23505') {
-        // Sign up succeeded but username taken —
-        // user still needs to pick another username
-        // Return specific message so UI can handle it
-        return 'USERNAME_TAKEN';
-      }
 
       return null;
     }

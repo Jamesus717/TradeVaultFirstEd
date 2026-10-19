@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../auth';
 import type { UserCardRow } from '../binder/types';
-import { buildVariants } from '../binder/utils';
+import { fetchSetVariants } from '../../lib/setCardsCache';
 
 export type OwnedSetSummary = {
   setId: string;
@@ -110,8 +110,13 @@ export function useCollection() {
     loadSets();
   }, []);
 
-  // Fetch true variant totals for sets we own cards in
+  // Fetch true variant totals for sets we own cards in.
+  // Goes through the shared set-cards cache, so the payload each expandable
+  // set card needs is fetched and parsed once for the whole page rather than
+  // once here and again per card.
   useEffect(() => {
+    let active = true;
+
     async function loadVariantTotals() {
       const setIds = [...new Set(ownedRows.map((r) => r.set_id).filter((id): id is string => Boolean(id)))];
       if (setIds.length === 0) return;
@@ -121,11 +126,7 @@ export function useCollection() {
       await Promise.all(
         setIds.map(async (setId) => {
           try {
-            const res = await fetch(`/api/pokemon/cards?setId=${encodeURIComponent(setId)}&pageSize=250`);
-            if (!res.ok) return;
-            const json = await res.json();
-            const cards = json.data ?? [];
-            const variants = buildVariants(cards);
+            const variants = await fetchSetVariants(setId);
             totals[setId] = variants.length;
           } catch {
             // Ignore failure for individual sets
@@ -133,14 +134,23 @@ export function useCollection() {
         })
       );
 
+      if (!active) return;
+
       setSetVariantTotals(prev => ({ ...prev, ...totals }));
     }
     loadVariantTotals();
+
+    return () => {
+      active = false;
+    };
   }, [ownedRows]);
 
-  // Fetch prices from Supabase card_prices cache
-  // (reads cached prices only — does NOT call eBay)
+  // Fetch prices from the card_prices cache (reads only; the price route
+  // fills it). Chunked so a large collection's `.in()` list stays well under
+  // the URL length limit.
   useEffect(() => {
+    let active = true;
+
     async function loadPrices() {
       if (!supabase || ownedRows.length === 0) return;
 
@@ -167,9 +177,15 @@ export function useCollection() {
         }
       }
 
+      if (!active) return;
+
       setCardPrices(prices);
     }
     loadPrices();
+
+    return () => {
+      active = false;
+    };
   }, [ownedRows]);
 
   // Derive set summaries
@@ -248,69 +264,6 @@ export function useCollection() {
     [ownedSets]
   );
 
-  // Sparkline data for portfolio value chart
-  // Uses fetched_at from card_prices to build
-  // approximate historical snapshots
-  const [sparklineData, setSparklineData] = useState<
-    { date: string; value: number }[]
-  >([]);
-
-  useEffect(() => {
-    async function loadSparkline() {
-      if (!supabase || ownedRows.length === 0) return;
-
-      const cardIds = [...new Set(
-        ownedRows.map((r) => r.card_id).filter(Boolean)
-      )];
-      if (cardIds.length === 0) return;
-
-      const { data } = await supabase
-        .from('card_prices')
-        .select('card_id, price_mid, fetched_at')
-        .in('card_id', cardIds)
-        .order('fetched_at', { ascending: true });
-
-      if (!data || data.length === 0) {
-        // No historical data yet — generate flat mock line
-        const today = new Date();
-        const points = Array.from({ length: 7 }, (_, i) => {
-          const d = new Date(today);
-          d.setDate(d.getDate() - (6 - i));
-          return {
-            date: d.toLocaleDateString('en-GB', {
-              day: 'numeric',
-              month: 'short'
-            }),
-            value: totalValue,
-          };
-        });
-        setSparklineData(points);
-        return;
-      }
-
-      // Group by day and sum prices
-      const byDay = new Map<string, number>();
-      for (const row of data) {
-        const day = row.fetched_at.split('T')[0];
-        const current = byDay.get(day) ?? 0;
-        byDay.set(day, current + Number(row.price_mid ?? 0));
-      }
-
-      const points = [...byDay.entries()]
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([dateStr, value]) => ({
-          date: new Date(dateStr).toLocaleDateString('en-GB', {
-            day: 'numeric',
-            month: 'short',
-          }),
-          value: Math.round(value * 100) / 100,
-        }));
-
-      setSparklineData(points);
-    }
-    loadSparkline();
-  }, [ownedRows, totalValue]);
-
   return {
     user,
     loading,
@@ -321,7 +274,6 @@ export function useCollection() {
     totalCards,
     grailCards,
     incompleteSets,
-    sparklineData,
     setMeta,
     cardPrices,
   };

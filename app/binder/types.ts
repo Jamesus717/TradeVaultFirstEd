@@ -61,7 +61,7 @@ export type CardPrice = {
   priceHigh: number | null;
   currency: 'GBP';
   sampleSize: number | null;
-  source: 'ebay_uk' | 'mock';
+  source: 'tcgplayer' | 'cardmarket' | 'mock';
   fetchedAt: string | null;
   lowConfidence: boolean;
   loading: boolean;
