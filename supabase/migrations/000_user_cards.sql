@@ -25,7 +25,8 @@ create index if not exists user_cards_user_id_set_id_idx
 
 alter table public.user_cards enable row level security;
 
--- Owner-only access, written with (select auth.uid()) per 007_rls_performance.
+-- Owner access, plus public read of owned rows (public profiles show collections).
+-- Matches the live project's policies. Written with (select auth.uid()) per 007_rls_performance.
 drop policy if exists "User cards are readable by owner" on public.user_cards;
 create policy "User cards are readable by owner"
 on public.user_cards
@@ -50,3 +51,9 @@ create policy "User cards are deletable by owner"
 on public.user_cards
 for delete
 using ((select auth.uid()) = user_id);
+
+drop policy if exists "Owned cards are publicly viewable" on public.user_cards;
+create policy "Owned cards are publicly viewable"
+on public.user_cards
+for select
+using (owned = true);
