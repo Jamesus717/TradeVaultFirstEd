@@ -40,6 +40,7 @@ export async function pokemonFetch(path: string, init?: RequestInit) {
 
     try {
       const response = await fetch(`${POKEMON_API_BASE_URL}${path}`, {
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
         ...init,
         headers,
       });
