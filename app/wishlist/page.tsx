@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { useCallback, useEffect, useState } from 'react';
+import { EmptyState } from '../components/EmptyState';
 import { useAuth } from '../auth';
 import { supabase } from '../../lib/supabaseClient';
 import type { CardSearchResult } from '../trade/types';
@@ -165,9 +166,9 @@ export default function WishlistPage() {
   return (
     <main className="min-h-screen bg-transparent text-stone-100">
       <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] shadow-2xl shadow-black/20 backdrop-blur">
-          <div className="bg-[radial-gradient(circle_at_top_right,var(--hero-gradient-color),transparent_30%),linear-gradient(135deg,rgba(28,25,23,0.96),rgba(10,10,10,0.96))] p-6 sm:p-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-primary-300/80">Wishlist</p>
+        <section className="hero-panel">
+          <div className="p-6 sm:p-8">
+            <p className="eyebrow">Wishlist</p>
             <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
               Cards you&apos;re hunting
             </h1>
@@ -244,18 +245,17 @@ export default function WishlistPage() {
               {loading ? (
                 <p className="text-sm text-stone-400">Loading your list…</p>
               ) : sorted.length === 0 ? (
-                <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-10 text-center">
-                  <div className="text-4xl">⭐</div>
-                  <p className="mt-3 text-sm text-stone-300">
-                    Nothing here yet. Search for a card above to start your list.
-                  </p>
-                </div>
+                <EmptyState
+                  compact
+                  title="Your wishlist is empty"
+                  body="Search for a card above to add it. Traders can see your list, and the Trade Board flags listings that match it."
+                />
               ) : (
                 <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {sorted.map((row) => (
                     <li
                       key={row.id}
-                      className="flex gap-4 rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-4"
+                      className="panel flex gap-4 p-4"
                     >
                       <div className="w-24 shrink-0">
                         {row.image_url ? (

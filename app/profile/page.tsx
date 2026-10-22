@@ -186,10 +186,10 @@ export default function ProfileEditorPage() {
   return (
     <main className="min-h-screen bg-transparent text-stone-100">
       <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
-        <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] shadow-2xl shadow-black/20 backdrop-blur">
-          <div className="bg-[radial-gradient(circle_at_top_right,var(--hero-gradient-color),transparent_30%),linear-gradient(135deg,rgba(28,25,23,0.96),rgba(10,10,10,0.96))] p-6 sm:p-8">
+        <section className="hero-panel">
+          <div className="p-6 sm:p-8">
             <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-primary-300/80">
+              <p className="eyebrow">
                 My Account
               </p>
               <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">Profile</h1>

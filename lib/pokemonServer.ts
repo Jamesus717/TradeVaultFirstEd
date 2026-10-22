@@ -11,7 +11,9 @@ const POKEMON_API_BASE_URL = 'https://api.pokemontcg.io/v2';
 const MAX_ATTEMPTS = 4;
 const RETRY_DELAYS_MS = [150, 300, 600];
 // A hung upstream must not hang the page; a timeout counts as a network error and is retried.
-const REQUEST_TIMEOUT_MS = 8000;
+// The timer also covers reading the body, and a 250-card set page can take
+// ~10s to stream, so this is generous (8s cut big sets off on 2026-10-22).
+const REQUEST_TIMEOUT_MS = 25000;
 
 function getPokemonApiKey() {
   return process.env.POKEMON_TCG_API_KEY ?? process.env.NEXT_PUBLIC_POKEMON_TCG_API_KEY ?? '';

@@ -1,5 +1,6 @@
 'use client';
 
+import { fetchWithRetry } from './fetchSets';
 import type { CardApiResponse, CardVariant } from '../app/binder/types';
 import { buildVariants } from '../app/binder/utils';
 
@@ -70,7 +71,7 @@ export function fetchSetVariants(setId: string): Promise<CardVariant[]> {
     return existing;
   }
 
-  const request = fetch(
+  const request = fetchWithRetry(
     `/api/pokemon/cards?setId=${encodeURIComponent(setId)}&pageSize=250`
   )
     .then(async (response) => {
