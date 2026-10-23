@@ -243,8 +243,8 @@ export default function InboxPage() {
   }, [supabaseDisabled, user]);
 
   const hero = (
-    <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] shadow-2xl shadow-black/20 backdrop-blur">
-      <div className="bg-[radial-gradient(circle_at_top_right,var(--hero-gradient-color),transparent_30%),linear-gradient(135deg,rgba(28,25,23,0.96),rgba(10,10,10,0.96))] p-6 sm:p-8">
+    <section className="hero-panel">
+      <div className="p-6 sm:p-8">
         <h1 className="text-4xl font-semibold text-white">Inbox</h1>
         <p className="mt-2 text-sm text-stone-400">Your trade conversations and offers.</p>
       </div>

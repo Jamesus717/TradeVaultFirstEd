@@ -2,6 +2,7 @@
 
 import { memo, useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
+import { EmptyState } from '../components/EmptyState';
 import type { CardVariant } from './types';
 import { usePriceData } from './hooks/usePriceData';
 
@@ -18,14 +19,16 @@ type Props = {
 export function BinderGrid({ cards, owned, savingId, bulkSaving, canEdit, onToggleOwned, onCardClick }: Props) {
   if (cards.length === 0) {
     return (
-      <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-10 text-center text-stone-300">
-        No cards match that search.
-      </div>
+      <EmptyState
+        compact
+        title="No cards match"
+        body="Try a different name, or switch the filter back to All Cards."
+      />
     );
   }
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+    <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
       {cards.map((card) => (
         <BinderCard
           key={card.id}
@@ -73,66 +76,62 @@ const BinderCard = memo(function BinderCard({
   onCardClick,
 }: BinderCardProps) {
   return (
-    <article
-      onClick={() => onCardClick(card)}
-      // Explicit property list rather than transition-all. These three are the
-      // only things that change between the owned and unowned states, so the
-      // animation is identical -- but a set can be ~500 cards, and transition-all
-      // makes every one of them diff every animatable property on each style
-      // recalculation.
-      className={`group cursor-pointer overflow-hidden rounded-[1.5rem] border transition-[background-color,border-color,box-shadow] duration-200 ${
-        isOwned
-          ? 'border-primary-400/40 bg-primary-500/10 shadow-lg shadow-primary-950/30'
-          : 'border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.05]'
-      }`}
-    >
-      <div className="p-3">
-        <div className="overflow-hidden rounded-[1rem] bg-stone-950/80 ring-1 ring-white/5">
-          {card.image ? (
-            <Image
-              src={card.image}
-              alt={`${card.name} ${card.variant}`}
-              width={245}
-              height={342}
-              sizes="(min-width: 1536px) 16vw, (min-width: 1280px) 18vw, (min-width: 1024px) 22vw, (min-width: 640px) 30vw, 46vw"
-              className="h-auto w-full object-cover transition-transform duration-200 group-hover:scale-[1.02]"
-            />
-          ) : (
-            <div className="flex aspect-[5/7] items-center justify-center text-sm text-stone-500">
-              No image
-            </div>
-          )}
-        </div>
-
-        <div className="mt-3 space-y-1">
-          <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-stone-400">
-            #{card.number}
-          </p>
-          <div className="flex items-start justify-between gap-1">
-            <h2 className="line-clamp-2 text-sm font-semibold text-white leading-snug">
-              {card.name}
-            </h2>
-            <CardPriceBadge card={card} isOwned={isOwned} />
+    <article onClick={() => onCardClick(card)} className="group cursor-pointer">
+      <div className={`tcg-card ${isOwned ? 'is-owned' : 'is-missing'}`}>
+        {card.image ? (
+          <Image
+            src={card.image}
+            alt={`${card.name} ${card.variant}`}
+            width={245}
+            height={342}
+            sizes="(min-width: 1536px) 16vw, (min-width: 1280px) 18vw, (min-width: 1024px) 22vw, (min-width: 640px) 30vw, 46vw"
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center text-sm text-stone-500">
+            No image
           </div>
-          <p className="text-xs text-stone-300">{card.variant}</p>
-        </div>
-
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleOwned(card);
-          }}
-          disabled={!canEdit || isSaving || bulkSaving}
-          className={`mt-3 w-full rounded-[0.9rem] px-3 py-2 text-xs font-medium transition-colors ${
-            isOwned
-              ? 'bg-primary-400 text-primary-950 hover:bg-primary-300'
-              : 'bg-stone-800 text-stone-100 hover:bg-stone-700'
-          } ${!canEdit || isSaving || bulkSaving ? 'cursor-not-allowed opacity-60' : ''}`}
-        >
-          {isSaving ? 'Saving...' : isOwned ? 'Owned' : 'Mark as Owned'}
-        </button>
+        )}
+        {card.variant !== 'Normal' && card.variant !== 'Unlimited' ? (
+          <span className="absolute left-2 top-2 rounded-full bg-black/70 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-stone-100 backdrop-blur">
+            {card.variant}
+          </span>
+        ) : null}
+        {isOwned ? (
+          <span
+            aria-label="Owned"
+            className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary-400 text-xs font-bold text-primary-950 shadow-lg"
+          >
+            ✓
+          </span>
+        ) : null}
       </div>
+
+      <div className="mt-2.5 space-y-0.5 px-0.5">
+        <div className="flex items-start justify-between gap-1">
+          <h2 className="line-clamp-1 text-sm font-semibold leading-snug text-white">
+            {card.name}
+          </h2>
+          <CardPriceBadge card={card} isOwned={isOwned} />
+        </div>
+        <p className="text-xs text-stone-400">#{card.number}</p>
+      </div>
+
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggleOwned(card);
+        }}
+        disabled={!canEdit || isSaving || bulkSaving}
+        className={`mt-2 min-h-11 w-full rounded-xl px-3 text-xs font-semibold transition-colors ${
+          isOwned
+            ? 'bg-primary-400/15 text-primary-200 ring-1 ring-primary-300/30 hover:bg-primary-400/25'
+            : 'bg-white/[0.05] text-stone-200 ring-1 ring-white/10 hover:bg-white/[0.1]'
+        } ${!canEdit || isSaving || bulkSaving ? 'cursor-not-allowed opacity-60' : ''}`}
+      >
+        {isSaving ? 'Saving...' : isOwned ? 'In binder ✓' : '+ Add to binder'}
+      </button>
     </article>
   );
 });

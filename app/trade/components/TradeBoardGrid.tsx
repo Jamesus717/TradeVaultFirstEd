@@ -1,12 +1,15 @@
 'use client';
 
 import type { TradeListing } from '../types';
-import { classNames } from '../utils';
+import { EmptyState } from '../../components/EmptyState';
 import { TradeListingCard } from './TradeListingCard';
 
 type Props = {
   loading: boolean;
   listings: TradeListing[];
+  wishlistIds: Set<string>;
+  filtersActive: boolean;
+  onClearFilters: () => void;
   nowMs: number | null;
   userId: string | null;
   hasUser: boolean;
@@ -25,6 +28,9 @@ type Props = {
 export function TradeBoardGrid({
   loading,
   listings,
+  wishlistIds,
+  filtersActive,
+  onClearFilters,
   nowMs,
   userId,
   hasUser,
@@ -46,7 +52,7 @@ export function TradeBoardGrid({
           {Array.from({ length: 8 }).map((_, index) => (
             <div
               key={`skeleton-${index}`}
-              className="animate-pulse overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/[0.04]"
+              className="panel animate-pulse overflow-hidden"
             >
               <div className="aspect-[3/4] bg-white/[0.06]" />
               <div className="space-y-3 p-4">
@@ -59,30 +65,30 @@ export function TradeBoardGrid({
           ))}
         </div>
       ) : listings.length === 0 ? (
-        <div className="mx-auto flex min-h-[40vh] max-w-2xl flex-col items-center justify-center gap-4 rounded-[2rem] border border-white/10 bg-white/[0.03] p-10 text-center backdrop-blur">
-          <div className="text-5xl">🃏</div>
-          <h2 className="text-2xl font-semibold text-white">No listings found</h2>
-          <p className="text-sm text-stone-400">Be the first to list a card.</p>
-          <button
-            type="button"
-            onClick={onOpenModal}
-            disabled={!hasUser}
-            className={classNames(
-              'mt-2 rounded-2xl px-6 py-3 text-sm font-semibold transition-colors',
+        filtersActive ? (
+          <EmptyState
+            title="Nothing matches those filters"
+            body="Try a wider postcode, another set, or clear the filters to see every listing."
+            action={{ label: 'Clear filters', onClick: onClearFilters }}
+          />
+        ) : (
+          <EmptyState
+            title="The board is empty"
+            body={
               hasUser
-                ? 'bg-primary-400 text-primary-950 hover:bg-primary-300'
-                : 'cursor-not-allowed border border-white/10 bg-white/[0.03] text-stone-400'
-            )}
-          >
-            List a Card
-          </button>
-        </div>
+                ? 'List a spare card for trade or sale and it shows up here for collectors near you.'
+                : 'Sign in to list a spare card for trade or sale.'
+            }
+            action={{ label: 'List a card', onClick: onOpenModal, disabled: !hasUser }}
+          />
+        )
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {listings.map((listing) => (
             <TradeListingCard
               key={listing.id}
               listing={listing}
+              onWishlist={wishlistIds.has(listing.card_id)}
               nowMs={nowMs}
               hasUser={hasUser}
               isOwner={Boolean(userId && userId === listing.user_id)}
