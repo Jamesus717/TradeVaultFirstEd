@@ -1,5 +1,6 @@
 'use client';
 
+import { fetchSets } from '../../lib/fetchSets';
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../auth';
@@ -80,7 +81,7 @@ export function useCollectionDashboard() {
         setError('');
 
         const [setsResponse, ownedResponse] = await Promise.all([
-          fetch('/api/pokemon/sets'),
+          fetchSets(),
           supabase
             .from('user_cards')
             .select('card_id, set_id, variant, owned')

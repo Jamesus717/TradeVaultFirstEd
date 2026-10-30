@@ -8,11 +8,13 @@ import { TradeFilterBar } from './components/TradeFilterBar';
 import { useListingForm } from './hooks/useListingForm';
 import { useTradeFilters } from './hooks/useTradeFilters';
 import { useTradeListings } from './hooks/useTradeListings';
+import { useWishlistIds } from './hooks/useWishlistIds';
 
 export default function TradeBoardPage() {
   const { user, authLoading } = useAuth();
   const board = useTradeListings();
-  const filters = useTradeFilters({ listings: board.listings });
+  const wishlistIds = useWishlistIds(user?.id ?? null);
+  const filters = useTradeFilters({ listings: board.listings, wishlistIds });
   const form = useListingForm({ onListingCreated: board.addListing });
 
   return (
@@ -20,6 +22,8 @@ export default function TradeBoardPage() {
       <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <TradeBoardHeader
           stats={board.stats}
+          wishlistMatchCount={filters.wishlistMatchCount}
+          onShowWishlistMatches={() => filters.setWishlistOnly(true)}
           hasUser={Boolean(user)}
           authLoading={authLoading}
           onOpenModal={form.openModal}
@@ -36,7 +40,7 @@ export default function TradeBoardPage() {
           </div>
         ) : null}
 
-        <TradeFilterBar filters={filters} setOptions={board.setOptions} />
+        <TradeFilterBar filters={filters} setOptions={board.setOptions} hasWishlist={wishlistIds.size > 0} />
 
         {board.error ? (
           <div className="mt-6 rounded-[1.5rem] border border-rose-400/20 bg-rose-500/10 p-6 text-rose-100">
@@ -47,6 +51,9 @@ export default function TradeBoardPage() {
         <TradeBoardGrid
           loading={board.loading}
           listings={filters.filteredListings}
+          wishlistIds={wishlistIds}
+          filtersActive={filters.filtersActive}
+          onClearFilters={filters.clearFilters}
           nowMs={board.nowMs}
           userId={user?.id ?? null}
           hasUser={Boolean(user)}

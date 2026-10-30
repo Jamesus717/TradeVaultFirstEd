@@ -17,7 +17,7 @@ export function BinderGridSkeleton({ count = 12 }: { count?: number }) {
   return (
     <div className="space-y-4">
       {/* Stands in for the filter / search panel above the grid. */}
-      <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5">
+      <div className="panel p-5">
         <div className="h-3 w-24 animate-pulse rounded bg-white/[0.06]" />
         <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="h-8 w-56 animate-pulse rounded bg-white/[0.06]" />
@@ -35,23 +35,15 @@ export function BinderGridSkeleton({ count = 12 }: { count?: number }) {
         <div className="mt-1 h-5 w-48 animate-pulse rounded bg-white/[0.06]" />
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
         {Array.from({ length: count }).map((_, index) => (
-          <div
-            key={`binder-skeleton-${index}`}
-            className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.03]"
-          >
-            <div className="p-3">
-              <div className="aspect-[5/7] w-full animate-pulse rounded-[1rem] bg-stone-950/80 ring-1 ring-white/5" />
-
-              <div className="mt-3 space-y-1">
-                <div className="h-[14px] w-12 animate-pulse rounded bg-white/[0.06]" />
-                <div className="h-5 w-4/5 animate-pulse rounded bg-white/[0.06]" />
-                <div className="h-4 w-1/2 animate-pulse rounded bg-white/[0.06]" />
-              </div>
-
-              <div className="mt-3 h-[34px] w-full animate-pulse rounded-[0.9rem] bg-white/[0.06]" />
+          <div key={`binder-skeleton-${index}`}>
+            <div className="aspect-[63/88] w-full animate-pulse rounded-[4.5%/3.2%] bg-white/[0.05] ring-1 ring-white/5" />
+            <div className="mt-2.5 space-y-1 px-0.5">
+              <div className="h-5 w-4/5 animate-pulse rounded bg-white/[0.06]" />
+              <div className="h-4 w-10 animate-pulse rounded bg-white/[0.06]" />
             </div>
+            <div className="mt-2 h-11 w-full animate-pulse rounded-xl bg-white/[0.06]" />
           </div>
         ))}
       </div>
