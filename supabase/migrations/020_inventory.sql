@@ -201,7 +201,7 @@ begin
   from public.inventory_items
   where user_id = l.user_id and game = 'pokemon' and card_id = l.card_id
     and variant = l.variant and status = 'keep'
-  order by (condition is null) desc, created_at
+  order by (condition is not distinct from code) desc, (condition is null) desc, created_at
   limit 1
   for update;
 
@@ -281,7 +281,12 @@ begin
 
   perform public.tb_mark_syncing();
 
-  if tg_op <> 'INSERT' and (tg_op = 'DELETE' or (old.owned and not new.owned)) then
+  -- A legacy null set_id row can sit beside a normal one for the same card, so
+  -- the stack only goes when no owned row is left.
+  if tg_op <> 'INSERT' and old.owned and (tg_op = 'DELETE' or not new.owned) and not exists (
+    select 1 from public.user_cards u
+    where u.user_id = old.user_id and u.card_id = old.card_id and u.variant = old.variant and u.owned
+  ) then
     delete from public.inventory_items
     where user_id = old.user_id and game = 'pokemon' and card_id = old.card_id
       and variant = old.variant and status = 'keep';
@@ -410,6 +415,8 @@ begin
     perform public.tb_stock_listing(new);
   elsif tg_op = 'UPDATE' and coalesce(old.is_active, false) and not coalesce(new.is_active, false) then
     perform public.tb_unstock_listing(new.id, true);
+  elsif tg_op = 'UPDATE' and not coalesce(old.is_active, false) and coalesce(new.is_active, false) then
+    perform public.tb_stock_listing(new);
   elsif tg_op = 'DELETE' then
     perform public.tb_unstock_listing(old.id, false);
   end if;
@@ -453,7 +460,8 @@ begin
     where u.user_id = new.user_id and u.card_id = new.card_id and u.variant = new.variant
   ) then
     insert into public.user_cards (user_id, card_id, set_id, variant, owned)
-    values (new.user_id, new.card_id, new.set_id, new.variant, true);
+    values (new.user_id, new.card_id, new.set_id, new.variant, true)
+    on conflict (user_id, card_id, variant, set_id) do nothing;
   end if;
 
   if was_owned and not exists (

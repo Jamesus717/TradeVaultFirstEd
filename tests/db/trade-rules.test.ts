@@ -306,6 +306,29 @@ describe('trade rules', () => {
       });
     });
 
+    it('an answer never lands on a newer suggestion', async () => {
+      const { conversation } = await startConversation();
+      const proposedAt = '2099-01-01T10:00:00Z';
+      await asUser(db, buyer, () => db.query(`select public.propose_meet($1, $2, $3)`, [conversation, shop, proposedAt]));
+      await asUser(db, seller, async () => {
+        await expect(
+          db.query(`select public.respond_meet($1, true, $2, $3)`, [conversation, shop, '2099-02-02T10:00:00Z'])
+        ).rejects.toThrow(/changed/);
+        await db.query(`select public.respond_meet($1, true, $2, $3)`, [conversation, shop, proposedAt]);
+      });
+      expect(await meet(conversation)).toBe('agreed');
+    });
+
+    it('cannot agree to meet at a shop that has left', async () => {
+      const { conversation } = await startConversation();
+      await asUser(db, buyer, () => db.query(`select public.propose_meet($1, $2)`, [conversation, shop]));
+      await db.query(`update public.shops set status = 'hidden' where id = $1`, [shop]);
+      await asUser(db, seller, async () => {
+        await expect(db.query(`select public.respond_meet($1, true)`, [conversation])).rejects.toThrow(/not available/);
+      });
+      await db.query(`update public.shops set status = 'active' where id = $1`, [shop]);
+    });
+
     it('outsiders and draft shops are refused', async () => {
       const { conversation } = await startConversation();
       await asUser(db, stranger, async () => {

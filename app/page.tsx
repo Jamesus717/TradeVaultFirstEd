@@ -105,10 +105,7 @@ export default function HomePage() {
                 key={shop.id}
                 type="button"
                 aria-pressed={shopId === shop.id}
-                onClick={() => {
-                  setShopId(shop.id);
-                  // Demo rows have no shops behind them, so the chips only show state.
-                }}
+                onClick={() => setShopId(shop.id)}
                 className={`min-h-11 shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
                   shopId === shop.id
                     ? 'border-primary-300/30 bg-primary-400/15 text-primary-100'

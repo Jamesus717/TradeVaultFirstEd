@@ -217,8 +217,14 @@ begin
 end;
 $$;
 
--- Only the person who did not suggest it can answer.
-create or replace function public.respond_meet(p_conversation_id uuid, p_agree boolean)
+-- Only the person who did not suggest it can answer. p_shop_id and p_meet_at are
+-- the suggestion the page showed, so an answer never lands on a newer one.
+create or replace function public.respond_meet(
+  p_conversation_id uuid,
+  p_agree boolean,
+  p_shop_id uuid default null,
+  p_meet_at timestamptz default null
+)
 returns void
 language plpgsql
 security definer
@@ -236,6 +242,13 @@ begin
   if c.meet_proposed_by is not distinct from actor then
     raise exception 'the other trader has to answer this' using errcode = '42501';
   end if;
+  if p_shop_id is not null
+     and (p_shop_id is distinct from c.meet_shop_id or p_meet_at is distinct from c.meet_at) then
+    raise exception 'that suggestion has changed' using errcode = '22023';
+  end if;
+  if p_agree and not exists (select 1 from public.shops where id = c.meet_shop_id and status = 'active') then
+    raise exception 'that shop is not available' using errcode = '22023';
+  end if;
 
   select name into shop_name from public.shops where id = c.meet_shop_id;
   label := case when p_agree then 'Meeting agreed at ' else 'Meeting declined at ' end
@@ -245,7 +258,12 @@ begin
 
   update public.conversations
   set meet_status = case when p_agree then 'agreed' else 'declined' end
-  where id = c.id;
+  where id = c.id and meet_status = 'proposed'
+    and meet_shop_id is not distinct from c.meet_shop_id and meet_at is not distinct from c.meet_at;
+
+  if not found then
+    raise exception 'that suggestion has changed' using errcode = '22023';
+  end if;
 
   insert into public.messages (conversation_id, sender_id, content, message_type)
   values (c.id, null, label, 'system');
@@ -256,6 +274,6 @@ end;
 $$;
 
 revoke execute on function public.propose_meet(uuid, uuid, timestamptz) from anon, public;
-revoke execute on function public.respond_meet(uuid, boolean) from anon, public;
+revoke execute on function public.respond_meet(uuid, boolean, uuid, timestamptz) from anon, public;
 grant execute on function public.propose_meet(uuid, uuid, timestamptz) to authenticated;
-grant execute on function public.respond_meet(uuid, boolean) to authenticated;
+grant execute on function public.respond_meet(uuid, boolean, uuid, timestamptz) to authenticated;

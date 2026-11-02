@@ -6,6 +6,7 @@ import { TradeBoardGrid } from './components/TradeBoardGrid';
 import { TradeBoardHeader } from './components/TradeBoardHeader';
 import { TradeFilterBar } from './components/TradeFilterBar';
 import { useListingForm } from './hooks/useListingForm';
+import { useShopFilter } from './hooks/useShopFilter';
 import { useTradeFilters } from './hooks/useTradeFilters';
 import { useTradeListings } from './hooks/useTradeListings';
 import { useWishlistIds } from './hooks/useWishlistIds';
@@ -14,7 +15,8 @@ export default function TradeBoardPage() {
   const { user, authLoading } = useAuth();
   const board = useTradeListings();
   const wishlistIds = useWishlistIds(user?.id ?? null);
-  const filters = useTradeFilters({ listings: board.listings, wishlistIds });
+  const { shops, shopByListing } = useShopFilter();
+  const filters = useTradeFilters({ listings: board.listings, wishlistIds, shopByListing });
   const form = useListingForm({ onListingCreated: board.addListing });
 
   return (
@@ -40,7 +42,7 @@ export default function TradeBoardPage() {
           </div>
         ) : null}
 
-        <TradeFilterBar filters={filters} setOptions={board.setOptions} hasWishlist={wishlistIds.size > 0} />
+        <TradeFilterBar filters={filters} setOptions={board.setOptions} hasWishlist={wishlistIds.size > 0} shops={shops} />
 
         {board.error ? (
           <div className="mt-6 rounded-xl border border-rose-400/20 bg-rose-500/10 p-6 text-rose-100">

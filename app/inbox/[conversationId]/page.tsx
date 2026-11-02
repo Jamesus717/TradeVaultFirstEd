@@ -9,8 +9,10 @@ import ConversationSkeleton from './components/ConversationSkeleton';
 import ListingSidebar from './components/ListingSidebar';
 import MessageComposer from './components/MessageComposer';
 import MessageList from './components/MessageList';
+import { MeetPanel } from './components/MeetPanel';
 import { useConversation } from './hooks/useConversation';
 import { useConversationActions } from './hooks/useConversationActions';
+import { useMeet } from './hooks/useMeet';
 
 export default function ConversationPage() {
   const { user, authLoading, supabaseDisabled } = useAuth();
@@ -56,6 +58,8 @@ export default function ConversationPage() {
     setConversation,
   });
 
+  const meeting = useMeet(conversationId);
+
   const activeListing = conversation?.trade_listings?.[0] ?? null;
 
   return (
@@ -87,6 +91,19 @@ export default function ConversationPage() {
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
             <div>
               <ConversationHeader conversation={conversation} activeListing={activeListing} />
+
+              {meeting.meet && meeting.shops.length > 0 && ['active', 'accepted'].includes(conversation.status) ? (
+                <MeetPanel
+                  meet={meeting.meet}
+                  shops={meeting.shops}
+                  userId={user.id}
+                  otherName={otherName}
+                  pending={meeting.pending}
+                  error={meeting.error}
+                  onPropose={meeting.propose}
+                  onRespond={meeting.respond}
+                />
+              ) : null}
 
               <section className="flex h-[60vh] flex-col overflow-hidden rounded-xl border border-white/10 bg-white/[0.03]">
                 <MessageList

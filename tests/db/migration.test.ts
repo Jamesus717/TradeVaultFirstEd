@@ -181,6 +181,39 @@ describe('old and new stay in step', () => {
     expect(await keepRows()).toBe(0);
   });
 
+  it('unticking one of two rows for a card keeps the stack', async () => {
+    await db.exec(`alter table public.user_cards disable row level security`);
+    await db.query(
+      `insert into public.user_cards (user_id, card_id, set_id, variant) values ($1, 'sv1-70', 'sv1', 'Normal'), ($1, 'sv1-70', null, 'Normal')`,
+      [ash]
+    );
+    await db.exec(`alter table public.user_cards enable row level security`);
+    await db.query(`delete from public.user_cards where card_id = 'sv1-70' and set_id is null`);
+    expect(await count(db, `public.inventory_items where card_id = 'sv1-70' and status = 'keep'`)).toBe(1);
+    await db.query(`delete from public.user_cards where card_id = 'sv1-70'`);
+    expect(await count(db, `public.inventory_items where card_id = 'sv1-70' and status = 'keep'`)).toBe(0);
+  });
+
+  it('a listing put back on sale is stocked again', async () => {
+    const listing = await insertListing(db, ash, { card_id: 'sv1-71' });
+    await db.query(`update public.trade_listings set is_active = false where id = $1`, [listing]);
+    expect(await count(db, `public.inventory_listing_links where listing_id = $1`, [listing])).toBe(0);
+    await db.query(`update public.trade_listings set is_active = true where id = $1`, [listing]);
+    expect(await count(db, `public.inventory_listing_links where listing_id = $1`, [listing])).toBe(1);
+  });
+
+  it('a listing takes the keep copy in its own condition first', async () => {
+    await asUser(db, ash, async () => {
+      await db.query(`select public.inventory_add('sv1-72', 'keep', 'Normal', 'NM')`);
+      await db.query(`select public.inventory_add('sv1-72', 'keep', 'Normal', 'HP')`);
+    });
+    await insertListing(db, ash, { card_id: 'sv1-72', condition: 'Heavily Played' });
+    const { rows } = await db.query<{ condition: string }>(
+      `select condition from public.inventory_items where card_id = 'sv1-72' and status = 'keep'`
+    );
+    expect(rows).toEqual([{ condition: 'NM' }]);
+  });
+
   it('inventory_add stacks up and ticks the binder once', async () => {
     await asUser(db, ash, async () => {
       await db.query(`select public.inventory_add('sv1-2', 'keep', 'Normal', 'NM', 2)`);

@@ -7,6 +7,7 @@ import { MissingCards } from './MissingCards';
 import { SetPicker } from './SetPicker';
 import { useBinder } from './useBinder';
 import { CardDetailModal } from './components/CardDetailModal';
+import { QuickAdd } from './components/QuickAdd';
 import type { SortMode, CardVariant } from './types';
 
 export default function Page() {
@@ -207,6 +208,8 @@ export default function Page() {
           </div>
         )}
       </div>
+
+      <QuickAdd />
 
       <CardDetailModal 
         card={selectedCard} 

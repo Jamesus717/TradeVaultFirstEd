@@ -150,7 +150,8 @@ begin
 
   select i.* into item
   from public.inventory_items i
-  where i.id = p_item_id and (i.status = 'for_trade' or (i.status = 'keep' and i.quantity > 1));
+  where i.id = p_item_id and (i.status = 'for_trade' or (i.status = 'keep' and i.quantity > 1))
+  for update of i;
 
   if item.id is null then
     raise exception 'that card is no longer available' using errcode = '22023';

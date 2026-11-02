@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
+import { demoMode } from '../lib/demo';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from './auth';
 import AuthModal from './auth/components/AuthModal';
@@ -122,7 +123,7 @@ export default function Navbar() {
           </Link>
         </div>
 
-        <div className="hidden items-center gap-6 md:flex">
+        <div className="hidden items-center gap-6 whitespace-nowrap lg:flex">
           {NAV_LINKS.map(({ href, label }) => (
             <Link
               key={href}
@@ -184,7 +185,7 @@ export default function Navbar() {
           <div className="hidden items-center gap-3 sm:flex">
             {authLoading ? (
               <p className="text-sm text-stone-300">Checking session...</p>
-            ) : supabaseDisabled ? (
+            ) : demoMode ? null : supabaseDisabled ? (
               <p className="hidden text-sm text-stone-300 lg:block">
                 Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY to enable login.
               </p>
@@ -225,7 +226,7 @@ export default function Navbar() {
           <button
             type="button"
             onClick={() => setMobileOpen((current) => !current)}
-            className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] p-2 text-stone-200 hover:bg-white/[0.06] sm:hidden"
+            className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] p-2 text-stone-200 hover:bg-white/[0.06] lg:hidden"
             aria-label="Toggle menu"
           >
             <svg
@@ -246,7 +247,7 @@ export default function Navbar() {
         </nav>
 
         {mobileOpen ? (
-          <div className="border-t border-white/10 bg-stone-950/85 px-4 py-4 backdrop-blur-md sm:hidden">
+          <div className="border-t border-white/10 bg-stone-950/85 px-4 py-4 lg:hidden">
             <div className="mx-auto flex w-full max-w-7xl flex-col gap-3">
             {user && !supabaseDisabled ? (
               <Link
@@ -291,7 +292,7 @@ export default function Navbar() {
 
             {authLoading ? (
               <p className="pt-2 text-sm text-stone-300">Checking session...</p>
-            ) : supabaseDisabled ? (
+            ) : demoMode ? null : supabaseDisabled ? (
               <p className="pt-2 text-sm text-stone-300">
                 Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY to enable login.
               </p>
