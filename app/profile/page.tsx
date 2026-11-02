@@ -175,7 +175,7 @@ export default function ProfileEditorPage() {
     return (
       <main className="min-h-screen bg-transparent text-stone-100">
         <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
-          <section className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-10 text-center text-stone-300">
+          <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-10 text-center text-stone-300">
             Loading...
           </section>
         </div>
@@ -198,8 +198,8 @@ export default function ProfileEditorPage() {
           </div>
 
           <div className="space-y-8 p-6 sm:p-8">
-            <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-stone-400">Appearance</p>
+            <section className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
+              <p className="text-xs font-semibold text-stone-400">Appearance</p>
               <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-sm text-stone-300">Choose your accent colour theme.</p>
                 <div className="flex items-center gap-3">
@@ -225,8 +225,8 @@ export default function ProfileEditorPage() {
               </div>
             </section>
 
-            <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-stone-400">Avatar</p>
+            <section className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
+              <p className="text-xs font-semibold text-stone-400">Avatar</p>
               <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-4">
                   <button
@@ -283,8 +283,8 @@ export default function ProfileEditorPage() {
               </div>
             </section>
 
-            <section className="space-y-4 rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-stone-400">Profile Details</p>
+            <section className="space-y-4 rounded-xl border border-white/10 bg-white/[0.03] p-5">
+              <p className="text-xs font-semibold text-stone-400">Profile Details</p>
 
               <div className="space-y-2">
                 <label className="text-xs font-medium text-stone-400">Display Name</label>
@@ -372,8 +372,8 @@ export default function ProfileEditorPage() {
               ) : null}
             </section>
 
-            <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-stone-400">Account</p>
+            <section className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
+              <p className="text-xs font-semibold text-stone-400">Account</p>
               <div className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
                 <div className="rounded-xl border border-white/10 bg-stone-950/30 px-4 py-3">
                   <p className="text-xs text-stone-500">Email</p>
@@ -400,8 +400,8 @@ export default function ProfileEditorPage() {
               </div>
             </section>
 
-            <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-stone-400">Password</p>
+            <section className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
+              <p className="text-xs font-semibold text-stone-400">Password</p>
               <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-sm text-stone-300">Send a password reset email to your account address.</p>
                 <button

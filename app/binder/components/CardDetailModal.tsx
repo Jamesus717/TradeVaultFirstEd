@@ -77,7 +77,7 @@ export function CardDetailModal({ card, isOpen, onClose, isOwned, onToggleOwned,
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm transition-opacity"
       onClick={handleBackdropClick}
     >
-      <div className="relative flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-[2rem] border border-white/10 bg-stone-950 shadow-2xl animate-in fade-in zoom-in-95 md:flex-row">
+      <div className="relative flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-stone-950 shadow-2xl animate-in fade-in zoom-in-95 md:flex-row">
         
         {/* Close Button */}
         <button
@@ -110,7 +110,7 @@ export function CardDetailModal({ card, isOpen, onClose, isOwned, onToggleOwned,
           
           <div className="mt-6 flex w-full max-w-[320px] flex-col items-center gap-3">
             <div className="text-center">
-              <p className="text-sm font-medium uppercase tracking-widest text-stone-400">
+              <p className="text-sm font-medium tracking-widest text-stone-400">
                 #{card.number}
               </p>
               <p className="mt-1 text-sm text-stone-500">{card.setName}</p>
@@ -151,9 +151,9 @@ export function CardDetailModal({ card, isOpen, onClose, isOwned, onToggleOwned,
             </button>
           </div>
 
-          <div className="mt-8 rounded-[1.5rem] border border-white/5 bg-white/[0.02] p-5">
+          <div className="mt-8 rounded-xl border border-white/5 bg-white/[0.02] p-5">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium uppercase tracking-widest text-stone-400">Market Price</h3>
+              <h3 className="text-sm font-medium tracking-widest text-stone-400">Market Price</h3>
               <span className="text-xs text-stone-500">{PRICE_SOURCE_LABEL[price.source]}</span>
             </div>
 
@@ -228,7 +228,7 @@ export function CardDetailModal({ card, isOpen, onClose, isOwned, onToggleOwned,
           </div>
 
           <div className="mt-auto pt-8">
-            <h3 className="text-xs font-semibold uppercase tracking-widest text-stone-500 mb-4">Card Details</h3>
+            <h3 className="text-xs font-semibold tracking-widest text-stone-500 mb-4">Card Details</h3>
             <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-sm">
               <div className="text-stone-500">Set</div>
               <div className="text-stone-300">{card.setName}</div>

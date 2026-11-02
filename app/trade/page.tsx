@@ -35,7 +35,7 @@ export default function TradeBoardPage() {
           of the four.
         */}
         {!user && !authLoading ? (
-          <div className="mt-6 rounded-[1.5rem] border border-amber-300/15 bg-amber-400/5 p-4 text-center text-sm text-amber-200/80">
+          <div className="mt-6 rounded-xl border border-amber-300/15 bg-amber-400/5 p-4 text-center text-sm text-amber-200/80">
             Sign in to list cards and express interest in trades
           </div>
         ) : null}
@@ -43,7 +43,7 @@ export default function TradeBoardPage() {
         <TradeFilterBar filters={filters} setOptions={board.setOptions} hasWishlist={wishlistIds.size > 0} />
 
         {board.error ? (
-          <div className="mt-6 rounded-[1.5rem] border border-rose-400/20 bg-rose-500/10 p-6 text-rose-100">
+          <div className="mt-6 rounded-xl border border-rose-400/20 bg-rose-500/10 p-6 text-rose-100">
             {board.error}
           </div>
         ) : null}

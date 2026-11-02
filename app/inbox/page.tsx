@@ -257,19 +257,19 @@ export default function InboxPage() {
         {hero}
 
         {authLoading ? (
-          <section className="mt-6 rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-6 text-sm text-stone-300 backdrop-blur">
+          <section className="mt-6 rounded-xl border border-white/10 bg-white/[0.03] p-6 text-sm text-stone-300 backdrop-blur">
             Checking your session...
           </section>
         ) : !user ? (
-          <section className="mt-6 rounded-[1.5rem] border border-amber-300/15 bg-amber-400/5 p-4 text-center text-sm text-amber-200/80">
+          <section className="mt-6 rounded-xl border border-amber-300/15 bg-amber-400/5 p-4 text-center text-sm text-amber-200/80">
             Sign in to view your trade conversations and offers.
           </section>
         ) : supabaseDisabled || !supabase ? (
-          <section className="mt-6 rounded-[1.5rem] border border-amber-300/15 bg-amber-400/5 p-6 text-center text-sm text-amber-200/80">
+          <section className="mt-6 rounded-xl border border-amber-300/15 bg-amber-400/5 p-6 text-center text-sm text-amber-200/80">
             Supabase is not configured for this app.
           </section>
         ) : error ? (
-          <section className="mt-6 rounded-[1.5rem] border border-rose-300/20 bg-rose-500/10 p-6 text-sm text-rose-100 backdrop-blur">
+          <section className="mt-6 rounded-xl border border-rose-300/20 bg-rose-500/10 p-6 text-sm text-rose-100 backdrop-blur">
             {error}
           </section>
         ) : loading ? (
@@ -281,12 +281,12 @@ export default function InboxPage() {
               // 30px short, so the list shifted ~180px upward as it loaded.
               <div
                 key={`s-${index}`}
-                className="h-[122px] animate-pulse rounded-[1.5rem] border border-white/10 bg-white/[0.04]"
+                className="h-[122px] animate-pulse rounded-xl border border-white/10 bg-white/[0.04]"
               />
             ))}
           </section>
         ) : conversations.length === 0 ? (
-          <section className="mt-6 rounded-[2rem] border border-white/10 bg-white/[0.03] p-10 text-center backdrop-blur">
+          <section className="mt-6 rounded-2xl border border-white/10 bg-white/[0.03] p-10 text-center backdrop-blur">
             <div className="text-5xl">💬</div>
             <h2 className="mt-4 text-2xl font-semibold text-white">No conversations yet</h2>
             <p className="mt-2 text-sm text-stone-400">
@@ -322,7 +322,7 @@ export default function InboxPage() {
                 <Link
                   key={conversation.id}
                   href={`/inbox/${conversation.id}`}
-                  className="flex items-center gap-4 rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5 transition-colors hover:bg-white/[0.05]"
+                  className="flex items-center gap-4 rounded-xl border border-white/10 bg-white/[0.03] p-5 transition-colors hover:bg-white/[0.05]"
                 >
                   <div className="h-20 w-14 shrink-0 overflow-hidden rounded-xl bg-stone-900 ring-1 ring-white/5">
                     {image ? (
@@ -359,7 +359,7 @@ export default function InboxPage() {
                       {badge ? (
                         <span
                           className={classNames(
-                            'rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-wider',
+                            'rounded-full border px-3 py-1 text-[10px] font-bold tracking-wider',
                             badge.className
                           )}
                         >

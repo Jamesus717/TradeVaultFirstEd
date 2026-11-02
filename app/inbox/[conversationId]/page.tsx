@@ -62,25 +62,25 @@ export default function ConversationPage() {
     <main className="min-h-screen bg-transparent text-stone-100">
       <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {authLoading ? (
-          <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-6 text-sm text-stone-300 backdrop-blur">
+          <section className="rounded-xl border border-white/10 bg-white/[0.03] p-6 text-sm text-stone-300 backdrop-blur">
             Checking your session...
           </section>
         ) : !user ? (
-          <section className="rounded-[1.5rem] border border-amber-300/15 bg-amber-400/5 p-4 text-center text-sm text-amber-200/80">
+          <section className="rounded-xl border border-amber-300/15 bg-amber-400/5 p-4 text-center text-sm text-amber-200/80">
             Sign in to view conversations.
           </section>
         ) : supabaseDisabled || !supabase ? (
-          <section className="rounded-[1.5rem] border border-amber-300/15 bg-amber-400/5 p-6 text-center text-sm text-amber-200/80">
+          <section className="rounded-xl border border-amber-300/15 bg-amber-400/5 p-6 text-center text-sm text-amber-200/80">
             Supabase is not configured for this app.
           </section>
         ) : error ? (
-          <section className="rounded-[1.5rem] border border-rose-300/20 bg-rose-500/10 p-6 text-sm text-rose-100 backdrop-blur">
+          <section className="rounded-xl border border-rose-300/20 bg-rose-500/10 p-6 text-sm text-rose-100 backdrop-blur">
             {error}
           </section>
         ) : loading ? (
           <ConversationSkeleton />
         ) : !conversation || !isParticipant ? (
-          <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-6 text-sm text-stone-300 backdrop-blur">
+          <section className="rounded-xl border border-white/10 bg-white/[0.03] p-6 text-sm text-stone-300 backdrop-blur">
             Conversation unavailable.
           </section>
         ) : (
@@ -88,7 +88,7 @@ export default function ConversationPage() {
             <div>
               <ConversationHeader conversation={conversation} activeListing={activeListing} />
 
-              <section className="flex h-[60vh] flex-col overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.03]">
+              <section className="flex h-[60vh] flex-col overflow-hidden rounded-xl border border-white/10 bg-white/[0.03]">
                 <MessageList
                   scrollRef={scrollRef}
                   messages={messages}
