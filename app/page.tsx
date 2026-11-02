@@ -45,20 +45,20 @@ export default function Page() {
   return (
     <main className="min-h-screen bg-transparent text-stone-100">
       <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
-        <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] shadow-2xl shadow-black/20 backdrop-blur">
-          <div className="bg-[radial-gradient(circle_at_top_right,var(--hero-gradient-color),transparent_30%),linear-gradient(135deg,rgba(28,25,23,0.96),rgba(10,10,10,0.96))] p-6 sm:p-8">
+        <section className="hero-panel">
+          <div className="p-6 sm:p-8">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-[0.35em] text-primary-300/80">
-                    Pokemon TCG Master Set Tracker
+                  <p className="eyebrow">
+                    Your digital binder
                   </p>
-                  <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-5xl">
+                  <h1 className="text-4xl font-bold text-white sm:text-6xl">
                     TradeBinder
                   </h1>
                   <p className="max-w-2xl text-sm leading-6 text-stone-300 sm:text-base">
-                    Track Normal and Reverse Holo variants across multiple eras and
-                    sets, with reverse holo variants generated in code only.
+                    Tick off every card you own, set by set. See what&apos;s missing,
+                    what it&apos;s worth, and trade the rest safely at a local shop.
                   </p>
                 </div>
 
@@ -85,7 +85,9 @@ export default function Page() {
                   <p className="mt-3 text-3xl font-semibold text-white">
                     {ownedCount} / {total || '--'}
                   </p>
-                  <p className="mt-1 text-sm text-primary-50/75">{completion}% complete</p>
+                  <p className="mt-1 text-sm text-primary-50/75">
+                    {completion}% complete{total > ownedCount ? ` · ${total - ownedCount} to go` : total ? ' · set complete!' : ''}
+                  </p>
                   <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
                     <div
                       className="h-full rounded-full bg-primary-400 transition-all duration-300"
@@ -102,12 +104,19 @@ export default function Page() {
           <BinderGridSkeleton />
         ) : error ? (
           <section className="rounded-[2rem] border border-rose-400/20 bg-rose-500/10 p-10 text-center text-rose-100">
-            {error}
+            <p>{error}</p>
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="mt-4 rounded-xl bg-primary-400 px-4 py-2 text-sm font-semibold text-primary-950 hover:bg-primary-300"
+            >
+              Try again
+            </button>
           </section>
         ) : (
           <div className="space-y-8">
             <section className="space-y-4">
-              <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5">
+              <div className="panel p-5">
                 <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary-300/80">
                   Set Binder
                 </p>
@@ -136,12 +145,12 @@ export default function Page() {
                     value={searchQuery}
                     onChange={(event) => setSearchQuery(event.target.value)}
                     placeholder="Search card name..."
-                    className="w-full rounded-xl border border-white/10 bg-stone-900 px-3 py-2 text-sm text-white outline-none"
+                    className="w-full rounded-xl border border-white/10 bg-stone-950/80 px-3 py-2.5 text-sm text-white outline-none focus:border-primary-300/50"
                   />
                   <select
                     value={sortMode}
                     onChange={(event) => setSortMode(event.target.value as SortMode)}
-                    className="w-full rounded-xl border border-white/10 bg-stone-900 px-3 py-2 text-sm text-white outline-none"
+                    className="w-full rounded-xl border border-white/10 bg-stone-950/80 px-3 py-2.5 text-sm text-white outline-none focus:border-primary-300/50"
                   >
                     <option value="binder">Binder order (Number ↑)</option>
                     <option value="number-desc">Number ↓</option>
@@ -150,7 +159,7 @@ export default function Page() {
                   </select>
                 </div>
 
-                <div className="flex flex-wrap gap-2 mt-2">
+                <div className="mt-3 flex flex-wrap gap-2">
                   {(
                     [
                       { value: 'all', label: 'All Cards' },

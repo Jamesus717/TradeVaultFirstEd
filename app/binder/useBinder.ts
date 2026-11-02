@@ -1,5 +1,6 @@
 'use client';
 
+import { fetchSets } from '../../lib/fetchSets';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../auth';
@@ -122,7 +123,7 @@ export function useBinder() {
         setLoadingSets(true);
         setError('');
 
-        const response = await fetch('/api/pokemon/sets');
+        const response = await fetchSets();
 
         if (!response.ok) {
           throw new Error('Failed to load sets from the Pokemon TCG API.');

@@ -6,6 +6,8 @@ import { classNames, conditionBadgeClass, formatMoneyGBP, formatTimeAgo, listing
 
 type Props = {
   listing: TradeListing;
+  /** The signed-in user has this card on their wishlist. */
+  onWishlist?: boolean;
   nowMs: number | null;
   hasUser: boolean;
   isOwner: boolean;
@@ -22,6 +24,7 @@ type Props = {
 
 export function TradeListingCard({
   listing,
+  onWishlist = false,
   nowMs,
   hasUser,
   isOwner,
@@ -48,22 +51,28 @@ export function TradeListingCard({
        * rendered result is identical while the browser stops diffing every
        * animatable property on each style recalculation of every card.
        */
-      className="group overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/[0.03] transition-colors duration-200 hover:border-white/20 hover:bg-white/[0.05]"
+      className={classNames(
+        'group panel flex flex-col overflow-hidden transition-colors duration-200 hover:border-white/20 hover:bg-white/[0.05]',
+        onWishlist ? '!border-primary-300/50 ring-1 ring-primary-300/30' : ''
+      )}
     >
-      <div className="relative aspect-[3/4] bg-stone-900">
-        {image ? (
-          <Image
-            src={image}
-            alt={listing.card_name}
-            fill
-            sizes="(min-width: 1280px) 22vw, (min-width: 1024px) 30vw, (min-width: 640px) 45vw, 92vw"
-            className="object-cover"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-sm text-stone-600">
-            No image
-          </div>
-        )}
+      {/* Whole card shown in a sleeve, not cropped, so condition is judged on the full art. */}
+      <div className="relative flex justify-center bg-[radial-gradient(circle_at_50%_30%,rgba(255,255,255,0.06),transparent_70%)] px-6 pb-5 pt-11">
+        <div className="tcg-card is-owned w-3/5">
+          {image ? (
+            <Image
+              src={image}
+              alt={listing.card_name}
+              fill
+              sizes="(min-width: 1280px) 14vw, (min-width: 1024px) 18vw, (min-width: 640px) 27vw, 55vw"
+              className="object-cover"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-sm text-stone-600">
+              No image
+            </div>
+          )}
+        </div>
 
         <div className="absolute left-0 top-0 flex w-full items-start justify-between p-2">
           <div
@@ -85,8 +94,14 @@ export function TradeListingCard({
         </div>
       </div>
 
-      <div className="space-y-2 p-4">
-        <p className="text-xs uppercase tracking-[0.25em] text-stone-400">
+      {onWishlist ? (
+        <p className="bg-primary-400/15 px-4 py-1.5 text-center text-[11px] font-semibold uppercase tracking-[0.2em] text-primary-200">
+          ★ On your wishlist
+        </p>
+      ) : null}
+
+      <div className="flex flex-1 flex-col gap-2 border-t border-white/5 p-4">
+        <p className="truncate text-[11px] uppercase tracking-[0.22em] text-stone-400">
           {listing.set_name}
         </p>
         <h3 className="text-base font-semibold text-white leading-tight">
@@ -124,7 +139,7 @@ export function TradeListingCard({
           </p>
         ) : null}
 
-        <div className="flex items-center justify-between pt-2">
+        <div className="mt-auto flex items-center justify-between pt-2">
           <div className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-full border border-primary-400/30 bg-primary-400/20 text-xs font-semibold text-primary-300">
               {sellerInitial}

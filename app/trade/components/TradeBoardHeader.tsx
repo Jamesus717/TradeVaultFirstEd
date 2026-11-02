@@ -5,34 +5,50 @@ import { classNames } from '../utils';
 
 type Props = {
   stats: TradeBoardStats;
+  wishlistMatchCount: number;
+  onShowWishlistMatches: () => void;
   hasUser: boolean;
   authLoading: boolean;
   onOpenModal: () => void;
 };
 
-export function TradeBoardHeader({ stats, hasUser, authLoading, onOpenModal }: Props) {
+export function TradeBoardHeader({
+  stats,
+  wishlistMatchCount,
+  onShowWishlistMatches,
+  hasUser, authLoading, onOpenModal }: Props) {
   return (
-    <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] shadow-2xl shadow-black/20 backdrop-blur">
-      <div className="bg-[radial-gradient(circle_at_top_right,var(--hero-gradient-color),transparent_30%),linear-gradient(135deg,rgba(28,25,23,0.96),rgba(10,10,10,0.96))] p-6 sm:p-8">
+    <section className="hero-panel">
+      <div className="p-6 sm:p-8">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 className="text-4xl font-semibold text-white">Trade Board</h1>
+            <p className="eyebrow">Meet, swap, sorted</p>
+            <h1 className="mt-2 text-4xl font-bold text-white sm:text-5xl">Trade Board</h1>
             <p className="mt-2 text-sm text-stone-400">
-              Buy, sell and trade Pokemon cards with collectors near you
+              Buy, sell and swap cards with collectors near you. Meet somewhere public, like your local card shop.
             </p>
             <div className="mt-5 flex flex-wrap gap-2">
               <div className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 text-sm text-stone-200">
-                <span className="text-stone-400">Active Listings:</span>{' '}
+                <span className="text-stone-400">Listings</span>{' '}
                 <span className="font-semibold text-white">{stats.activeListings}</span>
               </div>
               <div className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 text-sm text-stone-200">
-                <span className="text-stone-400">Traders Online Today:</span>{' '}
+                <span className="text-stone-400">Traders today</span>{' '}
                 <span className="font-semibold text-white">{stats.tradersToday}</span>
               </div>
               <div className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 text-sm text-stone-200">
-                <span className="text-stone-400">Sets Represented:</span>{' '}
+                <span className="text-stone-400">Sets</span>{' '}
                 <span className="font-semibold text-white">{stats.setsRepresented}</span>
               </div>
+              {wishlistMatchCount > 0 ? (
+                <button
+                  type="button"
+                  onClick={onShowWishlistMatches}
+                  className="rounded-full border border-primary-300/30 bg-primary-400/15 px-4 py-1.5 text-sm font-semibold text-primary-100 transition-colors hover:bg-primary-400/25"
+                >
+                  ★ {wishlistMatchCount} {wishlistMatchCount === 1 ? 'listing matches' : 'listings match'} your wishlist
+                </button>
+              ) : null}
             </div>
           </div>
 

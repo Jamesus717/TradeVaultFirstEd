@@ -10,6 +10,10 @@ const POKEMON_API_BASE_URL = 'https://api.pokemontcg.io/v2';
 // a 4xx is a real answer and is returned as-is.
 const MAX_ATTEMPTS = 4;
 const RETRY_DELAYS_MS = [150, 300, 600];
+// A hung upstream must not hang the page; a timeout counts as a network error and is retried.
+// The timer also covers reading the body, and a 250-card set page can take
+// ~10s to stream, so this is generous (8s cut big sets off on 2026-10-22).
+const REQUEST_TIMEOUT_MS = 25000;
 
 function getPokemonApiKey() {
   return process.env.POKEMON_TCG_API_KEY ?? process.env.NEXT_PUBLIC_POKEMON_TCG_API_KEY ?? '';
@@ -38,6 +42,7 @@ export async function pokemonFetch(path: string, init?: RequestInit) {
 
     try {
       const response = await fetch(`${POKEMON_API_BASE_URL}${path}`, {
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
         ...init,
         headers,
       });
@@ -54,4 +59,60 @@ export async function pokemonFetch(path: string, init?: RequestInit) {
   }
 
   throw lastError;
+}
+
+
+type CachedEntry = { data: unknown; cachedAt: number };
+
+const memoryCache = new Map<string, CachedEntry>();
+
+export const OK_CACHE_CONTROL = 'public, s-maxage=3600, stale-while-revalidate=86400';
+
+// GET + JSON with a per-isolate cache. Rules that fix the "Failed to load sets"
+// bug: only successes are cached, errors are never marked cacheable (so the CDN
+// can't pin a failure for an hour), and when upstream fails we serve the last
+// good copy, however old, instead of an error.
+export async function pokemonCachedJson(
+  path: string,
+  ttlMs: number,
+  cacheControl: string = OK_CACHE_CONTROL
+): Promise<Response> {
+  const cached = memoryCache.get(path);
+
+  if (cached && Date.now() - cached.cachedAt < ttlMs) {
+    return Response.json(cached.data, { headers: { 'Cache-Control': cacheControl } });
+  }
+
+  try {
+    const response = await pokemonFetch(path);
+
+    if (response.ok) {
+      const data = await response.json();
+      memoryCache.set(path, { data, cachedAt: Date.now() });
+      return Response.json(data, { headers: { 'Cache-Control': cacheControl } });
+    }
+
+    if (cached) {
+      return Response.json(cached.data, {
+        headers: { 'Cache-Control': 'no-store', 'X-Stale': '1' },
+      });
+    }
+
+    // 4xx is a real answer (e.g. unknown set): pass it through, uncached.
+    const status = response.status >= 500 ? 502 : response.status;
+    return Response.json(
+      { error: { message: `Pokémon TCG API returned ${response.status}.`, status: response.status } },
+      { status, headers: { 'Cache-Control': 'no-store' } }
+    );
+  } catch {
+    if (cached) {
+      return Response.json(cached.data, {
+        headers: { 'Cache-Control': 'no-store', 'X-Stale': '1' },
+      });
+    }
+    return Response.json(
+      { error: { message: 'Pokémon TCG API is unreachable.', status: 502 } },
+      { status: 502, headers: { 'Cache-Control': 'no-store' } }
+    );
+  }
 }

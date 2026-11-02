@@ -1,4 +1,5 @@
 'use client';
+import { fetchSets } from '../../lib/fetchSets';
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../auth';
@@ -86,7 +87,7 @@ export function useCollection() {
   useEffect(() => {
     async function loadSets() {
       try {
-        const res = await fetch('/api/pokemon/sets');
+        const res = await fetchSets();
         if (!res.ok) return;
         const json = await res.json();
         const sets = json.data ?? [];

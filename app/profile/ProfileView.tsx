@@ -1,5 +1,6 @@
 'use client';
 
+import { fetchSets } from '../../lib/fetchSets';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
@@ -113,7 +114,7 @@ export default function ProfileView({ userId }: Props) {
         setError('');
 
         const [setsResponse, cardsResponse] = await Promise.all([
-          fetch('/api/pokemon/sets'),
+          fetchSets(),
           supabaseDisabled || !supabase
             ? Promise.resolve(null)
             : supabase
@@ -257,8 +258,8 @@ export default function ProfileView({ userId }: Props) {
   return (
     <main className="min-h-screen bg-transparent text-stone-100">
       <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
-        <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] shadow-2xl shadow-black/20 backdrop-blur">
-          <div className="bg-[radial-gradient(circle_at_top_right,var(--hero-gradient-color),transparent_30%),linear-gradient(135deg,rgba(28,25,23,0.96),rgba(10,10,10,0.96))] p-6 sm:p-8">
+        <section className="hero-panel">
+          <div className="p-6 sm:p-8">
             <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-5">
                 <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-primary-400/40 bg-primary-400/20 text-3xl font-semibold text-primary-300">
