@@ -37,15 +37,18 @@ export default function ShopPage() {
         .eq('shop_id', shop.id);
       setTraders(count ?? 0);
 
-      if (user) {
-        const { data } = await supabase
-          .from('user_shops')
-          .select('shop_id')
-          .eq('shop_id', shop.id)
-          .eq('user_id', user.id)
-          .maybeSingle();
-        setIsHome(Boolean(data));
+      if (!user) {
+        setIsHome(false);
+        return;
       }
+
+      const { data } = await supabase
+        .from('user_shops')
+        .select('shop_id')
+        .eq('shop_id', shop.id)
+        .eq('user_id', user.id)
+        .maybeSingle();
+      setIsHome(Boolean(data));
     }
 
     loadHome();

@@ -22,7 +22,7 @@ Then open http://localhost:3100 (matches), `/shops`, `/shops/example-cards-leeds
 - Home shows "Matching is on its way".
 - `/shops` shows "No shops listed yet".
 - The meet panel and shop filter stay hidden.
-- Quick add writes to the existing `user_cards` and `wishlist_cards` tables, as Normal variant (Unlimited for vintage sets, matching the binder). The wishlist half needs migration 018.
+- Quick add writes to the existing `user_cards` and `wishlist_cards` tables, as Normal variant (Unlimited for vintage sets, matching the binder).
 
 ## Not tested
 
