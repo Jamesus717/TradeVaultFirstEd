@@ -13,6 +13,10 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'assets.tcgdex.net',
+      },
+      {
+        protocol: 'https',
         hostname: 'rjlwwyaeubvuioxyadfu.supabase.co',
       },
     ],

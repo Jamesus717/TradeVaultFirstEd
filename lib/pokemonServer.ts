@@ -71,11 +71,13 @@ export const OK_CACHE_CONTROL = 'public, s-maxage=3600, stale-while-revalidate=8
 // GET + JSON with a per-isolate cache. Rules that fix the "Failed to load sets"
 // bug: only successes are cached, errors are never marked cacheable (so the CDN
 // can't pin a failure for an hour), and when upstream fails we serve the last
-// good copy, however old, instead of an error.
+// good copy, however old, instead of an error. With no good copy either, an
+// optional fallback source gets a go before the error is returned.
 export async function pokemonCachedJson(
   path: string,
   ttlMs: number,
-  cacheControl: string = OK_CACHE_CONTROL
+  cacheControl: string = OK_CACHE_CONTROL,
+  fallback?: () => Promise<unknown | null>
 ): Promise<Response> {
   const cached = memoryCache.get(path);
 
@@ -96,6 +98,15 @@ export async function pokemonCachedJson(
       return Response.json(cached.data, {
         headers: { 'Cache-Control': 'no-store', 'X-Stale': '1' },
       });
+    }
+
+    if (response.status >= 500) {
+      const fromFallback = await fallback?.();
+      if (fromFallback) {
+        return Response.json(fromFallback, {
+          headers: { 'Cache-Control': 'no-store', 'X-Fallback': '1' },
+        });
+      }
     }
 
     // 4xx is a real answer (e.g. unknown set): pass it through, uncached.
