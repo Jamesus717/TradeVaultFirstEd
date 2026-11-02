@@ -14,6 +14,7 @@ export default function ShopPage() {
   const { slug } = useParams<{ slug: string }>();
   const { user } = useAuth();
   const [shop, setShop] = useState<Shop | null | undefined>(undefined);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [isHome, setIsHome] = useState(false);
   const [traders, setTraders] = useState(demoMode ? 12 : 0);
   const [saving, setSaving] = useState(false);
@@ -22,7 +23,7 @@ export default function ShopPage() {
   useEffect(() => {
     loadShops()
       .then((shops) => setShop(shops.find((entry) => entry.slug === slug) ?? null))
-      .catch(() => setShop(null));
+      .catch(() => setLoadFailed(true));
   }, [slug]);
 
   useEffect(() => {
@@ -66,6 +67,11 @@ export default function ShopPage() {
       : await supabase.from('user_shops').insert({ shop_id: shop.id, user_id: user.id });
     setSaving(false);
 
+    // Already added from another tab: the shop is yours, so show it that way.
+    if (error?.code === '23505') {
+      setIsHome(true);
+      return;
+    }
     if (error) {
       setSaveError(error.message);
       return;
@@ -83,7 +89,13 @@ export default function ShopPage() {
           All shops
         </Link>
 
-        {shop === undefined ? (
+        {loadFailed ? (
+          <EmptyState
+            title="Shops didn't load"
+            body="Check your connection, then reload the page."
+            action={{ label: 'Reload', onClick: () => window.location.reload() }}
+          />
+        ) : shop === undefined ? (
           <div className="panel h-48 animate-pulse" />
         ) : shop === null ? (
           <EmptyState

@@ -32,10 +32,30 @@ export default function Navbar() {
   const { submitting, openAuthModal, handleLogout } = authForm;
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [menuPath, setMenuPath] = useState(pathname);
   const [unreadState, setUnreadState] = useState<{ userId: string; count: number }>({
     userId: '',
     count: 0,
   });
+
+  // Back and forward don't go through the menu's links, so close it on any route change.
+  if (menuPath !== pathname) {
+    setMenuPath(pathname);
+    setMobileOpen(false);
+  }
+
+  useEffect(() => {
+    if (!mobileOpen) {
+      return;
+    }
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setMobileOpen(false);
+      }
+    }
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [mobileOpen]);
 
   const inboxActive = pathname.startsWith('/inbox');
   const isActive = (href: string) => (href === '/' ? pathname === '/' : pathname.startsWith(href));
@@ -160,7 +180,7 @@ export default function Navbar() {
             <Link
               href="/inbox"
               className="relative inline-flex items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] p-2 text-stone-300 hover:bg-white/[0.06] hover:text-white"
-              aria-label="Inbox"
+              aria-label={unreadCount > 0 ? `Inbox, ${unreadCount} unread` : 'Inbox'}
             >
               <svg
                 viewBox="0 0 24 24"
@@ -228,6 +248,8 @@ export default function Navbar() {
             onClick={() => setMobileOpen((current) => !current)}
             className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] p-2 text-stone-200 hover:bg-white/[0.06] lg:hidden"
             aria-label="Toggle menu"
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-menu"
           >
             <svg
               viewBox="0 0 24 24"
@@ -247,7 +269,7 @@ export default function Navbar() {
         </nav>
 
         {mobileOpen ? (
-          <div className="border-t border-white/10 bg-stone-950/85 px-4 py-4 lg:hidden">
+          <div id="mobile-menu" className="border-t border-white/10 bg-stone-950/85 px-4 py-4 lg:hidden">
             <div className="mx-auto flex w-full max-w-7xl flex-col gap-3">
             {user && !supabaseDisabled ? (
               <Link
