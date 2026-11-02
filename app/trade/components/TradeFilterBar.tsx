@@ -62,13 +62,13 @@ export function TradeFilterBar({ filters, setOptions, hasWishlist, shops = [] }:
           className="w-full rounded-xl border border-white/10 bg-stone-950/80 px-4 py-3 text-sm text-white outline-none"
         >
           <option value="">Any Condition</option>
-          {(['Mint', 'Near Mint', 'Lightly Played', 'Moderately Played', 'Heavily Played'] as const).map(
-            (value) => (
-              <option key={value} value={value}>
-                {value}
-              </option>
-            )
-          )}
+          {(
+            ['Mint', 'Near Mint', 'Lightly Played', 'Moderately Played', 'Heavily Played', 'Damaged', 'Ungraded'] as const
+          ).map((value) => (
+            <option key={value} value={value}>
+              {value}
+            </option>
+          ))}
         </select>
 
         <input
@@ -86,7 +86,7 @@ export function TradeFilterBar({ filters, setOptions, hasWishlist, shops = [] }:
             type="button"
             onClick={() => setTypeFilter(value)}
             className={classNames(
-              'rounded-full border px-4 py-2 text-xs font-semibold transition-colors',
+              'rounded-full border px-4 py-2 text-xs font-semibold capitalize transition-colors',
               typeFilter === value
                 ? 'border-primary-300/20 bg-primary-400/10 text-primary-200'
                 : 'border-white/10 bg-white/[0.03] text-stone-400 hover:text-stone-200'

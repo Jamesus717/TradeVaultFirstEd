@@ -58,7 +58,8 @@ export default function ConversationPage() {
     setConversation,
   });
 
-  const meeting = useMeet(conversationId);
+  const latestSystemMessage = messages.findLast((message) => message.message_type === 'system');
+  const meeting = useMeet(conversationId, latestSystemMessage?.id ?? null);
 
   const activeListing = conversation?.trade_listings?.[0] ?? null;
 

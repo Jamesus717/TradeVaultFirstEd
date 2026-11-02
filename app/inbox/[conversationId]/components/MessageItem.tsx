@@ -91,7 +91,7 @@ export default function MessageItem({
                 </button>
               </>
             ) : (
-              <span className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-[10px] font-bold tracking-wider text-stone-200">
+              <span className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-[10px] font-bold capitalize tracking-wider text-stone-200">
                 {message.offer_status ?? 'pending'}
               </span>
             )}

@@ -39,6 +39,7 @@ export default function Page() {
     bulkSaving,
     toggleOwned,
     toggleAllOwned,
+    noteOwned,
     ownershipFilter,
     setOwnershipFilter,
   } = useBinder();
@@ -209,7 +210,7 @@ export default function Page() {
         )}
       </div>
 
-      <QuickAdd />
+      <QuickAdd onOwned={noteOwned} />
 
       <CardDetailModal 
         card={selectedCard} 

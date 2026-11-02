@@ -22,9 +22,10 @@ Then open http://localhost:3100 (matches), `/shops`, `/shops/example-cards-leeds
 - Home shows "Matching is on its way".
 - `/shops` shows "No shops listed yet".
 - The meet panel and shop filter stay hidden.
-- Quick add writes to the existing `user_cards` and `wishlist_cards` tables, as Normal variant.
+- Quick add writes to the existing `user_cards` and `wishlist_cards` tables, as Normal variant (Unlimited for vintage sets, matching the binder). The wishlist half needs migration 018.
 
 ## Not tested
 
 - Matches, shops, meet step and quick add against a real database. The database functions are tested on PGlite only, and the new screens were only seen with demo data.
-- Quick add needs a signed-in user, so it has not been run at all.
+- Quick add needs a signed-in user, so its screen has not been run. Its save logic is tested with a fake client only.
+- The meet panel refreshing when the other trader answers relies on realtime, so it has not been seen working.

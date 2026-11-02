@@ -2,6 +2,8 @@
 
 import Image from 'next/image';
 import { useState } from 'react';
+import type { CardVariantType } from '../../../lib/constants/cardVariants';
+import { saveQuickAdd, type QuickAddTarget } from '../../../lib/quickAdd';
 import { supabase } from '../../../lib/supabaseClient';
 import { useAuth } from '../../auth';
 import { useCardSearch } from '../../trade/hooks/useCardSearch';
@@ -11,7 +13,7 @@ const NO_OWNED_CARDS = new Set<string>();
 
 // Add a card from anywhere in the binder without finding its set first: built
 // for logging a pull or a want from a phone at a shop.
-export function QuickAdd() {
+export function QuickAdd({ onOwned }: { onOwned: (setId: string, cardId: string, variant: CardVariantType) => void }) {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -36,39 +38,33 @@ export function QuickAdd() {
     setFailed(false);
   }
 
-  async function save(target: 'owned' | 'wanted') {
+  async function save(target: QuickAddTarget) {
     if (!card || !user || !supabase) {
       return;
     }
 
     setSaving(true);
     setFailed(false);
-    const { error: saveError } =
-      target === 'owned'
-        ? await supabase.from('user_cards').upsert(
-            { user_id: user.id, card_id: card.id, set_id: card.set?.id ?? null, variant: 'Normal', owned: true },
-            { onConflict: 'user_id,card_id,variant,set_id' }
-          )
-        : await supabase.from('wishlist_cards').insert({
-            user_id: user.id,
-            card_id: card.id,
-            set_id: card.set?.id ?? null,
-            card_name: card.name,
-            card_number: card.number,
-            image_url: card.images?.small ?? null,
-            set_name: card.set?.name ?? null,
-          });
+    const result = await saveQuickAdd(supabase, user.id, card, target);
     setSaving(false);
 
-    if (saveError) {
-      setFailed(true);
-      setMessage(saveError.code === '23505' ? `${card.name} is already on your wishlist.` : saveError.message);
+    setFailed(!result.ok);
+    setMessage(result.message);
+    if (!result.ok) {
       return;
     }
 
-    setMessage(target === 'owned' ? `Added ${card.name} to your binder.` : `Added ${card.name} to your wishlist.`);
+    if (target === 'owned' && card.set?.id) {
+      onOwned(card.set.id, card.id, result.variant);
+    }
     setCard(null);
     setQuery('');
+  }
+
+  function pick(next: CardSearchResult) {
+    setCard(next);
+    setMessage('');
+    setFailed(false);
   }
 
   if (!user) {
@@ -146,7 +142,7 @@ export function QuickAdd() {
                     <li key={result.id}>
                       <button
                         type="button"
-                        onClick={() => setCard(result)}
+                        onClick={() => pick(result)}
                         className="flex min-h-14 w-full items-center gap-3 rounded-xl p-2 text-left hover:bg-white/[0.06]"
                       >
                         {result.images?.small ? (

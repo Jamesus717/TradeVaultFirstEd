@@ -7,7 +7,9 @@ import type { MeetState } from '../components/MeetPanel';
 
 // Read apart from the conversation query, so that query keeps working on a
 // database without migration 021. `meet` stays null there and the panel hides.
-export function useMeet(conversationId: string) {
+// Each meet change posts a system message, so `latestSystemMessageId` changing
+// is how the other trader's panel hears about it.
+export function useMeet(conversationId: string, latestSystemMessageId: string | null) {
   const [meet, setMeet] = useState<MeetState | null>(null);
   const [shops, setShops] = useState<Shop[]>([]);
   const [pending, setPending] = useState(false);
@@ -32,6 +34,14 @@ export function useMeet(conversationId: string) {
     loadShops().then(setShops).catch(() => setShops([]));
     return () => clearTimeout(handle);
   }, [refresh]);
+
+  useEffect(() => {
+    if (!latestSystemMessageId) {
+      return;
+    }
+    const handle = setTimeout(refresh, 0);
+    return () => clearTimeout(handle);
+  }, [latestSystemMessageId, refresh]);
 
   async function run(name: string, args: Record<string, unknown>) {
     if (!supabase) {

@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { DEMO_MATCHES, demoMode } from '../lib/demo';
+import { demoMatches, demoMode } from '../lib/demo';
 import { groupMatches, isNotMigrated, tradeAnchor, type MatchRow, type TraderMatch } from '../lib/matching';
 import { loadShops, sortShops, type Shop } from '../lib/shops';
 import { supabase } from '../lib/supabaseClient';
@@ -34,7 +34,7 @@ export default function HomePage() {
 
     async function load() {
       if (demoMode) {
-        setRows(DEMO_MATCHES);
+        setRows(demoMatches(shopId));
         setState('ready');
         return;
       }
@@ -93,7 +93,7 @@ export default function HomePage() {
           <h1 className="text-3xl font-bold text-white sm:text-4xl">Who can trade with you</h1>
           <p className="max-w-xl text-sm leading-6 text-stone-300 sm:text-base">
             {matches.length > 0
-              ? `${matches.length} ${matches.length === 1 ? 'trader has' : 'traders have'} a card you want or want one you have. ${twoWayCount} of these work both ways.`
+              ? `${matches.length === 1 ? '1 trader has a card you want or wants' : `${matches.length} traders have a card you want or want`} one you have. ${twoWayCount} of these ${twoWayCount === 1 ? 'works' : 'work'} both ways.`
               : 'See who has the cards you want, and who wants your spares.'}
           </p>
         </header>
