@@ -1,11 +1,14 @@
 'use client';
 
+import { demoMode } from '../../lib/demo';
 import { useAuth } from '../auth';
+import { DemoBanner } from '../components/DemoBanner';
 import { ListingModal } from './components/ListingModal';
 import { TradeBoardGrid } from './components/TradeBoardGrid';
 import { TradeBoardHeader } from './components/TradeBoardHeader';
 import { TradeFilterBar } from './components/TradeFilterBar';
 import { useListingForm } from './hooks/useListingForm';
+import { useShopFilter } from './hooks/useShopFilter';
 import { useTradeFilters } from './hooks/useTradeFilters';
 import { useTradeListings } from './hooks/useTradeListings';
 import { useWishlistIds } from './hooks/useWishlistIds';
@@ -14,12 +17,19 @@ export default function TradeBoardPage() {
   const { user, authLoading } = useAuth();
   const board = useTradeListings();
   const wishlistIds = useWishlistIds(user?.id ?? null);
-  const filters = useTradeFilters({ listings: board.listings, wishlistIds });
+  const { shops, shopByListing } = useShopFilter();
+  const filters = useTradeFilters({ listings: board.listings, wishlistIds, shopByListing });
   const form = useListingForm({ onListingCreated: board.addListing });
 
   return (
     <main className="min-h-screen bg-transparent text-stone-100">
       <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {demoMode ? (
+          <div className="mb-6">
+            <DemoBanner />
+          </div>
+        ) : null}
+
         <TradeBoardHeader
           stats={board.stats}
           wishlistMatchCount={filters.wishlistMatchCount}
@@ -34,16 +44,16 @@ export default function TradeBoardPage() {
           (the filter bar, the error panel and the grid); it was the only mt-4
           of the four.
         */}
-        {!user && !authLoading ? (
-          <div className="mt-6 rounded-[1.5rem] border border-amber-300/15 bg-amber-400/5 p-4 text-center text-sm text-amber-200/80">
+        {!user && !authLoading && !demoMode ? (
+          <div className="mt-6 rounded-xl border border-amber-300/15 bg-amber-400/5 p-4 text-center text-sm text-amber-200/80">
             Sign in to list cards and express interest in trades
           </div>
         ) : null}
 
-        <TradeFilterBar filters={filters} setOptions={board.setOptions} hasWishlist={wishlistIds.size > 0} />
+        <TradeFilterBar filters={filters} setOptions={board.setOptions} hasWishlist={wishlistIds.size > 0} shops={shops} />
 
         {board.error ? (
-          <div className="mt-6 rounded-[1.5rem] border border-rose-400/20 bg-rose-500/10 p-6 text-rose-100">
+          <div className="mt-6 rounded-xl border border-rose-400/20 bg-rose-500/10 p-6 text-rose-100">
             {board.error}
           </div>
         ) : null}

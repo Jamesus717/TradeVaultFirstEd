@@ -1,0 +1,225 @@
+'use client';
+
+import { useState } from 'react';
+import { BinderGrid } from './BinderGrid';
+import { BinderGridSkeleton } from './BinderGridSkeleton';
+import { MissingCards } from './MissingCards';
+import { SetPicker } from './SetPicker';
+import { useBinder } from './useBinder';
+import { CardDetailModal } from './components/CardDetailModal';
+import { QuickAdd } from './components/QuickAdd';
+import type { SortMode, CardVariant } from './types';
+
+export default function Page() {
+  const [selectedCard, setSelectedCard] = useState<CardVariant | null>(null);
+
+  const {
+    user,
+    groupedSets,
+    selectedSet,
+    selectedSetId,
+    setSelectedSetId,
+    owned,
+    searchQuery,
+    setSearchQuery,
+    sortMode,
+    setSortMode,
+    visibleCards,
+    missingCards,
+    binderSummary,
+    loadingSets,
+    isLoading,
+    error,
+    cards,
+    total,
+    ownedCount,
+    completion,
+    allOwned,
+    savingId,
+    bulkSaving,
+    toggleOwned,
+    toggleAllOwned,
+    noteOwned,
+    ownershipFilter,
+    setOwnershipFilter,
+  } = useBinder();
+
+  return (
+    <main className="min-h-screen bg-transparent text-stone-100">
+      <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
+        <section className="hero-panel">
+          <div className="p-6 sm:p-8">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <p className="eyebrow">
+                    Your digital binder
+                  </p>
+                  <h1 className="text-4xl font-bold text-white sm:text-6xl">
+                    TradeBinder
+                  </h1>
+                  <p className="max-w-2xl text-sm leading-6 text-stone-300 sm:text-base">
+                    Tick off every card you own, set by set. See what&apos;s missing,
+                    what it&apos;s worth, and trade the rest safely at a local shop.
+                  </p>
+                </div>
+
+                <div className="max-w-xl">
+                  <SetPicker
+                    groupedSets={groupedSets}
+                    selectedSetId={selectedSetId}
+                    onChange={setSelectedSetId}
+                    disabled={loadingSets || Object.keys(groupedSets).length === 0}
+                    selectedSetLabel={
+                      selectedSet
+                        ? `${selectedSet.series} · ${selectedSet.releaseDate}`
+                        : 'Choose a set to load cards.'
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-4 lg:items-end">
+                <div className="min-w-[240px] rounded-xl border border-primary-300/20 bg-primary-400/10 p-5">
+                  <p className="text-xs font-medium text-primary-100/75">
+                    Collection Progress
+                  </p>
+                  <p className="mt-3 text-3xl font-semibold text-white">
+                    {ownedCount} / {total || '--'}
+                  </p>
+                  <p className="mt-1 text-sm text-primary-50/75">
+                    {completion}% complete{total > ownedCount ? ` · ${total - ownedCount} to go` : total ? ' · set complete!' : ''}
+                  </p>
+                  <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
+                    <div
+                      className="h-full rounded-full bg-primary-400 transition-all duration-300"
+                      style={{ width: `${completion}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {isLoading ? (
+          <BinderGridSkeleton />
+        ) : error ? (
+          <section className="rounded-2xl border border-rose-400/20 bg-rose-500/10 p-10 text-center text-rose-100">
+            <p>{error}</p>
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="mt-4 rounded-xl bg-primary-400 px-4 py-2 text-sm font-semibold text-primary-950 hover:bg-primary-300"
+            >
+              Try again
+            </button>
+          </section>
+        ) : (
+          <div className="space-y-8">
+            <section className="space-y-4">
+              <div className="panel p-5">
+                <p className="text-xs font-semibold text-primary-300/80">
+                  Set Binder
+                </p>
+                <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <h2 className="text-2xl font-semibold text-white">
+                    {selectedSet?.name ?? 'Selected Set'}
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={toggleAllOwned}
+                    disabled={!user || bulkSaving || cards.length === 0}
+                    className={`rounded-xl px-4 py-2 text-sm font-medium transition-colors ${
+                      !user || bulkSaving || cards.length === 0
+                        ? 'cursor-not-allowed bg-stone-800 text-stone-400'
+                        : allOwned
+                          ? 'bg-rose-400 text-rose-950 hover:bg-rose-300'
+                          : 'bg-primary-400 text-primary-950 hover:bg-primary-300'
+                    }`}
+                  >
+                    {bulkSaving ? 'Saving...' : allOwned ? 'Unmark all as owned' : 'Mark all as owned'}
+                  </button>
+                </div>
+                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <input
+                    type="search"
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    placeholder="Search card name..."
+                    className="w-full rounded-xl border border-white/10 bg-stone-950/80 px-3 py-2.5 text-sm text-white outline-none focus:border-primary-300/50"
+                  />
+                  <select
+                    value={sortMode}
+                    onChange={(event) => setSortMode(event.target.value as SortMode)}
+                    className="w-full rounded-xl border border-white/10 bg-stone-950/80 px-3 py-2.5 text-sm text-white outline-none focus:border-primary-300/50"
+                  >
+                    <option value="binder">Binder order (Number ↑)</option>
+                    <option value="number-desc">Number ↓</option>
+                    <option value="name-asc">Name A → Z</option>
+                    <option value="owned-first">Owned first</option>
+                  </select>
+                </div>
+
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {(
+                    [
+                      { value: 'all', label: 'All Cards' },
+                      { value: 'owned', label: '✓ Owned' },
+                      { value: 'unowned', label: 'Missing' },
+                    ] as const
+                  ).map(({ value, label }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setOwnershipFilter(value)}
+                      className={`rounded-full border px-4 py-1.5 
+                        text-xs font-semibold 
+                        transition-colors ${
+                        ownershipFilter === value
+                          ? 'border-primary-300/20 bg-primary-400/10 text-primary-200'
+                          : 'border-white/10 bg-white/[0.03] text-stone-300 hover:bg-white/[0.06]'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+
+                <p className="mt-1 text-sm text-stone-400">
+                  {binderSummary}
+                </p>
+              </div>
+
+              <BinderGrid
+                cards={visibleCards}
+                owned={owned}
+                savingId={savingId}
+                bulkSaving={bulkSaving}
+                canEdit={Boolean(user)}
+                onToggleOwned={toggleOwned}
+                onCardClick={setSelectedCard}
+              />
+            </section>
+
+            <MissingCards
+              missingCards={missingCards}
+              selectedSetName={selectedSet?.name ?? 'this set'}
+            />
+          </div>
+        )}
+      </div>
+
+      <QuickAdd onOwned={noteOwned} />
+
+      <CardDetailModal 
+        card={selectedCard} 
+        isOpen={selectedCard !== null} 
+        onClose={() => setSelectedCard(null)} 
+        isOwned={selectedCard ? (owned[selectedCard.id] ?? false) : false} 
+        onToggleOwned={() => selectedCard && toggleOwned(selectedCard)} 
+        isSaving={selectedCard ? savingId === selectedCard.id : false} 
+      />
+    </main>
+  );
+}

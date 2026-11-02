@@ -12,6 +12,19 @@
   --color-primary-800: var(--primary-800);
   --color-primary-900: var(--primary-900);
   --color-primary-950: var(--primary-950);
+
+  /* Binder vinyl: every neutral in the app leans blue, not brown. */
+  --color-stone-50: #f4f5fb;
+  --color-stone-100: #e8eaf4;
+  --color-stone-200: #cfd3e4;
+  --color-stone-300: #adb3cc;
+  --color-stone-400: #8a91ae;
+  --color-stone-500: #676e8c;
+  --color-stone-600: #4c5370;
+  --color-stone-700: #383f5a;
+  --color-stone-800: #282e47;
+  --color-stone-900: #1d2238;
+  --color-stone-950: #151929;
 }
 
 :root {
@@ -28,8 +41,6 @@
   --primary-800: #065f46;
   --primary-900: #064e3b;
   --primary-950: #022c22;
-  --bg-gradient-color: rgba(16, 185, 129, 0.14);
-  --hero-gradient-color: rgba(52, 211, 153, 0.16);
 }
 
 :root[data-theme="blue"] {
@@ -44,8 +55,6 @@
   --primary-800: #1e40af;
   --primary-900: #1e3a8a;
   --primary-950: #172554;
-  --bg-gradient-color: rgba(59, 130, 246, 0.14);
-  --hero-gradient-color: rgba(96, 165, 250, 0.16);
 }
 
 :root[data-theme="rose"] {
@@ -60,8 +69,6 @@
   --primary-800: #9f1239;
   --primary-900: #881337;
   --primary-950: #4c0519;
-  --bg-gradient-color: rgba(244, 63, 94, 0.14);
-  --hero-gradient-color: rgba(251, 113, 133, 0.16);
 }
 
 :root[data-theme="amber"] {
@@ -76,26 +83,29 @@
   --primary-800: #92400e;
   --primary-900: #78350f;
   --primary-950: #451a03;
-  --bg-gradient-color: rgba(245, 158, 11, 0.14);
-  --hero-gradient-color: rgba(251, 191, 36, 0.16);
 }
 
 html {
-  background:
-    radial-gradient(circle at 15% -10%, var(--bg-gradient-color), transparent 40%),
-    radial-gradient(circle at 100% 0%, rgba(99, 102, 241, 0.08), transparent 35%),
-    linear-gradient(180deg, #0b0b10 0%, #101014 100%);
-  background-attachment: fixed;
+  background: var(--color-stone-950);
 }
 
 body {
   min-height: 100vh;
-  color: #f5f5f4;
+  color: var(--color-stone-50);
   font-family: var(--font-body), "Segoe UI", system-ui, sans-serif;
-  /* Faint binder-sleeve dot grid behind every page. */
-  background-image: radial-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px);
-  background-size: 22px 22px;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Room for the bottom nav on phones. */
+@media (max-width: 639px) {
+  body {
+    padding-bottom: calc(4.25rem + env(safe-area-inset-bottom));
+  }
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary-300);
+  outline-offset: 2px;
 }
 
 h1,
@@ -169,28 +179,60 @@ h3,
 
 /* Shared surfaces so every page uses the same panel look. */
 .panel {
-  border-radius: 1.5rem;
+  border-radius: 0.875rem;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--color-stone-900);
 }
 
 .hero-panel {
   overflow: hidden;
-  border-radius: 2rem;
+  border-radius: 1rem;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  background:
-    radial-gradient(circle at 100% 0%, var(--hero-gradient-color), transparent 40%),
-    radial-gradient(circle at 0% 100%, rgba(99, 102, 241, 0.08), transparent 45%),
-    linear-gradient(135deg, rgba(28, 25, 23, 0.96), rgba(12, 12, 16, 0.96));
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+  background: var(--color-stone-900);
 }
 
 .eyebrow {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--primary-300);
+}
+
+/* An empty binder pocket, for the trade side with nothing on it yet. */
+.pocket {
+  aspect-ratio: 63 / 88;
+  border-radius: 0.5rem;
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+}
+
+/*
+ * The one loud thing in the app. Foil is kept for owned cards and for a
+ * two-way trade, so it always means something.
+ */
+.holo-tag {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.125rem 0.625rem;
   font-size: 0.75rem;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.3em;
-  color: color-mix(in srgb, var(--primary-300) 85%, transparent);
+  color: #151929;
+  background: linear-gradient(100deg, #ffb3d4, #ffec99 35%, #9cf0ff 65%, #c9b8ff);
+}
+
+/* Modals become full-screen sheets on phones. */
+@media (max-width: 639px) {
+  .sheet-backdrop {
+    align-items: stretch;
+    padding: 0;
+  }
+
+  .sheet {
+    max-height: none;
+    max-width: none;
+    border-radius: 0;
+    border-width: 0;
+    padding: 1.25rem 1rem calc(1.25rem + env(safe-area-inset-bottom));
+  }
 }
 
 .hide-scrollbar {

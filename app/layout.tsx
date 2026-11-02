@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { Bricolage_Grotesque, Inter } from 'next/font/google';
+import { Bricolage_Grotesque, Instrument_Sans } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from './auth';
 import Navbar from './navbar';
@@ -11,7 +11,7 @@ const display = Bricolage_Grotesque({
   display: 'swap',
 });
 
-const body = Inter({
+const body = Instrument_Sans({
   subsets: ['latin'],
   variable: '--font-body',
   display: 'swap',

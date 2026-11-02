@@ -5,7 +5,9 @@ export type ListingCondition =
   | 'Near Mint'
   | 'Lightly Played'
   | 'Moderately Played'
-  | 'Heavily Played';
+  | 'Heavily Played'
+  | 'Damaged'
+  | 'Ungraded';
 
 export type ListingType = 'trade' | 'sale' | 'either';
 

@@ -8,15 +8,17 @@ export type TradeSortMode = 'newest' | 'price-asc' | 'price-desc';
 type Params = {
   listings: TradeListing[];
   wishlistIds?: Set<string>;
+  shopByListing?: Record<string, string>;
 };
 
-export function useTradeFilters({ listings, wishlistIds }: Params) {
+export function useTradeFilters({ listings, wishlistIds, shopByListing }: Params) {
   const [searchText, setSearchText] = useState('');
   const [setFilter, setSetFilter] = useState('');
   const [conditionFilter, setConditionFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState<ListingTypeFilter>('all');
   const [postcodeFilter, setPostcodeFilter] = useState('');
   const [wishlistOnly, setWishlistOnly] = useState(false);
+  const [shopFilter, setShopFilter] = useState('');
   const [sortMode, setSortMode] = useState<TradeSortMode>('newest');
 
   const filtersActive = Boolean(
@@ -25,7 +27,8 @@ export function useTradeFilters({ listings, wishlistIds }: Params) {
       conditionFilter ||
       typeFilter !== 'all' ||
       postcodeFilter.trim() ||
-      wishlistOnly
+      wishlistOnly ||
+      shopFilter
   );
 
   const filteredListings = useMemo(() => {
@@ -34,6 +37,10 @@ export function useTradeFilters({ listings, wishlistIds }: Params) {
 
     const filtered = listings.filter((listing) => {
       if (wishlistOnly && !wishlistIds?.has(listing.card_id)) {
+        return false;
+      }
+
+      if (shopFilter && shopByListing?.[listing.id] !== shopFilter) {
         return false;
       }
 
@@ -83,6 +90,8 @@ export function useTradeFilters({ listings, wishlistIds }: Params) {
     postcodeFilter,
     searchText,
     setFilter,
+    shopByListing,
+    shopFilter,
     sortMode,
     typeFilter,
     wishlistIds,
@@ -100,6 +109,7 @@ export function useTradeFilters({ listings, wishlistIds }: Params) {
     setTypeFilter('all');
     setPostcodeFilter('');
     setWishlistOnly(false);
+    setShopFilter('');
   }
 
   return {
@@ -115,6 +125,8 @@ export function useTradeFilters({ listings, wishlistIds }: Params) {
     setPostcodeFilter,
     wishlistOnly,
     setWishlistOnly,
+    shopFilter,
+    setShopFilter,
     sortMode,
     setSortMode,
     wishlistMatchCount,

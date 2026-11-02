@@ -1,15 +1,17 @@
 'use client';
 
 import type { TradeFiltersState, TradeSortMode } from '../hooks/useTradeFilters';
+import type { Shop } from '../../../lib/shops';
 import { classNames } from '../utils';
 
 type Props = {
   filters: TradeFiltersState;
   setOptions: string[];
   hasWishlist: boolean;
+  shops?: Shop[];
 };
 
-export function TradeFilterBar({ filters, setOptions, hasWishlist }: Props) {
+export function TradeFilterBar({ filters, setOptions, hasWishlist, shops = [] }: Props) {
   const {
     searchText,
     setSearchText,
@@ -23,6 +25,8 @@ export function TradeFilterBar({ filters, setOptions, hasWishlist }: Props) {
     setPostcodeFilter,
     wishlistOnly,
     setWishlistOnly,
+    shopFilter,
+    setShopFilter,
     sortMode,
     setSortMode,
     filtersActive,
@@ -58,13 +62,13 @@ export function TradeFilterBar({ filters, setOptions, hasWishlist }: Props) {
           className="w-full rounded-xl border border-white/10 bg-stone-950/80 px-4 py-3 text-sm text-white outline-none"
         >
           <option value="">Any Condition</option>
-          {(['Mint', 'Near Mint', 'Lightly Played', 'Moderately Played', 'Heavily Played'] as const).map(
-            (value) => (
-              <option key={value} value={value}>
-                {value}
-              </option>
-            )
-          )}
+          {(
+            ['Mint', 'Near Mint', 'Lightly Played', 'Moderately Played', 'Heavily Played', 'Damaged', 'Ungraded'] as const
+          ).map((value) => (
+            <option key={value} value={value}>
+              {value}
+            </option>
+          ))}
         </select>
 
         <input
@@ -82,7 +86,7 @@ export function TradeFilterBar({ filters, setOptions, hasWishlist }: Props) {
             type="button"
             onClick={() => setTypeFilter(value)}
             className={classNames(
-              'rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.25em] transition-colors',
+              'rounded-full border px-4 py-2 text-xs font-semibold capitalize transition-colors',
               typeFilter === value
                 ? 'border-primary-300/20 bg-primary-400/10 text-primary-200'
                 : 'border-white/10 bg-white/[0.03] text-stone-400 hover:text-stone-200'
@@ -97,7 +101,7 @@ export function TradeFilterBar({ filters, setOptions, hasWishlist }: Props) {
             type="button"
             onClick={() => setWishlistOnly(!wishlistOnly)}
             className={classNames(
-              'rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] transition-colors',
+              'rounded-full border px-4 py-2 text-xs font-semibold transition-colors',
               wishlistOnly
                 ? 'border-primary-300/30 bg-primary-400/15 text-primary-100'
                 : 'border-white/10 bg-white/[0.03] text-stone-400 hover:text-stone-200'
@@ -105,6 +109,22 @@ export function TradeFilterBar({ filters, setOptions, hasWishlist }: Props) {
           >
             ★ My wishlist
           </button>
+        ) : null}
+
+        {shops.length > 0 ? (
+          <select
+            value={shopFilter}
+            onChange={(event) => setShopFilter(event.target.value)}
+            aria-label="Filter by shop"
+            className="rounded-xl border border-white/10 bg-stone-950/80 px-3 py-2 text-sm text-stone-200 outline-none"
+          >
+            <option value="">Any shop</option>
+            {shops.map((shop) => (
+              <option key={shop.id} value={shop.id}>
+                {shop.name}
+              </option>
+            ))}
+          </select>
         ) : null}
 
         <select

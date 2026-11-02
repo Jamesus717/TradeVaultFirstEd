@@ -305,17 +305,17 @@ export default function ProfileView({ userId }: Props) {
         </section>
 
         {loading ? (
-          <section className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-10 text-center text-stone-300">
+          <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-10 text-center text-stone-300">
             Loading profile...
           </section>
         ) : error ? (
-          <section className="rounded-[2rem] border border-rose-400/20 bg-rose-500/10 p-10 text-center text-rose-100">
+          <section className="rounded-2xl border border-rose-400/20 bg-rose-500/10 p-10 text-center text-rose-100">
             {error}
           </section>
         ) : (
           <>
-            <section className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 backdrop-blur">
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary-300/80">
+            <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur">
+              <p className="text-xs font-semibold text-primary-300/80">
                 Variant Breakdown
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-stone-300">
@@ -346,20 +346,20 @@ export default function ProfileView({ userId }: Props) {
                 {Array.from({ length: 6 }).map((_, index) => (
                   <div
                     key={`skeleton-${index}`}
-                    className="h-36 animate-pulse rounded-[1.5rem] border border-white/10 bg-white/[0.04]"
+                    className="h-36 animate-pulse rounded-xl border border-white/10 bg-white/[0.04]"
                   />
                 ))}
               </section>
             ) : groupedRows.length === 0 ? (
               <section className="mx-auto flex w-full max-w-2xl flex-col items-center justify-center px-4">
-                <div className="w-full rounded-[2rem] border border-white/10 bg-white/[0.03] p-10 text-center backdrop-blur">
+                <div className="w-full rounded-2xl border border-white/10 bg-white/[0.03] p-10 text-center backdrop-blur">
                   <div className="mb-6 text-5xl">📭</div>
                   <h2 className="text-2xl font-semibold text-white">No cards tracked yet</h2>
                   <p className="mt-2 text-sm leading-6 text-stone-400">
                     Head back to the Binder to start marking variants as owned.
                   </p>
                   <Link
-                    href="/"
+                    href="/binder"
                     className="mt-6 inline-block rounded-xl bg-primary-400 px-5 py-2.5 text-sm font-medium text-primary-950 hover:bg-primary-300"
                   >
                     Go to Binder
@@ -379,7 +379,7 @@ export default function ProfileView({ userId }: Props) {
                   return (
                     <article
                       key={group.setId}
-                      className={`relative rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5 transition-all hover:bg-white/[0.05] ${
+                      className={`relative rounded-xl border border-white/10 bg-white/[0.03] p-5 transition-all hover:bg-white/[0.05] ${
                         completionRatio && completionRatio > 0.5 ? 'border-l-2 border-l-primary-400/40' : ''
                       }`}
                     >
@@ -389,7 +389,7 @@ export default function ProfileView({ userId }: Props) {
                         </div>
                       ) : null}
 
-                      <p className="text-xs font-medium uppercase tracking-[0.28em] text-stone-400">
+                      <p className="text-xs font-medium text-stone-400">
                         {group.series}
                       </p>
                       <h2 className="mt-1 text-base font-semibold text-white">{group.setName}</h2>
