@@ -2,6 +2,7 @@
 // this is the only way to see the matching and shop pages. Nothing here is real:
 // the traders and shops are made up, and every demo page says so.
 
+import type { TradeListing } from '../app/trade/types';
 import type { MatchRow } from './matching';
 import type { Shop } from './shops';
 
@@ -63,6 +64,7 @@ function row(
 const sam: [string, string] = ['demo-sam', 'Sam (example)'];
 const robin: [string, string] = ['demo-robin', 'Robin (example)'];
 const alex: [string, string] = ['demo-alex', 'Alex (example)'];
+const jo: [string, string] = ['demo-jo', 'Jo (example)'];
 
 export const DEMO_MATCHES: MatchRow[] = [
   row(robin, 'they_have', 15, 'Venusaur', { condition: null }),
@@ -73,5 +75,69 @@ export const DEMO_MATCHES: MatchRow[] = [
   row(alex, 'i_have', 10, 'Mewtwo', { condition: 'MP' }),
   row(robin, 'i_have', 8, 'Machamp', { is_spare: true }),
   row(robin, 'i_have', 7, 'Hitmonchan'),
-  row(['demo-jo', 'Jo (example)'], 'they_have', 1, 'Alakazam'),
+  row(jo, 'they_have', 1, 'Alakazam'),
 ];
+
+// Which shop each example trader uses, so the home shop chips filter.
+const DEMO_TRADER_SHOPS: Record<string, string> = {
+  'demo-sam': 'demo-1',
+  'demo-robin': 'demo-1',
+  'demo-alex': 'demo-2',
+  'demo-jo': 'demo-3',
+};
+
+export function demoMatches(shopId: string) {
+  return shopId ? DEMO_MATCHES.filter((match) => DEMO_TRADER_SHOPS[match.trader_id] === shopId) : DEMO_MATCHES;
+}
+
+function listing(
+  trader: [string, string],
+  number: number,
+  name: string,
+  hoursAgo: number,
+  nowMs: number,
+  extra: Partial<TradeListing> = {}
+): TradeListing {
+  return {
+    id: `${trader[0]}-listing-${number}`,
+    user_id: trader[1],
+    card_id: `base1-${number}`,
+    card_name: name,
+    set_name: 'Base',
+    set_id: 'base1',
+    card_number: String(number),
+    variant: 'Unlimited',
+    condition: 'Near Mint',
+    listing_type: 'trade',
+    // No made-up prices: a sale listing reads "Price on request".
+    price: null,
+    trade_description: 'Example: open to Base set holos',
+    postcode_prefix: DEMO_SHOPS.find((entry) => entry.id === DEMO_TRADER_SHOPS[trader[0]])?.postcode_prefix ?? null,
+    image_url: null,
+    card_image_url: `https://images.pokemontcg.io/base1/${number}.png`,
+    created_at: new Date(nowMs - hoursAgo * 3_600_000).toISOString(),
+    is_active: true,
+    ...extra,
+  };
+}
+
+export function demoListings(nowMs: number): TradeListing[] {
+  return [
+    listing(sam, 4, 'Charizard', 1, nowMs, { condition: 'Lightly Played', listing_type: 'either' }),
+    listing(alex, 16, 'Zapdos', 3, nowMs),
+    listing(robin, 15, 'Venusaur', 5, nowMs, { listing_type: 'sale', trade_description: null }),
+    listing(jo, 1, 'Alakazam', 8, nowMs, { condition: 'Moderately Played' }),
+    listing(sam, 58, 'Pikachu', 26, nowMs, { variant: 'Normal', trade_description: null }),
+    listing(alex, 10, 'Mewtwo', 30, nowMs, { condition: 'Moderately Played', listing_type: 'sale', trade_description: null }),
+    listing(robin, 8, 'Machamp', 50, nowMs, { variant: '1st Edition' }),
+    listing(jo, 2, 'Blastoise', 72, nowMs, { condition: 'Heavily Played', listing_type: 'either' }),
+  ];
+}
+
+// Listings a shop has, derived the same way so the board's shop filter works too.
+export function demoShopByListing(listings: TradeListing[]) {
+  const traderByName = new Map([sam, robin, alex, jo].map(([id, name]) => [name, id]));
+  return Object.fromEntries(
+    listings.map((entry) => [entry.id, DEMO_TRADER_SHOPS[traderByName.get(entry.user_id) ?? '']])
+  );
+}

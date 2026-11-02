@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { demoMode } from '../../../lib/demo';
+import { demoListings, demoMode, demoShopByListing } from '../../../lib/demo';
 import { loadShops, type Shop } from '../../../lib/shops';
 import { supabase } from '../../../lib/supabaseClient';
 
@@ -16,7 +16,12 @@ export function useShopFilter() {
       const loaded = await loadShops().catch(() => []);
       setShops(loaded);
 
-      if (demoMode || !supabase || loaded.length === 0) {
+      if (demoMode) {
+        setShopByListing(demoShopByListing(demoListings(Date.now())));
+        return;
+      }
+
+      if (!supabase || loaded.length === 0) {
         return;
       }
 

@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { demoMode } from '../../../lib/demo';
+import { demoListings, demoMode } from '../../../lib/demo';
 import { supabase } from '../../../lib/supabaseClient';
 import { useAuth } from '../../auth';
 import type { TradeBoardStats, TradeListing } from '../types';
@@ -42,6 +42,7 @@ export function useTradeListings() {
   useEffect(() => {
     async function loadListings() {
       if (demoMode) {
+        setListings(demoListings(Date.now()));
         setLoading(false);
         return;
       }
