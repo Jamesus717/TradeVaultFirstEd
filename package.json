@@ -18,6 +18,7 @@
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.14",
     "@opennextjs/cloudflare": "^1.20.12",
     "@tailwindcss/postcss": "^4.1.14",
     "@types/node": "^24.7.2",
@@ -29,6 +30,7 @@
     "tailwindcss": "^4.1.14",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.58.2",
+    "vitest": "^3.2.7",
     "wrangler": "^4.88.0"
   },
   "overrides": {
