@@ -7,6 +7,8 @@
 -- Filled by scripts/import-catalog.mjs with the service role; there are no
 -- client write policies. Purely additive.
 
+begin;
+
 create table if not exists public.catalog_sets (
   game text not null default 'pokemon',
   id text not null,
@@ -59,3 +61,5 @@ create policy "Catalog cards are public"
 on public.catalog_cards
 for select
 using (true);
+
+commit;

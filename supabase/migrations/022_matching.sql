@@ -11,6 +11,8 @@
 -- than hidden, because most of today's collection has no condition yet, and
 -- the row says so.
 
+begin;
+
 create or replace function public.tb_condition_rank(p_code text)
 returns integer
 language sql
@@ -203,3 +205,5 @@ $$;
 
 revoke execute on function public.start_match_conversation(uuid) from anon, public;
 grant execute on function public.start_match_conversation(uuid) to authenticated;
+
+commit;

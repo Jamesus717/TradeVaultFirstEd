@@ -5,6 +5,8 @@
 -- status 'active' once a shop agrees. Only `active` shops are public. There are
 -- no client write policies.
 
+begin;
+
 create table if not exists public.shops (
   id uuid primary key default gen_random_uuid(),
   slug text not null unique check (slug ~ '^[a-z0-9-]{2,60}$'),
@@ -277,3 +279,5 @@ revoke execute on function public.propose_meet(uuid, uuid, timestamptz) from ano
 revoke execute on function public.respond_meet(uuid, boolean, uuid, timestamptz) from anon, public;
 grant execute on function public.propose_meet(uuid, uuid, timestamptz) to authenticated;
 grant execute on function public.respond_meet(uuid, boolean, uuid, timestamptz) to authenticated;
+
+commit;

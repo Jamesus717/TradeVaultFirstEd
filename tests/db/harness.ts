@@ -42,12 +42,22 @@ export function migrationSql(file: string) {
   return readFileSync(join(MIGRATIONS_DIR, file), 'utf8').replace(/\r\n/g, '\n');
 }
 
+export function ownsTransaction(sql: string) {
+  return /^begin;$/m.test(sql) && /^commit;$/m.test(sql);
+}
+
+export function rollbackSql(file: string) {
+  return readFileSync(join(MIGRATIONS_DIR, '..', 'rollback', file), 'utf8').replace(/\r\n/g, '\n');
+}
+
 export async function applyMigrations(db: PGlite, from: string, to: string) {
   for (const file of migrationFiles()) {
     const number = file.slice(0, 3);
     if (number >= from && number <= to) {
-      // Supabase runs a migration as one transaction, so do the same.
-      await db.exec(`begin;\n${migrationSql(file)}\ncommit;`);
+      // Supabase runs a migration as one transaction, so do the same for files
+      // that don't open their own (019 onwards do).
+      const sql = migrationSql(file);
+      await db.exec(ownsTransaction(sql) ? sql : `begin;\n${sql}\ncommit;`);
     }
   }
 }

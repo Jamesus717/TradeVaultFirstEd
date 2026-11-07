@@ -20,6 +20,8 @@
 -- to the id prefix. That prefix equals set_id on every prod row (checked
 -- 2026-11-02).
 
+begin;
+
 -- ── Table ───────────────────────────────────────────────────────
 
 create table if not exists public.inventory_items (
@@ -117,7 +119,25 @@ using (true);
 
 -- Listings can now say Damaged, and spares with no recorded condition can be
 -- listed honestly as Ungraded.
-alter table public.trade_listings drop constraint if exists trade_listings_condition_check;
+-- Drop every check on the condition column by its real name, so a check
+-- named differently on prod cannot survive and keep rejecting the new values.
+do $$
+declare
+  existing record;
+begin
+  for existing in
+    select con.conname
+    from pg_constraint con
+    join pg_attribute att
+      on att.attrelid = con.conrelid and att.attname = 'condition'
+    where con.conrelid = 'public.trade_listings'::regclass
+      and con.contype = 'c'
+      and con.conkey = array[att.attnum]
+  loop
+    execute format('alter table public.trade_listings drop constraint %I', existing.conname);
+  end loop;
+end $$;
+
 alter table public.trade_listings add constraint trade_listings_condition_check
   check (condition in ('Mint', 'Near Mint', 'Lightly Played', 'Moderately Played', 'Heavily Played', 'Damaged', 'Ungraded'));
 
@@ -219,7 +239,9 @@ begin
   )
   values (
     l.user_id, l.card_id, coalesce(l.set_id, public.tb_set_from_card(l.card_id)), l.variant, code, 'for_trade', 1,
-    l.card_name, l.set_name, l.card_number, l.card_image_url, l.listing_type, l.price,
+    l.card_name, l.set_name, l.card_number, l.card_image_url, l.listing_type,
+    -- trade_listings never checked price; a zero or negative one carries over as no price.
+    case when l.price > 0 then l.price end,
     l.trade_description, l.postcode_prefix, l.image_url,
     case when l.condition = 'Mint' then l.condition end
   )
@@ -666,3 +688,5 @@ begin
       missing_owned, missing_wants, missing_listings;
   end if;
 end $$;
+
+commit;
