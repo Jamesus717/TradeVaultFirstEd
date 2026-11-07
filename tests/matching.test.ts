@@ -75,6 +75,29 @@ describe('groupMatches', () => {
     expect(names).toEqual(['Ash', 'Trader']);
   });
 
+  it('counts only your own high priority wants, not theirs', () => {
+    const [trader] = groupMatches([row('t', 'i_have', 'a', 'high'), row('t', 'i_have', 'b', 'high')]);
+    expect(trader.twoWay).toBe(false);
+    expect(trader.highPriority).toBe(0);
+  });
+
+  it('groups rows for one trader that arrive out of order', () => {
+    const ranked = groupMatches([
+      row('a', 'they_have', 'x'),
+      row('b', 'they_have', 'y'),
+      row('a', 'i_have', 'z'),
+    ]);
+    expect(ranked).toHaveLength(2);
+    expect(ranked[0]).toMatchObject({ traderId: 'a', twoWay: true });
+  });
+
+  it('leaves the rows it was given untouched', () => {
+    const rows = [row('t', 'they_have', 'a', 'low'), row('t', 'they_have', 'b', 'high')];
+    const before = rows.map((r) => r.item_id);
+    groupMatches(rows);
+    expect(rows.map((r) => r.item_id)).toEqual(before);
+  });
+
   it('ranks the demo data with two-way trades first', () => {
     const ranked = groupMatches(DEMO_MATCHES);
     expect(ranked[0].name).toContain('Sam');

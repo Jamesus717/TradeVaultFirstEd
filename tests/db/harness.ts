@@ -37,8 +37,9 @@ export function migrationFiles() {
   return readdirSync(MIGRATIONS_DIR).filter((f) => f.endsWith('.sql')).sort();
 }
 
+// Windows checkouts get CRLF; tests that patch the SQL match on LF.
 export function migrationSql(file: string) {
-  return readFileSync(join(MIGRATIONS_DIR, file), 'utf8');
+  return readFileSync(join(MIGRATIONS_DIR, file), 'utf8').replace(/\r\n/g, '\n');
 }
 
 export async function applyMigrations(db: PGlite, from: string, to: string) {

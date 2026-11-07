@@ -1,6 +1,7 @@
 'use client';
 
 import type { TradeBoardStats } from '../types';
+import { demoMode } from '../../../lib/demo';
 import { classNames } from '../utils';
 
 type Props = {
@@ -17,6 +18,7 @@ export function TradeBoardHeader({
   wishlistMatchCount,
   onShowWishlistMatches,
   hasUser, authLoading, onOpenModal }: Props) {
+  const canOpen = hasUser || demoMode;
   return (
     <section className="hero-panel">
       <div className="p-6 sm:p-8">
@@ -56,11 +58,11 @@ export function TradeBoardHeader({
             <button
               type="button"
               onClick={onOpenModal}
-              disabled={!hasUser || authLoading}
-              title={!hasUser ? 'Sign in to list a card' : undefined}
+              disabled={!canOpen || authLoading}
+              title={!canOpen ? 'Sign in to list a card' : undefined}
               className={classNames(
                 'rounded-2xl px-6 py-3 text-sm font-semibold transition-colors',
-                hasUser
+                canOpen
                   ? 'bg-primary-400 text-primary-950 hover:bg-primary-300'
                   : 'cursor-not-allowed border border-white/10 bg-white/[0.03] text-stone-400'
               )}

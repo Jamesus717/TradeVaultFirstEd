@@ -139,6 +139,7 @@ describe('020 inventory backfill on a prod-shaped copy', () => {
       'where owned\non conflict',
       `where owned and false\non conflict`
     );
+    expect(sql).toContain('where owned and false');
     await expect(fresh.exec(`begin;\n${sql}\ncommit;`)).rejects.toThrow(/backfill incomplete: 1 owned/);
     await fresh.exec('rollback');
     await expect(fresh.query('select 1 from public.inventory_items')).rejects.toThrow(/does not exist/);

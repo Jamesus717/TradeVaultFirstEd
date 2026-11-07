@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { demoMode } from '../../../lib/demo';
 import type { ListingFormState } from '../hooks/useListingForm';
 import type { ListingCondition } from '../types';
 import { canReverseHolo, classNames } from '../utils';
@@ -207,6 +208,10 @@ export function ListingModal({ form }: Props) {
                   )}
                 </label>
               </div>
+
+              {demoMode ? (
+                <p className="text-sm text-stone-400">Example only: saving is off in demo mode.</p>
+              ) : null}
 
               {form.submitError ? (
                 <div className="rounded-2xl border border-rose-300/20 bg-rose-500/10 p-4 text-sm text-rose-100">
