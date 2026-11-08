@@ -7,7 +7,8 @@
 -- user_cards could not hold them. This adds the three columns to user_cards,
 -- the table the binder reads and writes today.
 --
--- Note: 023 is the price-alerts proposal on another branch; this one is independent of it.
+-- Note: 023 is the price-alerts proposal (wishlist_cards); this one is independent of it.
+-- Apply order: 023 then 024. tests/db/proposals-order.test.ts checks that.
 --
 -- Safe by design:
 --   * Additive only. Existing rows get qty 1, no condition, no price.
