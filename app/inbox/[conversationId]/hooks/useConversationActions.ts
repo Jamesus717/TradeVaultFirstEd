@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { User } from '@supabase/supabase-js';
+import { encodeCardOffer, type CardOffer } from '../../../../lib/cardOffer';
 import { supabase } from '../../../../lib/supabaseClient';
 import type { Conversation, ConversationStatus, Message, OfferStatus } from '../types';
 
@@ -24,6 +25,10 @@ export function useConversationActions({
   const [offerOpen, setOfferOpen] = useState(false);
   const [offerAmount, setOfferAmount] = useState('');
   const [offerSending, setOfferSending] = useState(false);
+
+  const [cardOfferOpen, setCardOfferOpen] = useState(false);
+  const [cardOfferSending, setCardOfferSending] = useState(false);
+  const [cardOfferError, setCardOfferError] = useState('');
 
   // Accept/Decline, Mark as Completed and Mark as Sold each run several
   // sequential writes. They previously ran with no UI feedback at all, so the
@@ -106,6 +111,40 @@ export function useConversationActions({
     }
 
     setOfferSending(false);
+  }
+
+  // A card offer is a normal message with a tagged payload (lib/cardOffer.ts),
+  // so it needs no migration and passes the existing insert policy.
+  async function sendCardOffer(offer: CardOffer) {
+    if (!user || !supabase || !conversation || cardOfferSending || conversation.status !== 'active') {
+      return;
+    }
+
+    let content: string;
+    try {
+      content = encodeCardOffer(offer);
+    } catch (error) {
+      setCardOfferError(error instanceof Error ? error.message : 'Could not build the offer.');
+      return;
+    }
+
+    setCardOfferSending(true);
+    setCardOfferError('');
+
+    const { error: insertError } = await supabase.from('messages').insert({
+      conversation_id: conversationId,
+      sender_id: user.id,
+      content,
+      message_type: 'message',
+    });
+
+    if (insertError) {
+      setCardOfferError('Could not send the offer. Try again.');
+    } else {
+      setCardOfferOpen(false);
+    }
+
+    setCardOfferSending(false);
   }
 
   async function handleOfferDecision(message: Message, decision: OfferStatus) {
@@ -238,6 +277,11 @@ export function useConversationActions({
     setOfferAmount,
     offerSending,
     sendOffer,
+    cardOfferOpen,
+    setCardOfferOpen,
+    cardOfferSending,
+    cardOfferError,
+    sendCardOffer,
     handleOfferDecision,
     offerDecisionPending,
     startCounterOffer,

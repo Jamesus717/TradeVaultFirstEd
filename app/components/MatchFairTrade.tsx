@@ -11,6 +11,7 @@ export function MatchFairTrade({ match }: { match: TraderMatch }) {
   const toItem = (row: TraderMatch['theyHave'][number]) => ({
     name: row.card_name ?? row.card_id,
     value: prices[row.card_id] ?? null,
+    variant: row.variant,
   });
 
   return (
