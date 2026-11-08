@@ -16,7 +16,7 @@ jobs:
     timeout-minutes: 20
     env:
       NEXT_TELEMETRY_DISABLED: "1"
-      # Dummy public values so `next build` works without secrets. Not real credentials.
+      # Dummy public values so `next build` works offline. Placeholders only, not real values.
       NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-dummy-anon-key
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-dummy-publishable-key
