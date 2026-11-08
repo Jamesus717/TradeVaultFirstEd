@@ -8,7 +8,7 @@ import type { Shop } from './shops';
 
 export const demoMode = process.env.NEXT_PUBLIC_TB_DEMO === '1';
 
-function shop(id: string, name: string, town: string, prefix: string, description: string): Shop {
+function shop(id: string, name: string, town: string, description: string): Shop {
   return {
     id,
     slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
@@ -16,7 +16,6 @@ function shop(id: string, name: string, town: string, prefix: string, descriptio
     description,
     address: `1 Example Street, ${town}`,
     town,
-    postcode_prefix: prefix,
     website: null,
     opening_hours: 'Example hours: Tue to Sat, 10 to 6',
     games: ['pokemon'],
@@ -26,11 +25,11 @@ function shop(id: string, name: string, town: string, prefix: string, descriptio
 
 export const DEMO_SHOPS: Shop[] = [
   {
-    ...shop('demo-1', 'Example Cards Leeds', 'Leeds', 'LS1', 'Example shop. Trade tables at the back and a noticeboard for meets.'),
+    ...shop('demo-1', 'Example Cards Leeds', 'Leeds', 'Example shop. Trade tables at the back and a noticeboard for meets.'),
     featured_until: '2099-01-01T00:00:00Z',
   },
-  shop('demo-2', 'Sample Games York', 'York', 'YO1', 'Example shop. League night on Thursdays.'),
-  shop('demo-3', 'Placeholder TCG Sheffield', 'Sheffield', 'S1', 'Example shop. Binder swaps every Saturday.'),
+  shop('demo-2', 'Sample Games York', 'York', 'Example shop. League night on Thursdays.'),
+  shop('demo-3', 'Placeholder TCG Sheffield', 'Sheffield', 'Example shop. Binder swaps every Saturday.'),
 ];
 
 function row(
@@ -75,7 +74,8 @@ export const DEMO_MATCHES: MatchRow[] = [
   row(alex, 'i_have', 10, 'Mewtwo', { condition: 'MP' }),
   row(robin, 'i_have', 8, 'Machamp', { is_spare: true }),
   row(robin, 'i_have', 7, 'Hitmonchan'),
-  row(jo, 'they_have', 1, 'Alakazam'),
+  // Jo has match requests turned off, so the demo shows the hidden button.
+  row(jo, 'they_have', 1, 'Alakazam', { accepts_requests: false }),
 ];
 
 // Which shop each example trader uses, so the home shop chips filter.
@@ -85,6 +85,13 @@ const DEMO_TRADER_SHOPS: Record<string, string> = {
   'demo-alex': 'demo-2',
   'demo-jo': 'demo-3',
 };
+
+// The demo user has used today's free allowance, so "Start trade" shows the
+// limit message the database raises.
+export const DEMO_ALLOWANCE = { daily_limit: 10, used: 10, resets_in_hours: 5 };
+export const DEMO_LIMIT_MESSAGE = `Daily match limit reached, resets in ${DEMO_ALLOWANCE.resets_in_hours} h`;
+export const DEMO_UNREAD_MESSAGES = 2;
+export const DEMO_ME = 'demo-me';
 
 export function demoMatches(shopId: string) {
   return shopId ? DEMO_MATCHES.filter((match) => DEMO_TRADER_SHOPS[match.trader_id] === shopId) : DEMO_MATCHES;
@@ -112,7 +119,6 @@ function listing(
     // No made-up prices: a sale listing reads "Price on request".
     price: null,
     trade_description: 'Example: open to Base set holos',
-    postcode_prefix: DEMO_SHOPS.find((entry) => entry.id === DEMO_TRADER_SHOPS[trader[0]])?.postcode_prefix ?? null,
     image_url: null,
     card_image_url: `https://images.pokemontcg.io/base1/${number}.png`,
     created_at: new Date(nowMs - hoursAgo * 3_600_000).toISOString(),

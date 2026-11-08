@@ -96,10 +96,117 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Room for the bottom nav on phones. */
-@media (max-width: 639px) {
+/* Room for the bottom tab bar on phones, and for the side rail from tablet up. */
+@media (max-width: 767px) {
   body {
-    padding-bottom: calc(4.25rem + env(safe-area-inset-bottom));
+    padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+  }
+}
+
+@media (min-width: 768px) {
+  body {
+    padding-left: 72px;
+  }
+}
+
+/* ── Side rail ─────────────────────────────────────────────────── */
+.side-rail {
+  position: fixed;
+  inset-block: 0;
+  left: 0;
+  z-index: 50;
+  display: none;
+  width: 72px;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+  border-right: 1px solid rgb(255 255 255 / 0.08);
+  background: rgb(12 10 9 / 0.96);
+  backdrop-filter: blur(12px);
+  transition: width 180ms cubic-bezier(0.2, 0, 0, 1), box-shadow 180ms ease;
+}
+
+@media (min-width: 768px) {
+  .side-rail {
+    display: flex;
+  }
+}
+
+.rail-item {
+  position: relative;
+  display: flex;
+  min-height: 3rem;
+  margin-inline: 0.5rem;
+  align-items: center;
+  gap: 1rem;
+  overflow: hidden;
+  border-radius: 0.875rem;
+  padding-inline: 1rem;
+  color: var(--color-stone-400);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.rail-item:hover {
+  background: rgb(255 255 255 / 0.06);
+  color: var(--color-stone-50);
+}
+
+.rail-item.is-active {
+  background: rgb(255 255 255 / 0.08);
+  color: #fff;
+  font-weight: 600;
+}
+
+.rail-item.is-active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.75rem;
+  bottom: 0.75rem;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--primary-400);
+}
+
+.rail-logo {
+  margin-bottom: 0.5rem;
+  padding-inline: 0.5rem;
+}
+
+.rail-logo:hover {
+  background: transparent;
+}
+
+.rail-label {
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+
+/* Desktop only: widen on hover or keyboard focus. Tablets keep the icon rail. */
+@media (min-width: 1024px) {
+  .side-rail:hover,
+  .side-rail:has(:focus-visible) {
+    width: 240px;
+    box-shadow: 12px 0 40px rgb(0 0 0 / 0.45);
+  }
+
+  .side-rail:hover .rail-label,
+  .side-rail:has(:focus-visible) .rail-label {
+    opacity: 1;
+    transform: none;
+    transition-delay: 40ms;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .side-rail,
+  .rail-label,
+  .rail-item {
+    transition: none;
   }
 }
 

@@ -130,7 +130,7 @@ export default function Page() {
                     type="button"
                     onClick={toggleAllOwned}
                     disabled={!user || bulkSaving || cards.length === 0}
-                    className={`rounded-xl px-4 py-2 text-sm font-medium transition-colors ${
+                    className={`min-h-11 rounded-xl px-4 py-2 text-sm font-medium transition-colors ${
                       !user || bulkSaving || cards.length === 0
                         ? 'cursor-not-allowed bg-stone-800 text-stone-400'
                         : allOwned
@@ -147,12 +147,12 @@ export default function Page() {
                     value={searchQuery}
                     onChange={(event) => setSearchQuery(event.target.value)}
                     placeholder="Search card name..."
-                    className="w-full rounded-xl border border-white/10 bg-stone-950/80 px-3 py-2.5 text-sm text-white outline-none focus:border-primary-300/50"
+                    className="min-h-11 w-full rounded-xl border border-white/10 bg-stone-950/80 px-3 py-2.5 text-sm text-white outline-none focus:border-primary-300/50"
                   />
                   <select
                     value={sortMode}
                     onChange={(event) => setSortMode(event.target.value as SortMode)}
-                    className="w-full rounded-xl border border-white/10 bg-stone-950/80 px-3 py-2.5 text-sm text-white outline-none focus:border-primary-300/50"
+                    className="min-h-11 w-full rounded-xl border border-white/10 bg-stone-950/80 px-3 py-2.5 text-sm text-white outline-none focus:border-primary-300/50"
                   >
                     <option value="binder">Binder order (Number ↑)</option>
                     <option value="number-desc">Number ↓</option>
@@ -173,7 +173,7 @@ export default function Page() {
                       key={value}
                       type="button"
                       onClick={() => setOwnershipFilter(value)}
-                      className={`rounded-full border px-4 py-1.5 
+                      className={`min-h-11 rounded-full border px-4 py-1.5 
                         text-xs font-semibold 
                         transition-colors ${
                         ownershipFilter === value

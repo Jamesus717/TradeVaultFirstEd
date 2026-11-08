@@ -91,13 +91,6 @@ export default function ListingSidebar({
         <p className="text-sm text-stone-300">{activeListing.trade_description}</p>
       ) : null}
 
-      {activeListing?.postcode_prefix ? (
-        <p className="text-xs text-stone-400">
-          <span className="mr-1">📍</span>
-          {activeListing.postcode_prefix} area
-        </p>
-      ) : null}
-
       <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.03] p-4">
         <p className="text-xs font-semibold text-stone-400">Seller</p>
         <p className="mt-2 text-sm text-stone-200">

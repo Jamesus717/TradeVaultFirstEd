@@ -174,7 +174,7 @@ export function ListingModal({ form }: Props) {
                   className="w-full rounded-xl border border-white/10 bg-stone-950 px-4 py-3 text-sm text-white outline-none"
                 />
                 <p className="text-xs text-stone-500">
-                  Only the first part — we never store your full postcode
+                  Only the first part. It is not shown on the trade board or in chats.
                 </p>
               </div>
 

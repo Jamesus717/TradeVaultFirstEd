@@ -27,8 +27,8 @@ describe('isFeatured', () => {
 
 describe('shopPlace', () => {
   it('skips missing parts', () => {
-    expect(shopPlace({ town: 'Leeds', postcode_prefix: 'LS1' })).toBe('Leeds, LS1');
-    expect(shopPlace({ town: null, postcode_prefix: 'LS1' })).toBe('LS1');
+    expect(shopPlace({ town: 'Leeds' })).toBe('Leeds');
+    expect(shopPlace({ town: null })).toBe('');
   });
 });
 

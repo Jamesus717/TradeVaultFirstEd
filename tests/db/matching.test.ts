@@ -101,8 +101,8 @@ describe('get_trade_matches', () => {
       const start = () =>
         asUser(db, ash, () => db.query<{ id: string }>('select public.start_match_conversation($1) as id', [rows[0].id]));
       const first = await start();
-      const second = await start();
-      expect(second.rows[0].id).toBe(first.rows[0].id);
+      expect(first.rows[0].id).toBeTruthy();
+      await expect(start()).rejects.toThrow(/already have a chat about this card/);
       expect(await count(db, `public.trade_listings where card_id = 'sv1-21' and condition = 'Lightly Played' and listing_type = 'trade'`)).toBe(1);
       expect(await count(db, `public.inventory_items where card_id = 'sv1-21' and quantity = 1`)).toBe(1);
     });

@@ -85,7 +85,7 @@ export default function ShopPage() {
       <div className="mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 py-6 sm:px-6 sm:py-10">
         <DemoBanner />
 
-        <Link href="/shops" className="text-sm text-stone-400 hover:text-white">
+        <Link href="/shops" className="inline-flex min-h-11 items-center self-start text-sm text-stone-400 hover:text-white">
           All shops
         </Link>
 
