@@ -6,6 +6,10 @@ import { EmptyState } from '../components/EmptyState';
 import { useAuth } from '../auth';
 import { supabase } from '../../lib/supabaseClient';
 import type { CardSearchResult } from '../trade/types';
+import { DEMO_WISHLIST, demoMode, demoPrices } from '../../lib/demo';
+import { findUnderTarget, formatGbp, parseTargetPrice, type CachedPrice } from '../../lib/priceAlerts';
+import { fetchCachedPrices, missingTargetColumn } from '../../lib/priceAlertsData';
+import { PriceAlerts } from './PriceAlerts';
 
 type Priority = 'low' | 'medium' | 'high';
 
@@ -20,7 +24,11 @@ type WishlistRow = {
   quantity: number;
   priority: Priority;
   note: string | null;
+  // Absent when the 023 proposal (target prices) is not applied.
+  target_price?: number | string | null;
 };
+
+const BASE_COLUMNS = 'id, card_id, set_id, card_name, card_number, image_url, set_name, quantity, priority, note';
 
 const PRIORITY_LABEL: Record<Priority, string> = { high: 'High', medium: 'Medium', low: 'Low' };
 const PRIORITY_ORDER: Record<Priority, number> = { high: 0, medium: 1, low: 2 };
@@ -40,8 +48,20 @@ export default function WishlistPage() {
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [prices, setPrices] = useState<CachedPrice[]>([]);
+  const [nowMs, setNowMs] = useState(0);
+  const [targetsReady, setTargetsReady] = useState(true);
+  const [targetErrors, setTargetErrors] = useState<Record<string, string>>({});
 
   const load = useCallback(async () => {
+    if (demoMode) {
+      const now = Date.now();
+      setRows(DEMO_WISHLIST);
+      setPrices(demoPrices(now));
+      setNowMs(now);
+      setLoading(false);
+      return;
+    }
     if (!supabase || !user) {
       setRows([]);
       setLoading(false);
@@ -49,11 +69,14 @@ export default function WishlistPage() {
     }
     setLoading(true);
     setError('');
-    const { data, error: loadError } = await supabase
-      .from('wishlist_cards')
-      .select('id, card_id, set_id, card_name, card_number, image_url, set_name, quantity, priority, note')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
+    const client = supabase;
+    const read = (columns: string) =>
+      client.from('wishlist_cards').select(columns).eq('user_id', user.id).order('created_at', { ascending: false });
+    let { data, error: loadError } = await read(`${BASE_COLUMNS}, target_price`);
+    // Target prices need the 023 proposal; without it the list still works.
+    const hasTargets = !missingTargetColumn(loadError);
+    if (!hasTargets) ({ data, error: loadError } = await read(BASE_COLUMNS));
+    setTargetsReady(hasTargets);
 
     if (loadError) {
       setError(
@@ -62,7 +85,10 @@ export default function WishlistPage() {
           : loadError.message
       );
     } else {
-      setRows((data ?? []) as WishlistRow[]);
+      const loaded = (data ?? []) as unknown as WishlistRow[];
+      setRows(loaded);
+      setPrices(await fetchCachedPrices(client, loaded.map((row) => row.card_id)));
+      setNowMs(Date.now());
     }
     setLoading(false);
   }, [user]);
@@ -128,7 +154,7 @@ export default function WishlistPage() {
         image_url: card.images?.small ?? null,
         set_name: card.set?.name ?? null,
       })
-      .select('id, card_id, set_id, card_name, card_number, image_url, set_name, quantity, priority, note')
+      .select(BASE_COLUMNS)
       .single();
 
     if (insertError) {
@@ -139,10 +165,13 @@ export default function WishlistPage() {
     setBusyId(null);
   }
 
-  async function updateRow(id: string, patch: Partial<Pick<WishlistRow, 'quantity' | 'priority' | 'note'>>) {
-    if (!supabase) return;
+  async function updateRow(
+    id: string,
+    patch: Partial<Pick<WishlistRow, 'quantity' | 'priority' | 'note' | 'target_price'>>
+  ) {
     const previous = rows;
     setRows((current) => current.map((row) => (row.id === id ? { ...row, ...patch } : row)));
+    if (demoMode || !supabase) return;
     const { error: updateError } = await supabase.from('wishlist_cards').update(patch).eq('id', id);
     if (updateError) {
       setRows(previous);
@@ -150,10 +179,23 @@ export default function WishlistPage() {
     }
   }
 
+  function saveTarget(row: WishlistRow, input: string) {
+    const parsed = parseTargetPrice(input);
+    setTargetErrors((current) => {
+      const next = { ...current };
+      if (parsed.ok) delete next[row.id];
+      else next[row.id] = parsed.error;
+      return next;
+    });
+    if (!parsed.ok) return;
+    const currentValue = row.target_price === null || row.target_price === undefined ? null : Number(row.target_price);
+    if (parsed.value !== currentValue) updateRow(row.id, { target_price: parsed.value });
+  }
+
   async function removeRow(id: string) {
-    if (!supabase) return;
     const previous = rows;
     setRows((current) => current.filter((row) => row.id !== id));
+    if (demoMode || !supabase) return;
     const { error: deleteError } = await supabase.from('wishlist_cards').delete().eq('id', id);
     if (deleteError) {
       setRows(previous);
@@ -162,6 +204,15 @@ export default function WishlistPage() {
   }
 
   const sorted = [...rows].sort((a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority]);
+  const priceByCard = new Map(prices.map((price) => [price.card_id, price]));
+  const alerts = targetsReady
+    ? findUnderTarget(
+        rows.map((row) => ({ ...row, target_price: row.target_price ?? null })),
+        prices,
+        { nowMs }
+      )
+    : [];
+  const alerted = new Set(alerts.map((alert) => alert.wishlistId));
 
   return (
     <main className="min-h-screen bg-transparent text-stone-100">
@@ -184,11 +235,17 @@ export default function WishlistPage() {
           </div>
         ) : null}
 
-        {supabaseDisabled ? (
+        {demoMode ? (
+          <p className="mt-6 rounded-xl border border-amber-300/20 bg-amber-400/5 p-3 text-xs text-amber-200/80">
+            Example wishlist and example prices. Nothing here is saved.
+          </p>
+        ) : null}
+
+        {!demoMode && supabaseDisabled ? (
           <div className="mt-6 rounded-xl border border-white/10 bg-white/[0.03] p-6 text-sm text-stone-300">
             Supabase isn&apos;t configured, so the wishlist is unavailable.
           </div>
-        ) : !authLoading && !user ? (
+        ) : !demoMode && !authLoading && !user ? (
           <div className="mt-6 rounded-xl border border-amber-300/15 bg-amber-400/5 p-6 text-center text-sm text-amber-200/80">
             Sign in to build your wishlist.
           </div>
@@ -240,6 +297,12 @@ export default function WishlistPage() {
                 </ul>
               ) : null}
             </section>
+
+            {alerts.length > 0 ? (
+              <div className="mt-6">
+                <PriceAlerts alerts={alerts} example={demoMode} />
+              </div>
+            ) : null}
 
             <section className="mt-6">
               {loading ? (
@@ -317,6 +380,37 @@ export default function WishlistPage() {
                             +
                           </button>
                         </div>
+                        <PriceLine
+                          price={priceByCard.get(row.card_id)}
+                          under={alerted.has(row.id)}
+                          example={demoMode}
+                        />
+                        {targetsReady ? (
+                          <div>
+                            <label className="flex items-center gap-2 text-xs text-stone-300">
+                              <span className="shrink-0">Alert under £</span>
+                              <input
+                                defaultValue={
+                                  row.target_price === null || row.target_price === undefined
+                                    ? ''
+                                    : Number(row.target_price).toFixed(2)
+                                }
+                                inputMode="decimal"
+                                placeholder="e.g. 12.50"
+                                aria-label={`Target price for ${row.card_name}`}
+                                aria-invalid={targetErrors[row.id] ? true : undefined}
+                                onBlur={(event) => saveTarget(row, event.target.value)}
+                                onKeyDown={(event) => {
+                                  if (event.key === 'Enter') event.currentTarget.blur();
+                                }}
+                                className="min-h-11 w-full min-w-0 rounded-lg border border-white/10 bg-stone-950/60 px-2 text-sm text-white placeholder:text-stone-500"
+                              />
+                            </label>
+                            {targetErrors[row.id] ? (
+                              <p className="mt-1 text-[11px] text-rose-300">{targetErrors[row.id]}</p>
+                            ) : null}
+                          </div>
+                        ) : null}
                         <input
                           defaultValue={row.note ?? ''}
                           maxLength={200}
@@ -345,5 +439,19 @@ export default function WishlistPage() {
         )}
       </div>
     </main>
+  );
+}
+
+function PriceLine({ price, under, example }: { price?: CachedPrice; under: boolean; example: boolean }) {
+  const amount = price?.price_mid === null || price?.price_mid === undefined ? null : Number(price.price_mid);
+  if (amount === null || !Number.isFinite(amount) || (price?.currency ?? 'GBP') !== 'GBP') {
+    return <p className="text-xs text-stone-500">No market price yet</p>;
+  }
+  return (
+    <p className="text-xs text-stone-300">
+      Market <span className={under ? 'font-semibold text-emerald-300' : 'text-white'}>{formatGbp(amount)}</span>
+      {example ? <span className="text-stone-500"> (example)</span> : null}
+      {under ? <span className="text-emerald-300"> · under target</span> : null}
+    </p>
   );
 }

@@ -240,3 +240,60 @@ export function demoConversation(id: string, nowMs: number) {
     : {};
   return { conversation, messages, profiles };
 }
+
+// Price alerts demo: wishlist cards with target prices and example cached
+// prices. The prices are made up and the page labels them as examples.
+export type DemoWishlistRow = {
+  id: string;
+  card_id: string;
+  set_id: string | null;
+  card_name: string;
+  card_number: string | null;
+  image_url: string | null;
+  set_name: string | null;
+  quantity: number;
+  priority: 'low' | 'medium' | 'high';
+  note: string | null;
+  target_price: number | null;
+};
+
+function want(
+  number: number,
+  name: string,
+  priority: DemoWishlistRow['priority'],
+  target: number | null,
+  note: string | null = null
+): DemoWishlistRow {
+  return {
+    id: `demo-want-${number}`,
+    card_id: `base1-${number}`,
+    set_id: 'base1',
+    card_name: name,
+    card_number: String(number),
+    image_url: `https://images.pokemontcg.io/base1/${number}.png`,
+    set_name: 'Base',
+    quantity: 1,
+    priority,
+    note,
+    target_price: target,
+  };
+}
+
+export const DEMO_WISHLIST: DemoWishlistRow[] = [
+  want(4, 'Charizard', 'high', 250, 'Example: unlimited is fine'),
+  want(2, 'Blastoise', 'high', 90),
+  want(15, 'Venusaur', 'medium', 60),
+  want(16, 'Zapdos', 'medium', 20),
+  want(58, 'Pikachu', 'low', null),
+];
+
+export function demoPrices(nowMs: number) {
+  const hoursAgo = (h: number) => new Date(nowMs - h * 3_600_000).toISOString();
+  return [
+    { card_id: 'base1-4', price_mid: 231.4, currency: 'GBP', fetched_at: hoursAgo(3) },
+    { card_id: 'base1-2', price_mid: 104.9, currency: 'GBP', fetched_at: hoursAgo(5) },
+    { card_id: 'base1-15', price_mid: 48.75, currency: 'GBP', fetched_at: hoursAgo(20) },
+    { card_id: 'base1-16', price_mid: 18.2, currency: 'GBP', fetched_at: hoursAgo(30) },
+    { card_id: 'base1-58', price_mid: 6.1, currency: 'GBP', fetched_at: hoursAgo(2) },
+  ];
+}

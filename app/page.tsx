@@ -6,12 +6,16 @@ import { useUnreadMessages } from './components/nav/useUnreadMessages';
 import { DemoBanner } from './components/DemoBanner';
 import { AllowanceNote, LimitAlert, MatchList } from './matches/MatchList';
 import { useMatches } from './matches/useMatches';
+import { PriceAlerts } from './wishlist/PriceAlerts';
+import { usePriceAlerts } from './wishlist/usePriceAlerts';
+import { demoMode } from '../lib/demo';
 
 type Tile = { key: NavKey; href: string; title: string; body: string; highlight?: boolean };
 
 export default function HomePage() {
   const result = useMatches();
   const unread = useUnreadMessages();
+  const priceAlerts = usePriceAlerts();
   const { matches, allowance, startError, signedOut } = result;
   const twoWay = matches.filter((match) => match.twoWay).length;
 
@@ -67,6 +71,8 @@ export default function HomePage() {
             </Link>
           ))}
         </nav>
+
+        <PriceAlerts alerts={priceAlerts} example={demoMode} limit={2} />
 
         <section className="space-y-4" aria-labelledby="top-matches">
           <div className="flex flex-wrap items-end justify-between gap-2">
