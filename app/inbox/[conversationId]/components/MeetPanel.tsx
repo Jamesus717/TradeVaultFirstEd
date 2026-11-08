@@ -116,7 +116,7 @@ export function MeetPanel({ meet, shops, userId, otherName, pending, error, onPr
           </button>
         </form>
       ) : meet.meet_status !== 'none' ? (
-        <button type="button" onClick={() => setChoosing(true)} className="text-sm text-stone-400 underline-offset-4 hover:text-white hover:underline">
+        <button type="button" onClick={() => setChoosing(true)} className="inline-flex min-h-11 items-center text-sm text-stone-400 underline-offset-4 hover:text-white hover:underline">
           Suggest a different shop
         </button>
       ) : null}

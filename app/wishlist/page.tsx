@@ -288,7 +288,7 @@ export default function WishlistPage() {
                             aria-label={`Priority for ${row.card_name}`}
                             value={row.priority}
                             onChange={(event) => updateRow(row.id, { priority: event.target.value as Priority })}
-                            className="rounded-lg border border-white/10 bg-stone-950/60 px-2 py-1 text-xs text-stone-200"
+                            className="min-h-11 rounded-lg border border-white/10 bg-stone-950/60 px-2 py-1 text-xs text-stone-200"
                           >
                             <option value="high">High</option>
                             <option value="medium">Medium</option>
@@ -302,7 +302,7 @@ export default function WishlistPage() {
                             aria-label="Decrease quantity"
                             disabled={row.quantity <= 1}
                             onClick={() => updateRow(row.id, { quantity: row.quantity - 1 })}
-                            className="h-8 w-8 rounded-lg border border-white/10 bg-white/5 disabled:opacity-40"
+                            className="h-11 w-11 rounded-lg border border-white/10 bg-white/5 disabled:opacity-40"
                           >
                             −
                           </button>
@@ -312,7 +312,7 @@ export default function WishlistPage() {
                             aria-label="Increase quantity"
                             disabled={row.quantity >= 99}
                             onClick={() => updateRow(row.id, { quantity: row.quantity + 1 })}
-                            className="h-8 w-8 rounded-lg border border-white/10 bg-white/5 disabled:opacity-40"
+                            className="h-11 w-11 rounded-lg border border-white/10 bg-white/5 disabled:opacity-40"
                           >
                             +
                           </button>
@@ -326,12 +326,12 @@ export default function WishlistPage() {
                             const next = event.target.value.trim() || null;
                             if (next !== row.note) updateRow(row.id, { note: next });
                           }}
-                          className="w-full rounded-lg border border-white/10 bg-stone-950/60 px-2 py-1.5 text-xs text-white placeholder:text-stone-500"
+                          className="min-h-11 w-full rounded-lg border border-white/10 bg-stone-950/60 px-2 py-1.5 text-xs text-white placeholder:text-stone-500"
                         />
                         <button
                           type="button"
                           onClick={() => removeRow(row.id)}
-                          className="text-xs text-stone-400 underline-offset-2 hover:text-rose-300 hover:underline"
+                          className="min-h-11 self-start pr-4 text-xs text-stone-400 underline-offset-2 hover:text-rose-300 hover:underline"
                         >
                           Remove
                         </button>
