@@ -1,6 +1,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
+import { latestOfferAmount } from '../../../lib/fairTrade';
 import { supabase } from '../../../lib/supabaseClient';
 import { useAuth } from '../../auth';
 import ClosedConversationNotice from './components/ClosedConversationNotice';
@@ -148,6 +149,7 @@ export default function ConversationPage() {
               onMarkListingSold={markListingSold}
               markingSold={markingSold}
               listingSold={listingSold}
+              latestOffer={latestOfferAmount(messages)}
             />
           </div>
         )}

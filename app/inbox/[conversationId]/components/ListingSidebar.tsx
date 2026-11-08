@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { ListingFairTrade } from '../../../components/ListingFairTrade';
 import type { Conversation, Listing } from '../types';
 import { classNames, conditionBadgeClass, formatMoneyGBP, listingTypeBadge } from '../utils';
 
@@ -12,6 +13,7 @@ export default function ListingSidebar({
   onMarkListingSold,
   markingSold,
   listingSold,
+  latestOffer = null,
 }: {
   activeListing: Listing | null;
   conversation: Conversation;
@@ -20,6 +22,7 @@ export default function ListingSidebar({
   onMarkListingSold: () => void;
   markingSold: boolean;
   listingSold: boolean;
+  latestOffer?: number | null;
 }) {
   return (
     <aside className="h-fit space-y-4 rounded-xl border border-white/10 bg-white/[0.03] p-5 lg:sticky lg:top-24">
@@ -74,6 +77,14 @@ export default function ListingSidebar({
         <p className="text-lg font-semibold text-primary-400">
           {formatMoneyGBP(activeListing.price)}
         </p>
+      ) : null}
+
+      {activeListing ? (
+        <ListingFairTrade
+          listing={activeListing}
+          isSeller={conversation.seller_id === userId}
+          latestOffer={latestOffer}
+        />
       ) : null}
 
       {activeListing?.trade_description ? (
