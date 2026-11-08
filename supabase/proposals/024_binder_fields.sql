@@ -1,11 +1,13 @@
--- PROPOSAL. NOT applied to any database. Do not run without Borty's say-so.
--- Rollback: supabase/rollback/024_rollback.sql
+-- PROPOSAL, not a migration. Never applied anywhere. Kept out of
+-- supabase/migrations on purpose so no `db push` or CI step picks it up.
+-- Needs 000 (user_cards). Rollback: 024_binder_fields_rollback.sql.
+-- See docs/ideas/binder-fields.md.
 --
 -- Binder CSV (docs/ideas/binder-csv.md) validates condition, qty and price but
 -- user_cards could not hold them. This adds the three columns to user_cards,
 -- the table the binder reads and writes today.
 --
--- Note: numbering skips 023 on purpose (no 023 exists on this branch).
+-- Note: 023 is the price-alerts proposal on another branch; this one is independent of it.
 --
 -- Safe by design:
 --   * Additive only. Existing rows get qty 1, no condition, no price.

@@ -1,4 +1,4 @@
--- Rollback for migration 024. NOT a migration: run by hand, only if 024 has to
+-- Rollback for proposal 024_binder_fields.sql. NOT a migration: run by hand, only if 024 has to
 -- come out. Puts user_cards back to its shape before 024.
 --
 -- What is lost: every condition, qty and price saved on user_cards since 024.

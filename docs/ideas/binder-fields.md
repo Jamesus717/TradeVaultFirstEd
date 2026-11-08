@@ -3,10 +3,10 @@
 Problem: binder CSV validates condition, qty and price, then drops them because `user_cards` has no columns for them.
 
 Proposal (NOT applied anywhere):
-- `supabase/migrations/024_binder_fields.sql` adds to `user_cards`: `condition` (NM/LP/MP/HP/DMG or null), `qty` (1 to 999, default 1), `price` (null, or above 0 and under 1,000,000, 2 decimals).
+- `supabase/proposals/024_binder_fields.sql` adds to `user_cards`: `condition` (NM/LP/MP/HP/DMG or null), `qty` (1 to 999, default 1), `price` (null, or above 0 and under 1,000,000, 2 decimals).
 - Additive. Existing rows become qty 1. Old upserts keep working. Same values as `inventory_items` (020).
-- `supabase/rollback/024_rollback.sql` drops the checks and columns. Rows stay; saved condition, qty and price are lost.
-- No 023 exists on this branch, so numbering skips it.
+- `supabase/proposals/024_binder_fields_rollback.sql` drops the checks and columns. Rows stay; saved condition, qty and price are lost.
+- It sits outside `supabase/migrations` so `db push` and test boots never apply it. 023 is the price-alerts proposal on another branch.
 
 In the app:
 - `npm run demo`: import keeps the fields, replaces a card imported twice, and shows them in a table in the CSV panel.

@@ -3,7 +3,7 @@
 // The card cell is "Name [card-id]" (a bare card id also works); the set cell is
 // a set name or id. Saving goes through the same user_cards upsert the binder
 // already uses. user_cards only records "owned" until proposal migration 024
-// (supabase/migrations/024_binder_fields.sql) is applied, so condition, qty and
+// (supabase/proposals/024_binder_fields.sql) is applied, so condition, qty and
 // price are checked and previewed, and stored only in demo mode or when
 // saveImport is called with includeFields (after 024 is applied).
 
