@@ -240,3 +240,15 @@ export function demoConversation(id: string, nowMs: number) {
     : {};
   return { conversation, messages, profiles };
 }
+
+// Example binder for the CSV tool: made up, held in memory only.
+export const DEMO_BINDER_SETS = [
+  { id: 'base1', name: 'Base' },
+  { id: 'sv1', name: 'Scarlet & Violet' },
+];
+
+export const DEMO_BINDER_ROWS = [
+  { cardId: 'base1-4', cardName: 'Charizard', setName: 'Base', condition: 'LP', qty: 1, price: 250 },
+  { cardId: 'base1-58', cardName: 'Pikachu', setName: 'Base', condition: 'NM', qty: 2, price: 12.5 },
+  { cardId: 'sv1-1', cardName: 'Pineco', setName: 'Scarlet & Violet', condition: null, qty: 1, price: null },
+];
