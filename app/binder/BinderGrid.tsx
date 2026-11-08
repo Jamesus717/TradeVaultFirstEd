@@ -93,7 +93,7 @@ const BinderCard = memo(function BinderCard({
           </div>
         )}
         {card.variant !== 'Normal' && card.variant !== 'Unlimited' ? (
-          <span className="absolute left-2 top-2 rounded-full bg-black/70 px-2 py-0.5 text-[10px] font-semibold tracking-wider text-stone-100 backdrop-blur">
+          <span className="absolute left-2 top-2 rounded-full bg-black/70 px-2 py-0.5 text-3xs font-semibold tracking-wider text-stone-100 backdrop-blur">
             {card.variant}
           </span>
         ) : null}
@@ -182,7 +182,7 @@ function CardPriceBadge({
     return (
       <span 
         ref={ref}
-        className="shrink-0 text-[11px] font-semibold text-stone-600 leading-snug pt-[1px]"
+        className="shrink-0 text-2xs font-semibold text-stone-600 leading-snug pt-[1px]"
       >
         ...
       </span>
@@ -193,7 +193,7 @@ function CardPriceBadge({
     return (
       <span 
         ref={ref}
-        className="shrink-0 text-[11px] text-stone-600 leading-snug pt-[1px]"
+        className="shrink-0 text-2xs text-stone-600 leading-snug pt-[1px]"
       >
         —
       </span>
@@ -203,7 +203,7 @@ function CardPriceBadge({
   return (
     <span
       ref={ref}
-      className="shrink-0 text-[11px] font-semibold text-primary-400 leading-snug pt-[1px]"
+      className="shrink-0 text-2xs font-semibold text-primary-400 leading-snug pt-[1px]"
     >
       {price.lowConfidence ? '~' : ''}£{price.priceMid.toFixed(2)}
     </span>

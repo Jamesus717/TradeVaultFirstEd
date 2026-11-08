@@ -85,7 +85,7 @@ export function FairTradeMeter({ get, give, getLabel = 'You get', giveLabel = 'Y
       <header className="mb-2 flex items-center justify-between gap-2">
         <p className="text-xs font-semibold text-stone-300">Fair-trade meter</p>
         {loading ? null : (
-          <span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${style.badge}`}>
+          <span className={`rounded-full border px-2 py-0.5 text-2xs font-semibold ${style.badge}`}>
             {badge}
           </span>
         )}
@@ -98,17 +98,17 @@ export function FairTradeMeter({ get, give, getLabel = 'You get', giveLabel = 'Y
 
       <p className="mt-2 text-xs text-stone-300">{summary}</p>
       {!loading && unpriced > 0 ? (
-        <p className="mt-1 text-[11px] text-stone-500">
+        <p className="mt-1 text-2xs text-stone-500">
           No price yet: {unpricedNames.join(', ')}. Left out of the totals.
         </p>
       ) : null}
       {!loading && result.reverseHolos > 0 ? (
-        <p className="mt-1 text-[11px] text-stone-500">
+        <p className="mt-1 text-2xs text-stone-500">
           Reverse holos are valued as the base print, so {result.reverseHolos === 1 ? 'it may be' : 'they may be'} worth a
           little more.
         </p>
       ) : null}
-      <p className="mt-1 text-[11px] text-stone-500">Market prices in GBP. A guide, not a valuation.</p>
+      <p className="mt-1 text-2xs text-stone-500">Market prices in GBP. A guide, not a valuation.</p>
     </section>
   );
 }

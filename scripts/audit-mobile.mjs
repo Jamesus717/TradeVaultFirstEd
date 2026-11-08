@@ -1,5 +1,6 @@
 // `npm run audit:mobile`: Playwright at 375x812 on every route.
-// Checks sideways scroll, tap targets under 44 px, text under 14 px and anything
+// Checks sideways scroll, tap targets under 44 px, text under 14 px (except inside
+// [data-small-text-ok], e.g. unread count badges) and anything
 // overlapping the fixed bottom tab bar. Starts `npm run demo` if port 3100 is free.
 // Output: reports/mobile-audit/report.md, report.json and one screenshot per route.
 import { spawn } from 'node:child_process';
@@ -7,6 +8,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { chromium } from 'playwright';
 
 const BASE = process.env.AUDIT_BASE || 'http://localhost:3100';
+const PORT = new URL(BASE).port || '3100';
 const OUT = 'reports/mobile-audit';
 const ROUTES = [
   '/', '/binder', '/collection', '/inbox', '/inbox/demo-chat-1', '/matches', '/preview',
@@ -45,7 +47,7 @@ function inPage() {
   const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
   while (w.nextNode()) {
     const n = w.currentNode; const el = n.parentElement;
-    if (!el || !n.textContent.trim() || ['SCRIPT', 'STYLE', 'NOSCRIPT'].includes(el.tagName) || !vis(el) || (tabbar && tabbar.contains(el))) continue;
+    if (!el || !n.textContent.trim() || ['SCRIPT', 'STYLE', 'NOSCRIPT'].includes(el.tagName) || !vis(el) || (tabbar && tabbar.contains(el)) || el.closest('[data-small-text-ok]')) continue;
     const fs = parseFloat(getComputedStyle(el).fontSize);
     if (fs < 14) { const k = `${fs}px ${desc(el)}`; if (!seen.has(k)) { seen.add(k); res.text.push(k); } }
   }
@@ -59,7 +61,7 @@ function inPage() {
 
 let server;
 if (!(await up())) {
-  server = spawn('npm run demo', { stdio: 'ignore', shell: true });
+  server = spawn('npm run demo', { stdio: 'ignore', shell: true, env: { ...process.env, DEMO_PORT: PORT } });
   for (let i = 0; i < 90 && !(await up()); i++) await new Promise((r) => setTimeout(r, 1000));
   if (!(await up())) { console.error('demo server did not start'); process.exit(2); }
 }

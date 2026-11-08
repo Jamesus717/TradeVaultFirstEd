@@ -49,7 +49,7 @@ export default function MessageItem({
             own ? 'rounded-br-sm' : 'rounded-bl-sm'
           )}
         >
-          <p className="text-[10px] font-bold tracking-wider text-amber-300/80">
+          <p className="text-3xs font-bold tracking-wider text-amber-300/80">
             Price Offer
           </p>
           <p className="mt-2 text-2xl font-semibold text-white">
@@ -93,13 +93,13 @@ export default function MessageItem({
                 </button>
               </>
             ) : (
-              <span className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-[10px] font-bold capitalize tracking-wider text-stone-200">
+              <span className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-3xs font-bold capitalize tracking-wider text-stone-200">
                 {message.offer_status ?? 'pending'}
               </span>
             )}
           </div>
         </div>
-        <p className="text-[10px] text-stone-500">
+        <p className="text-3xs text-stone-500">
           {own ? 'You' : otherName} · {formatTimeAgo(message.created_at)}
         </p>
       </div>
@@ -116,7 +116,7 @@ export default function MessageItem({
             own ? 'rounded-br-sm' : 'rounded-bl-sm'
           )}
         >
-          <p className="text-[10px] font-bold tracking-wider text-sky-300/80">Card Offer</p>
+          <p className="text-3xs font-bold tracking-wider text-sky-300/80">Card Offer</p>
           <ul className="mt-2 space-y-1 text-sm text-white">
             {cardOffer.cards.map((card, index) => (
               <li key={`${card.id}-${index}`}>
@@ -132,11 +132,11 @@ export default function MessageItem({
             ))}
             {cardOffer.cash ? <li className="font-semibold">+ {formatMoneyGBP(cardOffer.cash)} cash</li> : null}
           </ul>
-          <p className="mt-2 text-[11px] text-stone-400">
+          <p className="mt-2 text-2xs text-stone-400">
             {own ? 'The fair-trade meter by the listing shows how even this is.' : 'Check the fair-trade meter by the listing, then reply.'}
           </p>
         </div>
-        <p className="text-[10px] text-stone-500">
+        <p className="text-3xs text-stone-500">
           {own ? 'You' : otherName} · {formatTimeAgo(message.created_at)}
         </p>
       </div>
@@ -156,7 +156,7 @@ export default function MessageItem({
       >
         {message.content}
       </div>
-      <p className="text-[10px] text-stone-500">
+      <p className="text-3xs text-stone-500">
         {own ? 'You' : otherName} · {formatTimeAgo(message.created_at)}
       </p>
     </div>

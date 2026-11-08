@@ -52,13 +52,13 @@ export function PriceAlerts({ alerts, example = false, limit }: Props) {
                 <span className="text-stone-500"> · target {formatGbp(alert.target)}</span>
               </p>
             </div>
-            <span className="shrink-0 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-200">
+            <span className="shrink-0 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2 py-0.5 text-2xs font-semibold text-emerald-200">
               {alert.percentUnder > 0 ? `${alert.percentUnder}% under` : 'At target'}
             </span>
           </li>
         ))}
       </ul>
-      <p className="text-[11px] text-stone-500">Market price from the price cache, checked in the last 7 days.</p>
+      <p className="text-2xs text-stone-500">Market price from the price cache, checked in the last 7 days.</p>
     </section>
   );
 }

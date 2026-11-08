@@ -43,7 +43,7 @@ export default function ConversationHeader({
       {conversation ? (
         <span
           className={classNames(
-            'rounded-full border px-3 py-1 text-[10px] font-bold tracking-wider',
+            'rounded-full border px-3 py-1 text-3xs font-bold tracking-wider',
             statusBadge(conversation.status).className
           )}
         >
