@@ -4,7 +4,9 @@
 -- Puts the schema back to how it was before 019. user_cards, wishlist_cards,
 -- trade_listings and conversations keep their rows. What is lost:
 --   * everything only in the new tables: inventory copies, conditions and
---     statuses, the card catalog, shops and home shops
+--     statuses, the card catalog, shops and home shops, plan limits, user
+--     plans and the match request log
+--   * each profile's "allow match requests" setting (the column 022 added)
 --   * the shop on a listing and the meet step on a conversation (the columns
 --     021 added are dropped)
 -- Two things stay on purpose:
@@ -34,7 +36,14 @@ end $$;
 
 -- ── 022 matching ────────────────────────────────────────────────
 
+drop function if exists public.my_inventory_postcodes();
+drop function if exists public.get_match_allowance();
 drop function if exists public.start_match_conversation(uuid);
+drop function if exists public.tb_match_daily_limit(uuid);
+drop table if exists public.match_requests;
+drop table if exists public.user_plans;
+drop table if exists public.plan_limits;
+alter table public.public_profiles drop column if exists allow_match_requests;
 drop function if exists public.get_trade_matches(uuid);
 drop function if exists public.tb_want_covers(text, text, text, text);
 drop function if exists public.tb_tradable_items();

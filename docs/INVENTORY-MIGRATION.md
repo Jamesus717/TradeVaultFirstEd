@@ -29,6 +29,14 @@ select count(*) from public.user_cards where set_id is null;
 - Triggers keep old and new in step both ways, so the live site works before and after.
 - Ends with a check that raises and undoes the migration if any row was left behind.
 
+## What 022 does
+- Matching: `get_trade_matches` and `start_match_conversation` (see the file header).
+- **Daily match limit (review finding 5, decided 2026-11-08):** a user can start at most `plan_limits.match_daily_limit` new match chats in any rolling 24 hours. `free` is seeded at 10; anyone without a `user_plans` row is on `free`. A paid tier later is data only: `insert into plan_limits values ('plus', 30)` plus a `user_plans` row (written by billing with the service role; clients cannot write either table). Over the limit the function raises `Daily match limit reached, resets in N h` (errcode 54000), which the home page shows as is. `match_requests` logs each start.
+- **One chat per person per card:** a second start on the same stack or listing, or on a listing the user already messages about, raises `you already have a chat about this card` with the existing chat id in DETAIL; the home page opens that chat.
+- **Owner opt-out:** `public_profiles.allow_match_requests` (default true), set on the profile page. When false, `start_match_conversation` refuses that owner's stock and `get_trade_matches` returns `accepts_requests = false`, so the button is hidden.
+- **Privacy (review finding 6):** `inventory_items` is read through a column grant that leaves out `postcode_prefix`; the owner reads theirs with `my_inventory_postcodes()`. Card, set, condition, quantity, price, photo and wants stay public. `inventory_add` and `inventory_move` become security definer because they return whole rows (both only act on the caller's own stacks). `shops.lat` and `shops.lng` are not readable by clients; a trader's home shop shows its town.
+- **Not covered:** `trade_listings.postcode_prefix` (the live trade board, prod since 004) is still readable at the database. The app in this PR no longer selects or shows it anywhere, but revoking it in SQL before this app is live would break the current site's trade board. After deploy: `revoke select on public.trade_listings from anon, authenticated;` then grant every column except `postcode_prefix` (same pattern as 022).
+
 ## Decisions worth a look
 - **Key is the stack, not user + card.** Users hold Normal and Reverse Holo as separate rows today, so one row per card per user would lose data.
 - **Condition is null for carried-over collection cards.** `user_cards` never recorded one, and we won't guess NM.
@@ -51,4 +59,4 @@ Script: `supabase/rollback/019-022_rollback.sql`. It is not a migration; run it 
 Tested on PGlite (`tests/db/rollback.test.ts`): apply 019 to 022 on a copy with data, use the new tables, roll back, then compare tables, columns, constraints, indexes, triggers, functions (body and grants), policies and RLS with the pre-019 state. They match, and the old tables' rows are unchanged.
 
 ## Testing
-`npm test` runs on PGlite (embedded Postgres): 73 database tests, on synthetic data shaped like prod's counts, with prod's drift (`user_cards` has no `created_at`, 6 null `set_id` rows). Not tested on real Supabase, real PostgREST or a copy of real data.
+`npm test` runs on PGlite (embedded Postgres): 89 database tests, on synthetic data shaped like prod's counts, with prod's drift (`user_cards` has no `created_at`, 6 null `set_id` rows). Not tested on real Supabase, real PostgREST or a copy of real data.
