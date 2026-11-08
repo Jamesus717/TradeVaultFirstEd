@@ -280,7 +280,7 @@ export default function WishlistPage() {
                           />
                         ) : null}
                         <p className="mt-2 truncate text-xs font-semibold text-white">{card.name}</p>
-                        <p className="truncate text-[11px] text-stone-400">
+                        <p className="truncate text-2xs text-stone-400">
                           {card.set?.name ?? 'Unknown set'} · #{card.number}
                         </p>
                         <button
@@ -344,7 +344,7 @@ export default function WishlistPage() {
                           </p>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className={`rounded-full border px-2 py-0.5 text-[11px] ${PRIORITY_STYLE[row.priority]}`}>
+                          <span className={`rounded-full border px-2 py-0.5 text-2xs ${PRIORITY_STYLE[row.priority]}`}>
                             {PRIORITY_LABEL[row.priority]}
                           </span>
                           <select
@@ -407,7 +407,7 @@ export default function WishlistPage() {
                               />
                             </label>
                             {targetErrors[row.id] ? (
-                              <p className="mt-1 text-[11px] text-rose-300">{targetErrors[row.id]}</p>
+                              <p className="mt-1 text-2xs text-rose-300">{targetErrors[row.id]}</p>
                             ) : null}
                           </div>
                         ) : null}

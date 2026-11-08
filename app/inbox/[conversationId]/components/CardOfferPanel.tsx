@@ -63,7 +63,7 @@ export default function CardOfferPanel({
     <div className="mb-3 rounded-xl border border-white/10 bg-white/[0.03] p-4">
       <div className="flex items-baseline justify-between gap-2">
         <p className="text-xs font-semibold text-sky-200/80">Offer cards</p>
-        <p className="text-[11px] text-stone-500">
+        <p className="text-2xs text-stone-500">
           {picked.length}/{MAX_OFFER_CARDS} picked
         </p>
       </div>
@@ -114,7 +114,7 @@ export default function CardOfferPanel({
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-medium text-stone-100">{card.name}</span>
-                      <span className="block truncate text-[11px] text-stone-400">
+                      <span className="block truncate text-2xs text-stone-400">
                         #{card.number}
                         {card.variant ? ` · ${card.variant}` : ''}
                       </span>
@@ -122,7 +122,7 @@ export default function CardOfferPanel({
                     <span
                       aria-hidden="true"
                       className={classNames(
-                        'flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[11px]',
+                        'flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-2xs',
                         on ? 'border-sky-300 bg-sky-400 text-sky-950' : 'border-white/20'
                       )}
                     >

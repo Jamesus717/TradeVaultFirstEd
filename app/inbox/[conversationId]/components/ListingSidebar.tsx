@@ -60,7 +60,7 @@ export default function ListingSidebar({
         <div className="flex flex-wrap items-center gap-2">
           <span
             className={classNames(
-              'rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wider',
+              'rounded-full px-2.5 py-1 text-3xs font-bold tracking-wider',
               conditionBadgeClass(activeListing.condition)
             )}
           >
@@ -68,7 +68,7 @@ export default function ListingSidebar({
           </span>
           <span
             className={classNames(
-              'rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wider',
+              'rounded-full px-2.5 py-1 text-3xs font-bold tracking-wider',
               listingTypeBadge(activeListing.listing_type).className
             )}
           >

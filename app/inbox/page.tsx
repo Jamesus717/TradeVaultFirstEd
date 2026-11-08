@@ -438,7 +438,7 @@ export default function InboxPage() {
                       {badge ? (
                         <span
                           className={classNames(
-                            'rounded-full border px-3 py-1 text-[10px] font-bold tracking-wider',
+                            'rounded-full border px-3 py-1 text-3xs font-bold tracking-wider',
                             badge.className
                           )}
                         >

@@ -25,6 +25,27 @@
   --color-stone-800: #282e47;
   --color-stone-900: #1d2238;
   --color-stone-950: #151929;
+
+  /* Small print below text-xs. Desktop keeps these; phones raise them to 14 px (see below). */
+  --text-2xs: 0.6875rem;
+  --text-3xs: 0.625rem;
+  --text-4xs: 0.5625rem;
+}
+
+/*
+ * Phones (under 640 px): nothing reads smaller than 14 px. text-xs and the
+ * small-print sizes all become 14 px, so captions match body-small there.
+ * Kept small on purpose (the audit skips them): the bottom tab bar labels and
+ * unread count badges, marked data-small-text-ok. See docs/ideas/mobile-audit.md.
+ */
+@media (max-width: 639px) {
+  :root {
+    --text-xs: 0.875rem;
+    --text-xs--line-height: 1.25rem;
+    --text-2xs: 0.875rem;
+    --text-3xs: 0.875rem;
+    --text-4xs: 0.875rem;
+  }
 }
 
 :root {
@@ -324,6 +345,12 @@ h3,
   font-weight: 600;
   color: #151929;
   background: linear-gradient(100deg, #ffb3d4, #ffec99 35%, #9cf0ff 65%, #c9b8ff);
+}
+
+@media (max-width: 639px) {
+  .holo-tag {
+    font-size: 0.875rem;
+  }
 }
 
 /* Modals become full-screen sheets on phones. */
