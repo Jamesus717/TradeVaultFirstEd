@@ -1,25 +1,11 @@
-'use client';
+import { notFound } from 'next/navigation';
+import { profileExists } from '../../../lib/detailRoutes';
+import ProfileClient from './ProfileClient';
 
-import { useEffect, useState } from 'react';
-import ProfileView from '../ProfileView';
-
-type ProfilePageProps = {
-  params: Promise<{
-    user_id: string;
-  }>;
-};
-
-export default function ProfilePage({ params }: ProfilePageProps) {
-  const [userId, setUserId] = useState('');
-
-  useEffect(() => {
-    async function resolveParams() {
-      const resolved = await params;
-      setUserId(resolved.user_id);
-    }
-
-    resolveParams();
-  }, [params]);
-
-  return <ProfileView userId={userId} />;
+export default async function ProfilePage({ params }: { params: Promise<{ user_id: string }> }) {
+  const { user_id } = await params;
+  if (!(await profileExists(user_id))) {
+    notFound();
+  }
+  return <ProfileClient params={params} />;
 }

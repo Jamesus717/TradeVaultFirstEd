@@ -3,6 +3,7 @@
 import { fetchSets } from '../../lib/fetchSets';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
+import { demoMode, demoProfileByUserId } from '../../lib/demo';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../auth';
 import { fetchSetVariants } from '../../lib/setCardsCache';
@@ -79,6 +80,12 @@ export default function ProfileView({ userId }: Props) {
   useEffect(() => {
     async function loadPublicProfile() {
       if (!userId) {
+        return;
+      }
+
+      if (demoMode) {
+        setProfile(demoProfileByUserId(userId));
+        setProfileLoading(false);
         return;
       }
 

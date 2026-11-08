@@ -5,6 +5,7 @@
 import type { TradeListing } from '../app/trade/types';
 import type { MatchRow } from './matching';
 import type { Shop } from './shops';
+import type { Conversation, Message, PublicProfile } from '../app/inbox/[conversationId]/types';
 
 export const demoMode = process.env.NEXT_PUBLIC_TB_DEMO === '1';
 
@@ -146,4 +147,96 @@ export function demoShopByListing(listings: TradeListing[]) {
   return Object.fromEntries(
     listings.map((entry) => [entry.id, DEMO_TRADER_SHOPS[traderByName.get(entry.user_id) ?? '']])
   );
+}
+
+// Stable ids for the detail pages, so /inbox/demo-chat-1, /profile/demo-sam,
+// /shops/example-cards-leeds and /u/sam always render in `npm run demo`.
+export type DemoProfile = {
+  user_id: string;
+  username: string;
+  display_name: string;
+  profile_slug: string;
+  bio: string;
+  created_at: string;
+};
+
+export const DEMO_PROFILES: DemoProfile[] = [sam, alex, robin, jo].map(([id, name]) => ({
+  user_id: id,
+  username: id.replace('demo-', ''),
+  display_name: name,
+  profile_slug: id.replace('demo-', ''),
+  bio: 'Example trader. Made up for the demo.',
+  created_at: '2026-01-15T10:00:00Z',
+}));
+
+export function demoProfileByUserId(userId: string) {
+  return DEMO_PROFILES.find((profile) => profile.user_id === userId) ?? null;
+}
+
+export function demoProfileBySlug(slug: string) {
+  return DEMO_PROFILES.find((profile) => profile.profile_slug === slug) ?? null;
+}
+
+const DEMO_CHATS = [
+  { id: 'demo-chat-1', other: 'demo-sam', number: 4, name: 'Charizard', status: 'active', line: 'Example: Saturday at Example Cards Leeds works for me' },
+  { id: 'demo-chat-2', other: 'demo-alex', number: 16, name: 'Zapdos', status: 'active', line: 'Example: would you add the Mewtwo?' },
+  { id: 'demo-chat-3', other: 'demo-robin', number: 15, name: 'Venusaur', status: 'accepted', line: 'Example: deal, see you there' },
+] as const;
+
+export const DEMO_CONVERSATION_IDS: string[] = DEMO_CHATS.map((chat) => chat.id);
+
+export function demoConversation(id: string, nowMs: number) {
+  const chat = DEMO_CHATS.find((entry) => entry.id === id);
+  if (!chat) {
+    return null;
+  }
+  const at = (minutes: number) => new Date(nowMs - minutes * 60_000).toISOString();
+  const conversation: Conversation = {
+    id: chat.id,
+    listing_id: `${chat.id}-listing`,
+    buyer_id: DEMO_ME,
+    seller_id: chat.other,
+    status: chat.status,
+    created_at: at(180),
+    updated_at: at(5),
+    trade_listings: [
+      {
+        id: `${chat.id}-listing`,
+        user_id: chat.other,
+        card_name: chat.name,
+        set_name: 'Base',
+        set_id: 'base1',
+        card_number: String(chat.number),
+        variant: 'Unlimited',
+        condition: 'Near Mint',
+        listing_type: 'trade',
+        price: null,
+        trade_description: 'Example: open to Base set holos',
+        image_url: null,
+        card_image_url: `https://images.pokemontcg.io/base1/${chat.number}.png`,
+        is_active: true,
+      },
+    ],
+  };
+  const message = (n: number, sender: string, content: string, minutes: number): Message => ({
+    id: `${chat.id}-msg-${n}`,
+    conversation_id: chat.id,
+    sender_id: sender,
+    content,
+    message_type: 'message',
+    offer_amount: null,
+    offer_status: null,
+    created_at: at(minutes),
+    read_at: at(minutes),
+  });
+  const messages = [
+    message(1, DEMO_ME, `Example: hi, is the ${chat.name} still available?`, 120),
+    message(2, chat.other, 'Example: yes, still here', 60),
+    message(3, chat.other, chat.line, 5),
+  ];
+  const profile = demoProfileByUserId(chat.other);
+  const profiles: Record<string, PublicProfile> = profile
+    ? { [profile.user_id]: { user_id: profile.user_id, username: profile.username, display_name: profile.display_name } }
+    : {};
+  return { conversation, messages, profiles };
 }

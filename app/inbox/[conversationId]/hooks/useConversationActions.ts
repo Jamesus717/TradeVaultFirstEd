@@ -7,7 +7,7 @@ import type { Conversation, ConversationStatus, Message, OfferStatus } from '../
 
 type UseConversationActionsParams = {
   conversationId: string;
-  user: User | null;
+  user: Pick<User, 'id'> | null;
   conversation: Conversation | null;
   setConversation: React.Dispatch<React.SetStateAction<Conversation | null>>;
 };

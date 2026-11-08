@@ -9,9 +9,9 @@ import { chromium } from 'playwright';
 const BASE = process.env.AUDIT_BASE || 'http://localhost:3100';
 const OUT = 'reports/mobile-audit';
 const ROUTES = [
-  '/', '/binder', '/collection', '/inbox', '/inbox/demo-conversation', '/matches', '/preview',
-  '/profile', '/profile/demo-user', '/reset-password', '/shops', '/shops/example-cards-leeds',
-  '/trade', '/u/demo', '/wishlist',
+  '/', '/binder', '/collection', '/inbox', '/inbox/demo-chat-1', '/matches', '/preview',
+  '/profile', '/profile/demo-sam', '/reset-password', '/shops', '/shops/example-cards-leeds',
+  '/trade', '/u/sam', '/wishlist',
 ];
 
 async function up() {
