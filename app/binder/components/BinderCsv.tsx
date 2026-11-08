@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { CSV_COLUMNS, MAX_CSV_BYTES, MAX_CSV_ROWS, parseImport, saveImport, toCsv } from '../../../lib/binderCsv';
+import { CSV_COLUMNS, MAX_CSV_BYTES, MAX_CSV_ROWS, mergeBinderRows, parseImport, saveImport, toCsv } from '../../../lib/binderCsv';
 import type { ExportRow, ImportPreview, SetRef } from '../../../lib/binderCsv';
 import { DEMO_BINDER_ROWS, DEMO_BINDER_SETS, demoMode } from '../../../lib/demo';
 import { fetchSets } from '../../../lib/fetchSets';
@@ -144,7 +144,7 @@ export function BinderCsv() {
         qty: r.value!.qty,
         price: r.value!.price,
       }));
-      setDemoRows((current) => [...current, ...added]);
+      setDemoRows((current) => mergeBinderRows(current, added));
       say(`Demo: added ${added.length} example card${added.length === 1 ? '' : 's'} (kept in memory only).`);
     } else if (supabase && user) {
       const result = await saveImport(supabase, user.id, good);
@@ -169,8 +169,10 @@ export function BinderCsv() {
           {demoMode && <p className="text-amber-300">Demo: example binder, nothing is saved to a database.</p>}
           <p>
             Columns: {CSV_COLUMNS.join(', ')}. Card looks like &quot;Charizard [base1-4]&quot;. Up to {MAX_CSV_ROWS} rows
-            and {MAX_CSV_BYTES / 1024} KB. Saving marks each card as owned. Condition, qty and price are checked
-            but not stored yet.
+            and {MAX_CSV_BYTES / 1024} KB. Saving marks each card as owned.{' '}
+            {demoMode
+              ? 'In this demo, condition, qty and price are kept and shown below.'
+              : 'Condition, qty and price are checked but not stored yet.'}
           </p>
           <div className="flex flex-wrap gap-3">
             <button
@@ -195,6 +197,33 @@ export function BinderCsv() {
               />
             </label>
           </div>
+
+          {demoMode && (
+            <div className="overflow-auto rounded-xl border border-white/10">
+              <table className="w-full text-left text-xs" aria-label="Demo binder">
+                <thead className="bg-stone-900">
+                  <tr>
+                    <th className="p-2">Card</th>
+                    <th className="p-2">Set</th>
+                    <th className="p-2">Condition</th>
+                    <th className="p-2">Qty</th>
+                    <th className="p-2">Price</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {demoRows.map((r) => (
+                    <tr key={r.cardId} className="border-t border-white/5">
+                      <td className="p-2">{r.cardName}</td>
+                      <td className="p-2">{r.setName}</td>
+                      <td className="p-2">{r.condition ?? '-'}</td>
+                      <td className="p-2">{r.qty ?? 1}</td>
+                      <td className="p-2">{r.price == null ? '-' : `£${r.price.toFixed(2)}`}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
 
           {message && (
             <p role="status" className={failed ? 'text-rose-300' : 'text-primary-200'}>

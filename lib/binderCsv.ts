@@ -2,9 +2,10 @@
 // Columns: card, set, condition, qty, price.
 // The card cell is "Name [card-id]" (a bare card id also works); the set cell is
 // a set name or id. Saving goes through the same user_cards upsert the binder
-// already uses, so no migration is needed. user_cards only records "owned", so
-// condition, qty and price are checked and shown in the preview but are not
-// stored until the inventory migration is applied.
+// already uses. user_cards only records "owned" until proposal migration 024
+// (supabase/migrations/024_binder_fields.sql) is applied, so condition, qty and
+// price are checked and previewed, and stored only in demo mode or when
+// saveImport is called with includeFields (after 024 is applied).
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { normalizeVariantForSet } from './constants/cardVariants';
@@ -238,24 +239,40 @@ export function parseImport(text: string, sets: SetRef[], sizeBytes?: number): I
   return { rows, fileError: null, validCount, errorCount: rows.length - validCount };
 }
 
+// Demo mode keeps the binder in memory. One row per card (as user_cards keeps one
+// row per card variant), so importing a card again replaces its details.
+export function mergeBinderRows(current: ExportRow[], added: ExportRow[]): ExportRow[] {
+  const byCard = new Map<string, ExportRow>();
+  for (const row of [...current, ...added]) byCard.set(row.cardId.toLowerCase(), row);
+  return [...byCard.values()];
+}
+
 const CHUNK = 200;
 
 // Same upsert and conflict key as the binder's own writes (useBinder, quickAdd).
 export async function saveImport(
   client: SupabaseClient,
   userId: string,
-  rows: ImportRow[]
+  rows: ImportRow[],
+  options: { includeFields?: boolean } = {}
 ): Promise<{ ok: boolean; saved: number; message: string }> {
   const seen = new Set<string>();
   const records: Record<string, unknown>[] = [];
   for (const row of rows) {
     if (!row.value) continue;
-    const { cardId, setId } = row.value;
+    const { cardId, setId, condition, qty, price } = row.value;
     const variant = normalizeVariantForSet(setId, 'Normal');
     const key = `${cardId}|${variant}|${setId}`;
     if (seen.has(key)) continue; // same stack on two condition rows: one owned flag
     seen.add(key);
-    records.push({ user_id: userId, card_id: cardId, set_id: setId, variant, owned: true });
+    records.push({
+      user_id: userId,
+      card_id: cardId,
+      set_id: setId,
+      variant,
+      owned: true,
+      ...(options.includeFields ? { condition, qty, price } : {}),
+    });
   }
 
   let saved = 0;

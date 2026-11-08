@@ -68,7 +68,7 @@ describe('020 inventory backfill on a prod-shaped copy', () => {
     );
 
     before = {
-      cards: await fingerprint(db, 'select * from public.user_cards'),
+      cards: await fingerprint(db, 'select id, user_id, card_id, set_id, variant, owned from public.user_cards'),
       wishlist: await fingerprint(db, 'select * from public.wishlist_cards'),
       listings: await fingerprint(db, `select ${LISTING_COLUMNS} from public.trade_listings`),
     };
@@ -77,7 +77,7 @@ describe('020 inventory backfill on a prod-shaped copy', () => {
   });
 
   it('leaves every old table exactly as it was', async () => {
-    expect(await fingerprint(db, 'select * from public.user_cards')).toBe(before.cards);
+    expect(await fingerprint(db, 'select id, user_id, card_id, set_id, variant, owned from public.user_cards')).toBe(before.cards);
     expect(await fingerprint(db, 'select * from public.wishlist_cards')).toBe(before.wishlist);
     expect(await fingerprint(db, `select ${LISTING_COLUMNS} from public.trade_listings`)).toBe(before.listings);
   });

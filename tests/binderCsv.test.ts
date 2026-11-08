@@ -4,6 +4,7 @@ import {
   MAX_CSV_BYTES,
   MAX_CSV_ROWS,
   escapeCsvCell,
+  mergeBinderRows,
   parseCsv,
   parseImport,
   saveImport,
@@ -145,5 +146,64 @@ describe('saveImport', () => {
     const result = await saveImport(bad.client, 'u', preview.rows);
     expect(result.ok).toBe(false);
     expect(result.message).toContain('boom');
+  });
+});
+
+describe('binder fields', () => {
+  const one = (cells: string) => parseImport(`${HEADER}
+${cells}`, sets).rows[0];
+
+  it('accepts the edges of each field', () => {
+    expect(one('A [sv1-1],sv1,DMG,999,999999.99').value).toMatchObject({
+      condition: 'DMG',
+      qty: 999,
+      price: 999999.99,
+    });
+    expect(one('A [sv1-1],sv1,near mint,1,0.01').value).toMatchObject({ condition: 'NM', price: 0.01 });
+    expect(one('A [sv1-1],sv1,,,').value).toMatchObject({ condition: null, qty: 1, price: null });
+  });
+
+  it('rejects values the database checks would reject', () => {
+    for (const cells of [
+      'A [sv1-1],sv1,MINT,1,',
+      'A [sv1-1],sv1,NM,0,',
+      'A [sv1-1],sv1,NM,1000,',
+      'A [sv1-1],sv1,NM,1.5,',
+      'A [sv1-1],sv1,NM,-1,',
+      'A [sv1-1],sv1,NM,1,0',
+      'A [sv1-1],sv1,NM,1,-3',
+      'A [sv1-1],sv1,NM,1,1000000',
+      'A [sv1-1],sv1,NM,1,1.234',
+    ]) {
+      const row = one(cells);
+      expect(row.errors.length, cells).toBeGreaterThan(0);
+      expect(row.value).toBeUndefined();
+    }
+  });
+
+  it('writes the fields only when asked, for after 024 is applied', async () => {
+    const preview = parseImport(`${HEADER}
+Pineco [sv1-1],sv1,LP,3,1.5`, sets);
+    const calls: Record<string, unknown>[][] = [];
+    const client = {
+      from: () => ({
+        upsert: async (rows: Record<string, unknown>[]) => {
+          calls.push(rows);
+          return { error: null };
+        },
+      }),
+    } as unknown as SupabaseClient;
+    await saveImport(client, 'u', preview.rows);
+    await saveImport(client, 'u', preview.rows, { includeFields: true });
+    expect(calls[0][0]).not.toHaveProperty('qty');
+    expect(calls[1][0]).toMatchObject({ condition: 'LP', qty: 3, price: 1.5 });
+  });
+
+  it('demo binder keeps imported fields and replaces a card imported twice', () => {
+    const current = [{ cardId: 'sv1-1', cardName: 'Pineco', setName: 'S', condition: null, qty: 1, price: null }];
+    const added = [{ cardId: 'SV1-1', cardName: 'Pineco', setName: 'S', condition: 'LP', qty: 4, price: 2 }];
+    const merged = mergeBinderRows(current, added);
+    expect(merged).toHaveLength(1);
+    expect(merged[0]).toMatchObject({ condition: 'LP', qty: 4, price: 2 });
   });
 });
