@@ -9,7 +9,6 @@ export type Shop = {
   description: string | null;
   address: string | null;
   town: string | null;
-  postcode_prefix: string | null;
   website: string | null;
   opening_hours: string | null;
   games: string[];
@@ -17,7 +16,7 @@ export type Shop = {
 };
 
 const SHOP_COLUMNS =
-  'id, slug, name, description, address, town, postcode_prefix, website, opening_hours, games, featured_until';
+  'id, slug, name, description, address, town, website, opening_hours, games, featured_until';
 
 // Empty until 021 is applied and a shop has agreed to be listed.
 export async function loadShops(): Promise<Shop[]> {
@@ -38,8 +37,9 @@ export async function loadShops(): Promise<Shop[]> {
   return (data ?? []) as Shop[];
 }
 
-export function shopPlace(shop: Pick<Shop, 'town' | 'postcode_prefix'>) {
-  return [shop.town, shop.postcode_prefix].filter(Boolean).join(', ');
+// Town only: a trader's home shop should not narrow down where they live.
+export function shopPlace(shop: Pick<Shop, 'town'>) {
+  return shop.town ?? '';
 }
 
 export function isFeatured(shop: Pick<Shop, 'featured_until'>, now: number) {

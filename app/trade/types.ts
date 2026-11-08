@@ -24,7 +24,6 @@ export type TradeListing = {
   listing_type: ListingType;
   price: number | null;
   trade_description: string | null;
-  postcode_prefix: string | null;
   image_url: string | null;
   card_image_url: string | null;
   created_at: string;

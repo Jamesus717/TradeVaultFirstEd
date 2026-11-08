@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { groupMatches, isNotMigrated, tradeAnchor, type MatchRow } from '../lib/matching';
+import { existingChatId, groupMatches, isNotMigrated, tradeAnchor, type MatchRow } from '../lib/matching';
 import { DEMO_MATCHES } from '../lib/demo';
 
 function row(trader: string, direction: MatchRow['direction'], item: string, priority: MatchRow['want_priority'] = null): MatchRow {
@@ -120,5 +120,24 @@ describe('isNotMigrated', () => {
     expect(isNotMigrated({ code: '42P01' })).toBe(true);
     expect(isNotMigrated({ code: '42501' })).toBe(false);
     expect(isNotMigrated(null)).toBe(false);
+  });
+});
+
+describe('match requests (022)', () => {
+  it('marks a trader who has match requests off', () => {
+    const rows = [
+      { ...row('a', 'they_have', '1'), accepts_requests: false },
+      { ...row('b', 'they_have', '2'), accepts_requests: true },
+      row('c', 'they_have', '3'),
+    ];
+    const byTrader = Object.fromEntries(groupMatches(rows).map((m) => [m.traderId, m.acceptsRequests]));
+    expect(byTrader).toEqual({ a: false, b: true, c: true });
+  });
+
+  it('opens the existing chat on a duplicate start, and only then', () => {
+    expect(existingChatId({ code: '23505', details: 'chat-1' })).toBe('chat-1');
+    expect(existingChatId({ code: '23505', details: '' })).toBeNull();
+    expect(existingChatId({ code: '54000', details: null })).toBeNull();
+    expect(existingChatId(null)).toBeNull();
   });
 });

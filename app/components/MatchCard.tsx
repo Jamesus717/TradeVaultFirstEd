@@ -57,14 +57,18 @@ export function MatchCard({ match, starting, onStart }: Props) {
           <h2 className="truncate text-lg font-semibold text-white">{match.name}</h2>
           {match.twoWay ? <span className="holo-tag">Two-way</span> : null}
         </div>
-        <button
-          type="button"
-          onClick={onStart}
-          disabled={starting || match.theyHave.length === 0}
-          className="min-h-11 rounded-xl bg-primary-400 px-4 py-2 text-sm font-semibold text-primary-950 hover:bg-primary-300 disabled:cursor-not-allowed disabled:bg-stone-800 disabled:text-stone-400"
-        >
-          {starting ? 'Starting...' : match.theyHave.length === 0 ? 'Waiting on their side' : 'Start trade'}
-        </button>
+        {match.acceptsRequests ? (
+          <button
+            type="button"
+            onClick={onStart}
+            disabled={starting || match.theyHave.length === 0}
+            className="min-h-11 rounded-xl bg-primary-400 px-4 py-2 text-sm font-semibold text-primary-950 hover:bg-primary-300 disabled:cursor-not-allowed disabled:bg-stone-800 disabled:text-stone-400"
+          >
+            {starting ? 'Starting...' : match.theyHave.length === 0 ? 'Waiting on their side' : 'Start trade'}
+          </button>
+        ) : (
+          <p className="text-sm text-stone-400">Not taking match requests</p>
+        )}
       </header>
 
       <div className="flex flex-col gap-5 sm:flex-row sm:gap-8">

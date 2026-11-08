@@ -3,8 +3,10 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { DEMO_ME, demoMode } from '../../lib/demo';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../auth';
+import { DemoBanner } from '../components/DemoBanner';
 
 type ConversationStatus = 'active' | 'accepted' | 'declined' | 'completed' | 'cancelled';
 
@@ -19,7 +21,6 @@ type Listing = {
   listing_type: string;
   price: number | null;
   trade_description: string | null;
-  postcode_prefix: string | null;
   image_url: string | null;
   card_image_url: string | null;
   created_at?: string;
@@ -106,6 +107,65 @@ function shortId(value: string) {
   return `${value.slice(0, 6)}…${value.slice(-4)}`;
 }
 
+// Example chats for `npm run demo`. Made up, like the rest of the demo data.
+function demoInbox() {
+  const now = Date.now();
+  const at = (minutes: number) => new Date(now - minutes * 60_000).toISOString();
+  const chat = (id: string, other: string, number: number, name: string, minutes: number, status: ConversationStatus = 'active'): Conversation => ({
+    id,
+    listing_id: `${id}-listing`,
+    buyer_id: DEMO_ME,
+    seller_id: other,
+    status,
+    created_at: at(minutes + 60),
+    updated_at: at(minutes),
+    trade_listings: [
+      {
+        id: `${id}-listing`,
+        user_id: other,
+        card_name: name,
+        set_name: 'Base',
+        card_number: String(number),
+        variant: 'Unlimited',
+        condition: 'Near Mint',
+        listing_type: 'trade',
+        price: null,
+        trade_description: null,
+        image_url: null,
+        card_image_url: `https://images.pokemontcg.io/base1/${number}.png`,
+      },
+    ],
+  });
+  const message = (conversation: string, sender: string, content: string, minutes: number, read: boolean): Message => ({
+    conversation_id: conversation,
+    sender_id: sender,
+    content,
+    message_type: 'message',
+    offer_amount: null,
+    offer_status: null,
+    created_at: at(minutes),
+    read_at: read ? at(minutes) : null,
+  });
+  return {
+    conversations: [
+      chat('demo-chat-1', 'demo-sam', 4, 'Charizard', 4),
+      chat('demo-chat-2', 'demo-alex', 16, 'Zapdos', 95),
+      chat('demo-chat-3', 'demo-robin', 15, 'Venusaur', 60 * 26, 'accepted'),
+    ],
+    latest: {
+      'demo-chat-1': message('demo-chat-1', 'demo-sam', 'Example: Saturday at Example Cards Leeds works for me', 4, false),
+      'demo-chat-2': message('demo-chat-2', 'demo-alex', 'Example: would you add the Mewtwo?', 95, false),
+      'demo-chat-3': message('demo-chat-3', DEMO_ME, 'Example: deal, see you there', 60 * 26, true),
+    } as Record<string, Message | undefined>,
+    unread: { 'demo-chat-1': 1, 'demo-chat-2': 1 } as Record<string, number>,
+    profiles: {
+      'demo-sam': { user_id: 'demo-sam', username: 'sam', display_name: 'Sam (example)' },
+      'demo-alex': { user_id: 'demo-alex', username: 'alex', display_name: 'Alex (example)' },
+      'demo-robin': { user_id: 'demo-robin', username: 'robin', display_name: 'Robin (example)' },
+    } as Record<string, PublicProfile | undefined>,
+  };
+}
+
 export default function InboxPage() {
   const { user, authLoading, supabaseDisabled } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -119,6 +179,14 @@ export default function InboxPage() {
     let active = true;
 
     async function loadInbox() {
+      if (demoMode) {
+        const demo = demoInbox();
+        setConversations(demo.conversations);
+        setLatestByConversation(demo.latest);
+        setUnreadByConversation(demo.unread);
+        setProfilesByUserId(demo.profiles);
+        return;
+      }
       if (!user || supabaseDisabled || !supabase) {
         setConversations([]);
         setLatestByConversation({});
@@ -150,7 +218,7 @@ export default function InboxPage() {
       const { data: convData, error: convError } = await supabase
         .from('conversations')
         .select(
-          'id,listing_id,buyer_id,seller_id,status,created_at,updated_at,trade_listings(id,user_id,card_name,set_name,card_number,variant,condition,listing_type,price,trade_description,postcode_prefix,image_url,card_image_url)'
+          'id,listing_id,buyer_id,seller_id,status,created_at,updated_at,trade_listings(id,user_id,card_name,set_name,card_number,variant,condition,listing_type,price,trade_description,image_url,card_image_url)'
         )
         .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`)
         .order('updated_at', { ascending: false });
@@ -242,29 +310,33 @@ export default function InboxPage() {
     };
   }, [supabaseDisabled, user]);
 
+  const viewerId = demoMode ? DEMO_ME : user?.id ?? null;
+  const unreadTotal = Object.values(unreadByConversation).reduce((sum, n) => sum + n, 0);
+
   const hero = (
-    <section className="hero-panel">
-      <div className="p-6 sm:p-8">
-        <h1 className="text-4xl font-semibold text-white">Inbox</h1>
-        <p className="mt-2 text-sm text-stone-400">Your trade conversations and offers.</p>
-      </div>
-    </section>
+    <header className="space-y-1">
+      <h1 className="text-3xl font-semibold text-white sm:text-4xl">Messages</h1>
+      <p className="text-sm text-stone-400">
+        {unreadTotal > 0 ? `${unreadTotal} unread. ` : ''}Your trade chats and offers.
+      </p>
+    </header>
   );
 
   return (
     <main className="min-h-screen bg-transparent text-stone-100">
-      <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-3xl space-y-4 px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
+        <DemoBanner />
         {hero}
 
-        {authLoading ? (
+        {!demoMode && authLoading ? (
           <section className="mt-6 rounded-xl border border-white/10 bg-white/[0.03] p-6 text-sm text-stone-300 backdrop-blur">
             Checking your session...
           </section>
-        ) : !user ? (
+        ) : !viewerId ? (
           <section className="mt-6 rounded-xl border border-amber-300/15 bg-amber-400/5 p-4 text-center text-sm text-amber-200/80">
             Sign in to view your trade conversations and offers.
           </section>
-        ) : supabaseDisabled || !supabase ? (
+        ) : !demoMode && (supabaseDisabled || !supabase) ? (
           <section className="mt-6 rounded-xl border border-amber-300/15 bg-amber-400/5 p-6 text-center text-sm text-amber-200/80">
             Supabase is not configured for this app.
           </section>
@@ -305,7 +377,7 @@ export default function InboxPage() {
               const listing = conversation.trade_listings?.[0] ?? null;
               const image = listing?.image_url ?? listing?.card_image_url ?? '';
               const latest = latestByConversation[conversation.id];
-              const otherId = conversation.buyer_id === user!.id ? conversation.seller_id : conversation.buyer_id;
+              const otherId = conversation.buyer_id === viewerId ? conversation.seller_id : conversation.buyer_id;
               const profile = profilesByUserId[otherId];
               const otherName = profile?.display_name ?? profile?.username ?? shortId(otherId);
               const unread = (unreadByConversation[conversation.id] ?? 0) > 0;
@@ -322,7 +394,7 @@ export default function InboxPage() {
                 <Link
                   key={conversation.id}
                   href={`/inbox/${conversation.id}`}
-                  className="flex items-center gap-4 rounded-xl border border-white/10 bg-white/[0.03] p-5 transition-colors hover:bg-white/[0.05]"
+                  className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3 transition-colors hover:bg-white/[0.05] sm:gap-4 sm:p-5"
                 >
                   <div className="h-20 w-14 shrink-0 overflow-hidden rounded-xl bg-stone-900 ring-1 ring-white/5">
                     {image ? (

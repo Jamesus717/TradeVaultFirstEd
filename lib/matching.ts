@@ -19,6 +19,8 @@ export type MatchRow = {
   tradable: number;
   is_spare: boolean;
   want_priority: 'low' | 'medium' | 'high' | null;
+  // False when the trader has turned match requests off (022). Missing before 022.
+  accepts_requests?: boolean;
 };
 
 export type TraderMatch = {
@@ -28,6 +30,7 @@ export type TraderMatch = {
   iHave: MatchRow[];
   twoWay: boolean;
   highPriority: number;
+  acceptsRequests: boolean;
 };
 
 const PRIORITY_RANK = { high: 3, medium: 2, low: 1 } as const;
@@ -63,8 +66,12 @@ export function groupMatches(rows: MatchRow[]): TraderMatch[] {
         iHave: [],
         twoWay: false,
         highPriority: 0,
+        acceptsRequests: true,
       };
       traders.set(row.trader_id, trader);
+    }
+    if (row.accepts_requests === false) {
+      trader.acceptsRequests = false;
     }
     addOnce(row.direction === 'they_have' ? trader.theyHave : trader.iHave, row);
   }
@@ -90,6 +97,12 @@ export function groupMatches(rows: MatchRow[]): TraderMatch[] {
 // if they have it, otherwise your own card is not theirs to list, so null.
 export function tradeAnchor(match: TraderMatch): MatchRow | null {
   return match.theyHave[0] ?? null;
+}
+
+// start_match_conversation refuses a second chat on the same card with the
+// existing chat's id in DETAIL; open that one instead of showing an error.
+export function existingChatId(error: { code?: string; details?: string | null } | null | undefined) {
+  return error?.code === '23505' && error.details ? error.details : null;
 }
 
 // PostgREST says this when a table or function has not been migrated yet.

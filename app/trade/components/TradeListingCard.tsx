@@ -132,13 +132,6 @@ export function TradeListingCard({
           </div>
         )}
 
-        {listing.postcode_prefix ? (
-          <p className="text-xs text-stone-400">
-            <span className="mr-1">📍</span>
-            {listing.postcode_prefix} area
-          </p>
-        ) : null}
-
         <div className="mt-auto flex items-center justify-between pt-2">
           <div className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-full border border-primary-400/30 bg-primary-400/20 text-xs font-semibold text-primary-300">
@@ -189,7 +182,7 @@ export function TradeListingCard({
               onClick={onExpressInterest}
               disabled={!hasUser || interestPending}
               className={classNames(
-                'rounded-xl px-3 py-1.5 text-xs font-medium transition-colors',
+                'min-h-11 rounded-xl px-3 py-1.5 text-xs font-medium transition-colors',
                 showOpenChat
                   ? 'bg-primary-400/20 text-primary-200 hover:bg-primary-400/30'
                   : 'bg-stone-800 text-stone-100 hover:bg-primary-400 hover:text-primary-950',

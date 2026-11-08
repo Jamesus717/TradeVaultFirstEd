@@ -21,7 +21,7 @@ export default function ShopsPage() {
   const visible = useMemo(() => {
     const needle = search.trim().toLowerCase();
     const matching = (shops ?? []).filter((shop) =>
-      [shop.name, shop.town, shop.postcode_prefix].some((value) => value?.toLowerCase().includes(needle))
+      [shop.name, shop.town].some((value) => value?.toLowerCase().includes(needle))
     );
     return sortShops(matching, now);
   }, [now, search, shops]);
@@ -54,7 +54,7 @@ export default function ShopsPage() {
               type="search"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search by town or postcode"
+              placeholder="Search by name or town"
               aria-label="Search shops"
               className="w-full rounded-xl border border-white/10 bg-stone-900 px-4 py-3 text-base text-white outline-none focus:border-primary-300/50 sm:text-sm"
             />

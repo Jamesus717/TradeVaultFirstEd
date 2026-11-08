@@ -16,7 +16,6 @@ export function useTradeFilters({ listings, wishlistIds, shopByListing }: Params
   const [setFilter, setSetFilter] = useState('');
   const [conditionFilter, setConditionFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState<ListingTypeFilter>('all');
-  const [postcodeFilter, setPostcodeFilter] = useState('');
   const [wishlistOnly, setWishlistOnly] = useState(false);
   const [shopFilter, setShopFilter] = useState('');
   const [sortMode, setSortMode] = useState<TradeSortMode>('newest');
@@ -26,14 +25,12 @@ export function useTradeFilters({ listings, wishlistIds, shopByListing }: Params
       setFilter ||
       conditionFilter ||
       typeFilter !== 'all' ||
-      postcodeFilter.trim() ||
       wishlistOnly ||
       shopFilter
   );
 
   const filteredListings = useMemo(() => {
     const nameNeedle = searchText.trim().toLowerCase();
-    const postcodeNeedle = postcodeFilter.trim().toLowerCase();
 
     const filtered = listings.filter((listing) => {
       if (wishlistOnly && !wishlistIds?.has(listing.card_id)) {
@@ -65,13 +62,6 @@ export function useTradeFilters({ listings, wishlistIds, shopByListing }: Params
         }
       }
 
-      if (postcodeNeedle) {
-        const prefix = (listing.postcode_prefix ?? '').toLowerCase();
-        if (!prefix.startsWith(postcodeNeedle)) {
-          return false;
-        }
-      }
-
       return true;
     });
 
@@ -87,7 +77,6 @@ export function useTradeFilters({ listings, wishlistIds, shopByListing }: Params
   }, [
     conditionFilter,
     listings,
-    postcodeFilter,
     searchText,
     setFilter,
     shopByListing,
@@ -107,7 +96,6 @@ export function useTradeFilters({ listings, wishlistIds, shopByListing }: Params
     setSetFilter('');
     setConditionFilter('');
     setTypeFilter('all');
-    setPostcodeFilter('');
     setWishlistOnly(false);
     setShopFilter('');
   }
@@ -121,8 +109,6 @@ export function useTradeFilters({ listings, wishlistIds, shopByListing }: Params
     setConditionFilter,
     typeFilter,
     setTypeFilter,
-    postcodeFilter,
-    setPostcodeFilter,
     wishlistOnly,
     setWishlistOnly,
     shopFilter,
