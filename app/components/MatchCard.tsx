@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import type { MatchRow, TraderMatch } from '../../lib/matching';
+import { MatchFairTrade } from './MatchFairTrade';
 
 const SHOWN = 3;
 
@@ -74,6 +75,10 @@ export function MatchCard({ match, starting, onStart }: Props) {
       <div className="flex flex-col gap-5 sm:flex-row sm:gap-8">
         <Side title="You get" rows={match.theyHave} empty="Nothing you want yet" />
         <Side title="You give" rows={match.iHave} empty="Nothing they want yet" />
+      </div>
+
+      <div className="mt-4">
+        <MatchFairTrade match={match} />
       </div>
     </article>
   );

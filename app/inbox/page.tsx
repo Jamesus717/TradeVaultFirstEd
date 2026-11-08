@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { cardOfferSummary, parseCardOffer } from '../../lib/cardOffer';
 import { DEMO_ME, demoMode } from '../../lib/demo';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../auth';
@@ -164,6 +165,12 @@ function demoInbox() {
       'demo-robin': { user_id: 'demo-robin', username: 'robin', display_name: 'Robin (example)' },
     } as Record<string, PublicProfile | undefined>,
   };
+}
+
+// A card offer's content ends in a JSON payload; the list shows its summary.
+function previewOf(content: string | null) {
+  const offer = parseCardOffer(content);
+  return offer ? cardOfferSummary(offer) : content ?? '';
 }
 
 export default function InboxPage() {
@@ -388,7 +395,7 @@ export default function InboxPage() {
                   ? `Offer: £${latest.offer_amount ?? ''} · ${latest.offer_status ?? ''}`
                   : latest?.message_type === 'system'
                     ? latest.content ?? ''
-                    : latest?.content ?? '';
+                    : previewOf(latest?.content ?? null);
 
               return (
                 <Link

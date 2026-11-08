@@ -2,11 +2,13 @@
 
 import { useParams } from 'next/navigation';
 import { DEMO_ME, demoMode } from '../../../lib/demo';
+import { latestDeal } from '../../../lib/fairTrade';
 import { supabase } from '../../../lib/supabaseClient';
 import { useAuth } from '../../auth';
 import ClosedConversationNotice from './components/ClosedConversationNotice';
 import ConversationHeader from './components/ConversationHeader';
 import ConversationSkeleton from './components/ConversationSkeleton';
+import CardOfferPanel from './components/CardOfferPanel';
 import ListingSidebar from './components/ListingSidebar';
 import MessageComposer from './components/MessageComposer';
 import MessageList from './components/MessageList';
@@ -14,6 +16,7 @@ import { MeetPanel } from './components/MeetPanel';
 import { useConversation } from './hooks/useConversation';
 import { useConversationActions } from './hooks/useConversationActions';
 import { useMeet } from './hooks/useMeet';
+import { useMyCards } from './hooks/useMyCards';
 
 export default function ConversationClient() {
   const auth = useAuth();
@@ -47,6 +50,11 @@ export default function ConversationClient() {
     setOfferAmount,
     offerSending,
     sendOffer,
+    cardOfferOpen,
+    setCardOfferOpen,
+    cardOfferSending,
+    cardOfferError,
+    sendCardOffer,
     handleOfferDecision,
     offerDecisionPending,
     startCounterOffer,
@@ -66,6 +74,7 @@ export default function ConversationClient() {
   const meeting = useMeet(conversationId, latestSystemMessage?.id ?? null);
 
   const activeListing = conversation?.trade_listings?.[0] ?? null;
+  const myCards = useMyCards(user?.id ?? null, cardOfferOpen);
 
   return (
     <main className="min-h-screen bg-transparent text-stone-100">
@@ -133,6 +142,22 @@ export default function ConversationClient() {
                     setOfferAmount={setOfferAmount}
                     offerSending={offerSending}
                     onSendOffer={sendOffer}
+                    cardOfferOpen={cardOfferOpen}
+                    setCardOfferOpen={setCardOfferOpen}
+                    cardOfferPanel={
+                      <CardOfferPanel
+                        cards={myCards.cards}
+                        loading={myCards.loading}
+                        loadError={myCards.error}
+                        listing={activeListing}
+                        userId={user.id}
+                        sellerId={conversation.seller_id}
+                        sending={cardOfferSending}
+                        sendError={cardOfferError}
+                        onSend={sendCardOffer}
+                        onCancel={() => setCardOfferOpen(false)}
+                      />
+                    }
                   />
                 ) : (
                   <ClosedConversationNotice
@@ -152,6 +177,7 @@ export default function ConversationClient() {
               onMarkListingSold={markListingSold}
               markingSold={markingSold}
               listingSold={listingSold}
+              deal={latestDeal(messages)}
             />
           </div>
         )}

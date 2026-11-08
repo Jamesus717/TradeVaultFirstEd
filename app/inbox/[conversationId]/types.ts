@@ -13,6 +13,7 @@ export type ListingCondition =
 export type Listing = {
   id: string;
   user_id: string;
+  card_id?: string | null;
   card_name: string;
   set_name: string;
   set_id: string;

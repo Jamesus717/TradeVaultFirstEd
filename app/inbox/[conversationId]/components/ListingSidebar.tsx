@@ -1,6 +1,8 @@
 'use client';
 
 import Image from 'next/image';
+import { ListingFairTrade } from '../../../components/ListingFairTrade';
+import type { Deal } from '../../../../lib/fairTrade';
 import type { Conversation, Listing } from '../types';
 import { classNames, conditionBadgeClass, formatMoneyGBP, listingTypeBadge } from '../utils';
 
@@ -12,6 +14,8 @@ export default function ListingSidebar({
   onMarkListingSold,
   markingSold,
   listingSold,
+  latestOffer = null,
+  deal,
 }: {
   activeListing: Listing | null;
   conversation: Conversation;
@@ -20,6 +24,9 @@ export default function ListingSidebar({
   onMarkListingSold: () => void;
   markingSold: boolean;
   listingSold: boolean;
+  latestOffer?: number | null;
+  // The offer on the table (cash or cards). Wins over latestOffer when passed.
+  deal?: Deal | null;
 }) {
   return (
     <aside className="h-fit space-y-4 rounded-xl border border-white/10 bg-white/[0.03] p-5 lg:sticky lg:top-24">
@@ -74,6 +81,16 @@ export default function ListingSidebar({
         <p className="text-lg font-semibold text-primary-400">
           {formatMoneyGBP(activeListing.price)}
         </p>
+      ) : null}
+
+      {activeListing ? (
+        <ListingFairTrade
+          listing={activeListing}
+          isSeller={conversation.seller_id === userId}
+          sellerId={conversation.seller_id}
+          latestOffer={latestOffer}
+          deal={deal}
+        />
       ) : null}
 
       {activeListing?.trade_description ? (

@@ -1,7 +1,7 @@
 import type { ConversationStatus, ListingCondition, ListingType } from './types';
 
 export const CONVERSATION_COLUMNS =
-  'id,listing_id,buyer_id,seller_id,status,created_at,updated_at,trade_listings(id,user_id,card_name,set_name,set_id,card_number,variant,condition,listing_type,price,trade_description,image_url,card_image_url,is_active)';
+  'id,listing_id,buyer_id,seller_id,status,created_at,updated_at,trade_listings(id,user_id,card_id,card_name,set_name,set_id,card_number,variant,condition,listing_type,price,trade_description,image_url,card_image_url,is_active)';
 
 export const MESSAGE_COLUMNS =
   'id,conversation_id,sender_id,content,message_type,offer_amount,offer_status,created_at,read_at';
