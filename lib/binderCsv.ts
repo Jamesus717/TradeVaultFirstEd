@@ -53,7 +53,7 @@ export function neutraliseFormula(text: string): string {
 }
 
 // Undo our own export prefix, so a round trip gives back the original text.
-function restoreFormula(text: string): string {
+export function restoreFormula(text: string): string {
   return /^'[=+\-@\t\r]/.test(text) ? text.slice(1) : text;
 }
 
@@ -129,14 +129,14 @@ export function parseCsv(text: string): string[][] | null {
 
 const CARD_ID = /^[a-z0-9.]+-[a-z0-9]+$/i;
 
-function readCard(cell: string): string | null {
+export function readCard(cell: string): string | null {
   const text = cell.trim();
   const bracket = text.match(/\[([^\]]+)\]\s*$/);
   const id = (bracket ? bracket[1] : text).trim();
   return CARD_ID.test(id) ? id : null;
 }
 
-function resolveSet(cell: string, cardId: string, sets: SetRef[]): string | null {
+export function resolveSet(cell: string, cardId: string, sets: SetRef[]): string | null {
   const wanted = cell.trim().toLowerCase();
   if (!wanted) return null;
   const hit = sets.find((s) => s.id.toLowerCase() === wanted || s.name.toLowerCase() === wanted);

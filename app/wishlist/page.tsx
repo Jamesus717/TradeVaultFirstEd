@@ -10,6 +10,9 @@ import { DEMO_WISHLIST, demoEmpty, demoMode, demoPrices } from '../../lib/demo';
 import { findUnderTarget, formatGbp, parseTargetPrice, type CachedPrice } from '../../lib/priceAlerts';
 import { fetchCachedPrices, missingTargetColumn } from '../../lib/priceAlertsData';
 import { PriceAlerts } from './PriceAlerts';
+import { WantsCsv } from './WantsCsv';
+import { mergeWants } from '../../lib/wantsCsv';
+import type { WantValue } from '../../lib/wantsCsv';
 
 type Priority = 'low' | 'medium' | 'high';
 
@@ -138,6 +141,28 @@ export default function WishlistPage() {
   }, [query]);
 
   const wanted = new Set(rows.map((row) => row.card_id));
+
+  function importedWants(added: WantValue[]) {
+    // Real mode saved to the database: reload. Demo keeps the rows in memory.
+    if (!demoMode) {
+      void load();
+      return;
+    }
+    const fresh: WishlistRow[] = added.map((v) => ({
+      id: `demo-csv-${v.cardId}`,
+      card_id: v.cardId,
+      set_id: v.setId,
+      card_name: v.cardName,
+      card_number: v.cardNumber,
+      image_url: `https://images.pokemontcg.io/${v.setId}/${v.cardNumber}.png`,
+      set_name: v.setName,
+      quantity: v.qty,
+      priority: v.priority,
+      note: v.note,
+      target_price: null,
+    }));
+    setRows((current) => mergeWants(current, fresh));
+  }
 
   async function addCard(card: CardSearchResult) {
     if (!supabase || !user || wanted.has(card.id)) return;
@@ -297,6 +322,8 @@ export default function WishlistPage() {
                 </ul>
               ) : null}
             </section>
+
+            <WantsCsv rows={rows} onImported={importedWants} />
 
             {alerts.length > 0 ? (
               <div className="mt-6">
