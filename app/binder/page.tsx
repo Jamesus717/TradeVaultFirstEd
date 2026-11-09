@@ -8,6 +8,7 @@ import { MissingCards } from './MissingCards';
 import { SetPicker } from './SetPicker';
 import { useBinder } from './useBinder';
 import { CardDetailModal } from './components/CardDetailModal';
+import { BinderFiltersBar } from './components/BinderFilters';
 import { BinderCsv } from './components/BinderCsv';
 import { QuickAdd } from './components/QuickAdd';
 import type { SortMode, CardVariant } from './types';
@@ -22,7 +23,6 @@ export default function Page() {
     selectedSetId,
     setSelectedSetId,
     owned,
-    searchQuery,
     setSearchQuery,
     sortMode,
     setSortMode,
@@ -42,8 +42,11 @@ export default function Page() {
     toggleOwned,
     toggleAllOwned,
     noteOwned,
-    ownershipFilter,
-    setOwnershipFilter,
+    filters,
+    setFilters,
+    clearFilters,
+    available,
+    activeFilters,
   } = useBinder();
 
   return (
@@ -148,7 +151,7 @@ export default function Page() {
                 <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <input
                     type="search"
-                    value={searchQuery}
+                    value={filters.q}
                     onChange={(event) => setSearchQuery(event.target.value)}
                     placeholder="Search card name..."
                     className="min-h-11 w-full rounded-xl border border-white/10 bg-stone-950/80 px-3 py-2.5 text-sm text-white outline-none focus:border-primary-300/50"
@@ -165,37 +168,20 @@ export default function Page() {
                   </select>
                 </div>
 
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {(
-                    [
-                      { value: 'all', label: 'All Cards' },
-                      { value: 'owned', label: '✓ Owned' },
-                      { value: 'unowned', label: 'Missing' },
-                    ] as const
-                  ).map(({ value, label }) => (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => setOwnershipFilter(value)}
-                      className={`min-h-11 rounded-full border px-4 py-1.5 
-                        text-xs font-semibold 
-                        transition-colors ${
-                        ownershipFilter === value
-                          ? 'border-primary-300/20 bg-primary-400/10 text-primary-200'
-                          : 'border-white/10 bg-white/[0.03] text-stone-300 hover:bg-white/[0.06]'
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
+                <BinderFiltersBar
+                  filters={filters}
+                  onChange={setFilters}
+                  onClear={clearFilters}
+                  activeCount={activeFilters}
+                  available={available}
+                />
 
-                <p className="mt-1 text-sm text-stone-400">
+                <p className="mt-3 text-sm text-stone-400" aria-live="polite">
                   {binderSummary}
                 </p>
               </div>
 
-              {ownedCount === 0 && cards.length > 0 && ownershipFilter === 'all' && !searchQuery ? (
+              {ownedCount === 0 && cards.length > 0 && activeFilters === 0 ? (
                 <EmptyState
                   compact
                   title="Your binder is empty"
@@ -209,6 +195,7 @@ export default function Page() {
 
               <BinderGrid
                 cards={visibleCards}
+                onClearFilters={activeFilters > 0 ? clearFilters : undefined}
                 owned={owned}
                 savingId={savingId}
                 bulkSaving={bulkSaving}
