@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../auth';
 import { supabase } from '../../lib/supabaseClient';
-import { DEMO_WISHLIST, demoMode, demoPrices } from '../../lib/demo';
+import { DEMO_WISHLIST, demoEmpty, demoMode, demoPrices } from '../../lib/demo';
 import { findUnderTarget, type PriceAlert, type WishlistTarget } from '../../lib/priceAlerts';
 import { fetchCachedPrices } from '../../lib/priceAlertsData';
 
@@ -17,7 +17,7 @@ export function usePriceAlerts(): PriceAlert[] {
     if (demoMode) {
       const now = Date.now();
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setAlerts(findUnderTarget(DEMO_WISHLIST, demoPrices(now), { nowMs: now }));
+      setAlerts(findUnderTarget(demoEmpty ? [] : DEMO_WISHLIST, demoPrices(now), { nowMs: now }));
       return;
     }
     if (authLoading || !user || !supabase) return;

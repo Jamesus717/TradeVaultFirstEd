@@ -302,7 +302,7 @@ export default function CollectionPage() {
         <EmptyState
           title="Your binder is empty"
           body="Pick a set in the Binder and tap “Add to binder” on the cards you own. Your sets, value and progress show up here."
-          action={{ label: 'Open the Binder', href: '/' }}
+          action={{ label: 'Open the Binder', href: '/binder' }}
         />
       </main>
     );

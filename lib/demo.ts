@@ -8,6 +8,8 @@ import type { Shop } from './shops';
 import type { Conversation, Message, PublicProfile } from '../app/inbox/[conversationId]/types';
 
 export const demoMode = process.env.NEXT_PUBLIC_TB_DEMO === '1';
+// `DEMO_EMPTY=1 npm run demo`: a brand new account, to see the empty states and the first-run guide.
+export const demoEmpty = demoMode && process.env.NEXT_PUBLIC_TB_DEMO_EMPTY === '1';
 
 function shop(id: string, name: string, town: string, description: string): Shop {
   return {
@@ -91,10 +93,11 @@ const DEMO_TRADER_SHOPS: Record<string, string> = {
 // limit message the database raises.
 export const DEMO_ALLOWANCE = { daily_limit: 10, used: 10, resets_in_hours: 5 };
 export const DEMO_LIMIT_MESSAGE = `Daily match limit reached, resets in ${DEMO_ALLOWANCE.resets_in_hours} h`;
-export const DEMO_UNREAD_MESSAGES = 2;
+export const DEMO_UNREAD_MESSAGES = demoEmpty ? 0 : 2;
 export const DEMO_ME = 'demo-me';
 
 export function demoMatches(shopId: string) {
+  if (demoEmpty) return [];
   return shopId ? DEMO_MATCHES.filter((match) => DEMO_TRADER_SHOPS[match.trader_id] === shopId) : DEMO_MATCHES;
 }
 
