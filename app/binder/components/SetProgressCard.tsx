@@ -1,6 +1,7 @@
 'use client';
 
 import { MISSING_FILTERS, missingCardsHref, setProgress } from '../../../lib/setProgress';
+import { printChecklistHref } from '../../../lib/printChecklist';
 import type { BinderFilters } from '../../../lib/binderFilters';
 
 type Props = {
@@ -45,6 +46,14 @@ export function SetProgressCard({ setId, owned, total, onShowMissing }: Props) {
           className="mt-4 inline-flex min-h-11 items-center text-sm font-semibold text-primary-200 underline underline-offset-4 hover:text-white"
         >
           Show {p.missing} missing {p.missing === 1 ? 'card' : 'cards'}
+        </a>
+      ) : null}
+      {setId ? (
+        <a
+          href={printChecklistHref(setId)}
+          className="mt-1 flex min-h-11 items-center text-sm font-semibold text-primary-200 underline underline-offset-4 hover:text-white"
+        >
+          Print checklist
         </a>
       ) : null}
     </div>
