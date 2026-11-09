@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { BinderGrid } from './BinderGrid';
 import { BinderGridSkeleton } from './BinderGridSkeleton';
+import { EmptyState } from '../components/EmptyState';
 import { MissingCards } from './MissingCards';
 import { SetPicker } from './SetPicker';
 import { useBinder } from './useBinder';
@@ -193,6 +194,18 @@ export default function Page() {
                   {binderSummary}
                 </p>
               </div>
+
+              {ownedCount === 0 && cards.length > 0 && ownershipFilter === 'all' && !searchQuery ? (
+                <EmptyState
+                  compact
+                  title="Your binder is empty"
+                  body={
+                    user
+                      ? 'Tap a card below to mark it as owned. Start with one you have in your hands.'
+                      : 'Sign in to save the cards you own. You can still look around the set.'
+                  }
+                />
+              ) : null}
 
               <BinderGrid
                 cards={visibleCards}

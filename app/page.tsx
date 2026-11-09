@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { NavIcon, type NavKey } from './components/nav/items';
 import { useUnreadMessages } from './components/nav/useUnreadMessages';
 import { DemoBanner } from './components/DemoBanner';
+import { FirstRunGuide } from './components/FirstRunGuide';
 import { AllowanceNote, LimitAlert, MatchList } from './matches/MatchList';
 import { useMatches } from './matches/useMatches';
 import { PriceAlerts } from './wishlist/PriceAlerts';
@@ -50,6 +51,8 @@ export default function HomePage() {
               : 'What needs you today, and who you can trade with.'}
           </p>
         </header>
+
+        <FirstRunGuide matchCount={matches.length} />
 
         <nav aria-label="Shortcuts" className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {tiles.map((tile) => (

@@ -6,7 +6,7 @@ import { EmptyState } from '../components/EmptyState';
 import { useAuth } from '../auth';
 import { supabase } from '../../lib/supabaseClient';
 import type { CardSearchResult } from '../trade/types';
-import { DEMO_WISHLIST, demoMode, demoPrices } from '../../lib/demo';
+import { DEMO_WISHLIST, demoEmpty, demoMode, demoPrices } from '../../lib/demo';
 import { findUnderTarget, formatGbp, parseTargetPrice, type CachedPrice } from '../../lib/priceAlerts';
 import { fetchCachedPrices, missingTargetColumn } from '../../lib/priceAlertsData';
 import { PriceAlerts } from './PriceAlerts';
@@ -56,7 +56,7 @@ export default function WishlistPage() {
   const load = useCallback(async () => {
     if (demoMode) {
       const now = Date.now();
-      setRows(DEMO_WISHLIST);
+      setRows(demoEmpty ? [] : DEMO_WISHLIST);
       setPrices(demoPrices(now));
       setNowMs(now);
       setLoading(false);
