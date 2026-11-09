@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { EmptyState } from '../components/EmptyState';
 import { useAuth } from '../auth';
 import { supabase } from '../../lib/supabaseClient';
@@ -11,6 +11,21 @@ import { findUnderTarget, formatGbp, parseTargetPrice, type CachedPrice } from '
 import { fetchCachedPrices, missingTargetColumn } from '../../lib/priceAlertsData';
 import { PriceAlerts } from './PriceAlerts';
 import { WantsCsv } from './WantsCsv';
+import { WantsFiltersBar } from './WantsFilters';
+import {
+  DEFAULT_WANT_SORT,
+  EMPTY_WANT_FILTERS,
+  activeWantFilterCount,
+  applyWantFilters,
+  hasAddedDates,
+  parseWantFilters,
+  parseWantSort,
+  serializeWantFilters,
+  sortWants,
+  wantSets,
+  type WantFilters,
+  type WantSort,
+} from '../../lib/wantsFilters';
 import { CopyAsText } from '../components/CopyAsText';
 import { gotIt, undoGotIt, type GotItReceipt } from '../../lib/gotIt';
 import { mergeWants } from '../../lib/wantsCsv';
@@ -29,14 +44,14 @@ type WishlistRow = {
   quantity: number;
   priority: Priority;
   note: string | null;
+  created_at?: string | null;
   // Absent when the 023 proposal (target prices) is not applied.
   target_price?: number | string | null;
 };
 
-const BASE_COLUMNS = 'id, card_id, set_id, card_name, card_number, image_url, set_name, quantity, priority, note';
+const BASE_COLUMNS = 'id, card_id, set_id, card_name, card_number, image_url, set_name, quantity, priority, note, created_at';
 
 const PRIORITY_LABEL: Record<Priority, string> = { high: 'High', medium: 'Medium', low: 'Low' };
-const PRIORITY_ORDER: Record<Priority, number> = { high: 0, medium: 1, low: 2 };
 const PRIORITY_STYLE: Record<Priority, string> = {
   high: 'border-rose-400/30 bg-rose-500/10 text-rose-200',
   medium: 'border-amber-300/30 bg-amber-400/10 text-amber-200',
@@ -60,6 +75,9 @@ export default function WishlistPage() {
   const [toast, setToast] = useState<{ message: string; receipt: GotItReceipt } | null>(null);
   const [toastNote, setToastNote] = useState('');
   const [movingId, setMovingId] = useState<string | null>(null);
+  const [filters, setFilters] = useState<WantFilters>(EMPTY_WANT_FILTERS);
+  const [sortMode, setSortMode] = useState<WantSort>(DEFAULT_WANT_SORT);
+  const [urlReady, setUrlReady] = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const load = useCallback(async () => {
@@ -145,6 +163,27 @@ export default function WishlistPage() {
       controller.abort();
     };
   }, [query]);
+
+  // Read filters from the URL once, after mount (avoids a hydration mismatch).
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const timer = setTimeout(() => {
+      setFilters(parseWantFilters(params));
+      setSortMode(parseWantSort(params));
+      setUrlReady(true);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Keep the URL in step, without piling up history entries.
+  useEffect(() => {
+    if (!urlReady) return;
+    const query = serializeWantFilters(filters, sortMode);
+    const next = `${window.location.pathname}${query ? `?${query}` : ''}`;
+    if (next !== `${window.location.pathname}${window.location.search}`) {
+      window.history.replaceState(window.history.state, '', next);
+    }
+  }, [urlReady, filters, sortMode]);
 
   const wanted = new Set(rows.map((row) => row.card_id));
 
@@ -281,7 +320,13 @@ export default function WishlistPage() {
     setToast(null);
   }
 
-  const sorted = [...rows].sort((a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority]);
+  const sorted = useMemo(
+    () => sortWants(applyWantFilters(rows, filters), sortMode),
+    [rows, filters, sortMode]
+  );
+  const filterCount = activeWantFilterCount(filters);
+  const sets = useMemo(() => wantSets(rows), [rows]);
+  const showAdded = useMemo(() => hasAddedDates(rows), [rows]);
   const priceByCard = new Map(prices.map((price) => [price.card_id, price]));
   const alerts = targetsReady
     ? findUnderTarget(
@@ -394,9 +439,36 @@ export default function WishlistPage() {
               </div>
             ) : null}
 
+            {rows.length > 0 ? (
+              <section className="panel mt-6 p-5">
+                <WantsFiltersBar
+                  filters={filters}
+                  sort={sortMode}
+                  sets={sets}
+                  showAdded={showAdded}
+                  activeCount={filterCount}
+                  onFilters={setFilters}
+                  onSort={setSortMode}
+                  onClear={() => setFilters(EMPTY_WANT_FILTERS)}
+                />
+                <p className="mt-3 text-xs text-stone-400" aria-live="polite">
+                  {filterCount > 0
+                    ? `Showing ${sorted.length} of ${rows.length} cards.`
+                    : `${rows.length} ${rows.length === 1 ? 'card' : 'cards'}.`}
+                </p>
+              </section>
+            ) : null}
+
             <section className="mt-6">
               {loading ? (
                 <p className="text-sm text-stone-400">Loading your list…</p>
+              ) : rows.length > 0 && sorted.length === 0 ? (
+                <EmptyState
+                  compact
+                  title="No cards match"
+                  body="Nothing on your wishlist matches these filters."
+                  action={{ label: 'Clear all filters', onClick: () => setFilters(EMPTY_WANT_FILTERS) }}
+                />
               ) : sorted.length === 0 ? (
                 <EmptyState
                   compact
