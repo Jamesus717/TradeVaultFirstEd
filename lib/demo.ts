@@ -258,6 +258,7 @@ export type DemoWishlistRow = {
   priority: 'low' | 'medium' | 'high';
   note: string | null;
   target_price: number | null;
+  created_at: string;
 };
 
 function want(
@@ -265,29 +266,34 @@ function want(
   name: string,
   priority: DemoWishlistRow['priority'],
   target: number | null,
-  note: string | null = null
+  note: string | null = null,
+  added = '2026-10-01',
+  set = { id: 'base1', name: 'Base' }
 ): DemoWishlistRow {
   return {
-    id: `demo-want-${number}`,
-    card_id: `base1-${number}`,
-    set_id: 'base1',
+    id: `demo-want-${set.id}-${number}`,
+    card_id: `${set.id}-${number}`,
+    set_id: set.id,
     card_name: name,
     card_number: String(number),
-    image_url: `https://images.pokemontcg.io/base1/${number}.png`,
-    set_name: 'Base',
+    image_url: `https://images.pokemontcg.io/${set.id}/${number}.png`,
+    set_name: set.name,
     quantity: 1,
     priority,
     note,
     target_price: target,
+    created_at: `${added}T10:00:00Z`,
   };
 }
 
 export const DEMO_WISHLIST: DemoWishlistRow[] = [
-  want(4, 'Charizard', 'high', 250, 'Example: unlimited is fine'),
-  want(2, 'Blastoise', 'high', 90),
-  want(15, 'Venusaur', 'medium', 60),
-  want(16, 'Zapdos', 'medium', 20),
-  want(58, 'Pikachu', 'low', null),
+  want(4, 'Charizard', 'high', 250, 'Example: unlimited is fine', '2026-11-04'),
+  want(2, 'Blastoise', 'high', 90, null, '2026-10-12'),
+  want(15, 'Venusaur', 'medium', 60, null, '2026-10-28'),
+  want(16, 'Zapdos', 'medium', 20, null, '2026-09-30'),
+  want(58, 'Pikachu', 'low', null, null, '2026-11-07'),
+  want(1, 'Pineco', 'low', null, null, '2026-11-06', { id: 'sv1', name: 'Scarlet & Violet' }),
+  want(25, 'Sprigatito', 'medium', null, null, '2026-10-20', { id: 'sv1', name: 'Scarlet & Violet' }),
 ];
 
 export function demoPrices(nowMs: number) {
