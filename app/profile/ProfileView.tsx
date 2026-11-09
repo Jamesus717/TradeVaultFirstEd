@@ -281,7 +281,7 @@ export default function ProfileView({ userId }: Props) {
                     {shareHref && !profileLoading ? (
                       <p className="mt-1 text-sm text-stone-500">
                         Public profile:{' '}
-                        <Link href={shareHref} className="text-stone-300 hover:text-white">
+                        <Link href={shareHref} className="-my-3 inline-flex min-h-11 items-center text-stone-300 hover:text-white">
                           {shareHref}
                         </Link>
                       </p>
@@ -367,7 +367,7 @@ export default function ProfileView({ userId }: Props) {
                   </p>
                   <Link
                     href="/binder"
-                    className="mt-6 inline-block rounded-xl bg-primary-400 px-5 py-2.5 text-sm font-medium text-primary-950 hover:bg-primary-300"
+                    className="mt-6 inline-flex min-h-11 items-center rounded-xl bg-primary-400 px-5 py-2.5 text-sm font-medium text-primary-950 hover:bg-primary-300"
                   >
                     Go to Binder
                   </Link>
