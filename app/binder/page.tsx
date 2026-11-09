@@ -10,6 +10,7 @@ import { useBinder } from './useBinder';
 import { CardDetailModal } from './components/CardDetailModal';
 import { BinderFiltersBar } from './components/BinderFilters';
 import { BinderCsv } from './components/BinderCsv';
+import { SetProgressCard } from './components/SetProgressCard';
 import { QuickAdd } from './components/QuickAdd';
 import type { SortMode, CardVariant } from './types';
 
@@ -35,7 +36,6 @@ export default function Page() {
     cards,
     total,
     ownedCount,
-    completion,
     allOwned,
     savingId,
     bulkSaving,
@@ -85,23 +85,12 @@ export default function Page() {
               </div>
 
               <div className="flex flex-col gap-4 lg:items-end">
-                <div className="min-w-[240px] rounded-xl border border-primary-300/20 bg-primary-400/10 p-5">
-                  <p className="text-xs font-medium text-primary-100/75">
-                    Collection Progress
-                  </p>
-                  <p className="mt-3 text-3xl font-semibold text-white">
-                    {ownedCount} / {total || '--'}
-                  </p>
-                  <p className="mt-1 text-sm text-primary-50/75">
-                    {completion}% complete{total > ownedCount ? ` · ${total - ownedCount} to go` : total ? ' · set complete!' : ''}
-                  </p>
-                  <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
-                    <div
-                      className="h-full rounded-full bg-primary-400 transition-all duration-300"
-                      style={{ width: `${completion}%` }}
-                    />
-                  </div>
-                </div>
+                <SetProgressCard
+                  setId={selectedSetId}
+                  owned={ownedCount}
+                  total={total}
+                  onShowMissing={setFilters}
+                />
               </div>
             </div>
           </div>
