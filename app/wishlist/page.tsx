@@ -11,6 +11,7 @@ import { findUnderTarget, formatGbp, parseTargetPrice, type CachedPrice } from '
 import { fetchCachedPrices, missingTargetColumn } from '../../lib/priceAlertsData';
 import { PriceAlerts } from './PriceAlerts';
 import { WantsCsv } from './WantsCsv';
+import { CopyAsText } from '../components/CopyAsText';
 import { gotIt, undoGotIt, type GotItReceipt } from '../../lib/gotIt';
 import { mergeWants } from '../../lib/wantsCsv';
 import type { WantValue } from '../../lib/wantsCsv';
@@ -373,6 +374,16 @@ export default function WishlistPage() {
                   })}
                 </ul>
               ) : null}
+            </section>
+
+            <section className="panel mt-6 p-5">
+              <CopyAsText
+                title="Wants"
+                emptyMessage="Your wishlist is empty, so there is nothing to copy."
+                getItems={() =>
+                  rows.map((r) => ({ name: r.card_name, setName: r.set_name ?? r.set_id, qty: r.quantity, priority: r.priority }))
+                }
+              />
             </section>
 
             <WantsCsv rows={rows} onImported={importedWants} />

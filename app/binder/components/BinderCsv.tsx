@@ -8,6 +8,7 @@ import { fetchSets } from '../../../lib/fetchSets';
 import { fetchSetVariants } from '../../../lib/setCardsCache';
 import { supabase } from '../../../lib/supabaseClient';
 import { useAuth } from '../../auth';
+import { CopyAsText } from '../../components/CopyAsText';
 import { addBinderRows, getBinderRows, useBinderDetails } from '../../../lib/binderDetails';
 
 async function loadSets(): Promise<SetRef[]> {
@@ -158,6 +159,19 @@ export function BinderCsv() {
 
   return (
     <div className="panel p-5">
+      <div className="mb-3">
+        <CopyAsText
+          title="Binder"
+          emptyMessage="Your binder is empty, so there is nothing to copy."
+          getItems={async () =>
+            (demoMode ? demoRows : await loadExportRows(user!.id)).map((r) => ({
+              name: r.cardName,
+              setName: r.setName,
+              qty: r.qty,
+            }))
+          }
+        />
+      </div>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
