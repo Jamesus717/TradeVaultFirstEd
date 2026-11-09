@@ -18,7 +18,13 @@ export function getBinderRows(): ExportRow[] {
 }
 
 export function addBinderRows(added: ExportRow[]) {
-  rows = mergeBinderRows(rows, added);
+  // Keep the original date when a card is re-imported; new cards get today.
+  const now = new Date().toISOString();
+  const before = new Map(rows.map((r) => [r.cardId.toLowerCase(), r.addedAt]));
+  rows = mergeBinderRows(
+    rows,
+    added.map((r) => ({ ...r, addedAt: r.addedAt ?? before.get(r.cardId.toLowerCase()) ?? now }))
+  );
   detailsCache = null;
   listeners.forEach((l) => l());
 }
@@ -36,7 +42,7 @@ function snapshot(): DetailsById {
   if (!detailsCache) {
     detailsCache = {};
     for (const r of rows) {
-      detailsCache[r.cardId.toLowerCase()] = { condition: r.condition ?? null, price: r.price ?? null };
+      detailsCache[r.cardId.toLowerCase()] = { condition: r.condition ?? null, price: r.price ?? null, addedAt: r.addedAt ?? null };
     }
   }
   return detailsCache;

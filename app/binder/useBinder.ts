@@ -27,6 +27,7 @@ import {
   type BinderFilters,
   type OwnershipFilter,
 } from '../../lib/binderFilters';
+import { availableSorts, sortCards } from '../../lib/binderSort';
 
 export function useBinder() {
   const { user, supabaseDisabled } = useAuth();
@@ -39,6 +40,7 @@ export function useBinder() {
   const [urlReady, setUrlReady] = useState(false);
   const details = useBinderDetails();
   const available = useMemo(() => availableFilters(details), [details]);
+  const sortAvailable = useMemo(() => availableSorts(details), [details]);
   const searchQuery = filters.q;
   const ownershipFilter = filters.own;
   const setSearchQuery = useCallback((q: string) => setFilters((f) => ({ ...f, q })), []);
@@ -74,40 +76,7 @@ export function useBinder() {
 
     const ownershipFiltered = applyFilters(cards, ownedForView, details, filters);
 
-    return [...ownershipFiltered].sort((a, b) => {
-      if (sortMode === 'binder') {
-        const numA = Number.parseInt(a.number.replace(/\D/g, ''), 10) || 0;
-        const numB = Number.parseInt(b.number.replace(/\D/g, ''), 10) || 0;
-        if (numA !== numB) return numA - numB;
-        if (a.name !== b.name) return a.name.localeCompare(b.name);
-        return a.variant.localeCompare(b.variant);
-      }
-
-      if (sortMode === 'number-desc') {
-        const numA = Number.parseInt(a.number.replace(/\D/g, ''), 10) || 0;
-        const numB = Number.parseInt(b.number.replace(/\D/g, ''), 10) || 0;
-        if (numA !== numB) return numB - numA;
-        if (a.name !== b.name) return a.name.localeCompare(b.name);
-        return a.variant.localeCompare(b.variant);
-      }
-
-      if (sortMode === 'name-asc') {
-        if (a.name !== b.name) return a.name.localeCompare(b.name);
-        return a.variant.localeCompare(b.variant);
-      }
-
-      if (sortMode === 'owned-first') {
-        const aOwned = Boolean(ownedForView[a.id]);
-        const bOwned = Boolean(ownedForView[b.id]);
-        if (aOwned && !bOwned) return -1;
-        if (!aOwned && bOwned) return 1;
-        const numA = Number.parseInt(a.number.replace(/\D/g, ''), 10) || 0;
-        const numB = Number.parseInt(b.number.replace(/\D/g, ''), 10) || 0;
-        return numA - numB;
-      }
-
-      return 0;
-    });
+    return sortCards(ownershipFiltered, sortMode, ownedForView, details);
   }, [cards, filters, sortMode, ownedForView, details]);
 
   const missingCards = useMemo(
@@ -513,6 +482,7 @@ export function useBinder() {
     setSearchQuery,
     sortMode,
     setSortMode,
+    sortAvailable,
     visibleCards,
     missingCards,
     binderSummary,

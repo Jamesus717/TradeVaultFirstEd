@@ -22,6 +22,8 @@ export type ExportRow = {
   condition?: string | null;
   qty?: number;
   price?: number | null;
+  // ISO date the card joined the binder. Not part of the CSV; used for sorting.
+  addedAt?: string | null;
 };
 
 export type SetRef = { id: string; name: string };
