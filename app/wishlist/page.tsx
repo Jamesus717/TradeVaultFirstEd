@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { EmptyState } from '../components/EmptyState';
 import { useAuth } from '../auth';
 import { supabase } from '../../lib/supabaseClient';
@@ -11,6 +11,7 @@ import { findUnderTarget, formatGbp, parseTargetPrice, type CachedPrice } from '
 import { fetchCachedPrices, missingTargetColumn } from '../../lib/priceAlertsData';
 import { PriceAlerts } from './PriceAlerts';
 import { WantsCsv } from './WantsCsv';
+import { gotIt, undoGotIt, type GotItReceipt } from '../../lib/gotIt';
 import { mergeWants } from '../../lib/wantsCsv';
 import type { WantValue } from '../../lib/wantsCsv';
 
@@ -55,6 +56,10 @@ export default function WishlistPage() {
   const [nowMs, setNowMs] = useState(0);
   const [targetsReady, setTargetsReady] = useState(true);
   const [targetErrors, setTargetErrors] = useState<Record<string, string>>({});
+  const [toast, setToast] = useState<{ message: string; receipt: GotItReceipt } | null>(null);
+  const [toastNote, setToastNote] = useState('');
+  const [movingId, setMovingId] = useState<string | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const load = useCallback(async () => {
     if (demoMode) {
@@ -226,6 +231,53 @@ export default function WishlistPage() {
       setRows(previous);
       setError(deleteError.message);
     }
+  }
+
+  useEffect(() => () => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+  }, []);
+
+  async function markGotIt(row: WishlistRow) {
+    if (movingId) return;
+    setMovingId(row.id);
+    setError('');
+    let receipt: GotItReceipt = { want: row, variant: 'Normal', binderAdded: true };
+    if (!demoMode) {
+      if (!supabase || !user) {
+        setMovingId(null);
+        return;
+      }
+      const result = await gotIt(supabase, user.id, row);
+      if (!result.ok) {
+        setError(`Couldn't move ${row.card_name} to your binder, so it's still on your list. ${result.message}`);
+        setMovingId(null);
+        return;
+      }
+      receipt = result.receipt;
+    }
+    setRows((current) => current.filter((r) => r.id !== row.id));
+    setMovingId(null);
+    setToastNote('');
+    setToast({ message: `${row.card_name} moved to your binder.`, receipt });
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 8000);
+  }
+
+  async function undoMove() {
+    if (!toast) return;
+    const { receipt } = toast;
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    if (!demoMode) {
+      if (!supabase || !user) return;
+      const result = await undoGotIt(supabase, user.id, receipt);
+      if (!result.ok) {
+        setToastNote(`Couldn't undo: ${result.message}`);
+        toastTimer.current = setTimeout(() => setToast(null), 8000);
+        return;
+      }
+    }
+    setRows((current) => (current.some((r) => r.id === receipt.want.id) ? current : [...current, receipt.want as WishlistRow]));
+    setToast(null);
   }
 
   const sorted = [...rows].sort((a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority]);
@@ -456,6 +508,14 @@ export default function WishlistPage() {
                         >
                           Remove
                         </button>
+                        <button
+                          type="button"
+                          onClick={() => markGotIt(row)}
+                          disabled={movingId === row.id}
+                          className="min-h-11 w-full rounded-lg bg-emerald-400 px-3 text-sm font-semibold text-emerald-950 hover:bg-emerald-300 disabled:opacity-60"
+                        >
+                          {movingId === row.id ? 'Moving…' : 'Got it'}
+                        </button>
                       </div>
                     </li>
                   ))}
@@ -465,6 +525,21 @@ export default function WishlistPage() {
           </>
         )}
       </div>
+      {toast ? (
+        <div
+          role="status"
+          className="fixed inset-x-4 bottom-4 z-50 mx-auto flex max-w-md items-center justify-between gap-3 rounded-xl border border-white/10 bg-stone-900 p-3 text-sm text-white shadow-lg"
+        >
+          <span>{toastNote || toast.message}</span>
+          <button
+            type="button"
+            onClick={undoMove}
+            className="min-h-11 shrink-0 rounded-lg px-4 text-sm font-semibold text-primary-300 hover:bg-white/10"
+          >
+            Undo
+          </button>
+        </div>
+      ) : null}
     </main>
   );
 }
