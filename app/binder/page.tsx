@@ -12,6 +12,7 @@ import { BinderFiltersBar } from './components/BinderFilters';
 import { BinderSortControl } from './components/BinderSort';
 import { BinderCsv } from './components/BinderCsv';
 import { SetProgressCard } from './components/SetProgressCard';
+import { BinderSummaryCard } from './components/BinderSummaryCard';
 import { QuickAdd } from './components/QuickAdd';
 import type { CardVariant } from './types';
 
@@ -32,6 +33,7 @@ export default function Page() {
     visibleCards,
     missingCards,
     binderSummary,
+    ownedSummary,
     loadingSets,
     isLoading,
     error,
@@ -162,6 +164,14 @@ export default function Page() {
                   {binderSummary}
                 </p>
               </div>
+
+              <BinderSummaryCard
+                summary={ownedSummary}
+                filterCount={activeFilters}
+                shown={visibleCards.length}
+                inSet={cards.length}
+                setName={selectedSet?.name ?? 'this set'}
+              />
 
               {ownedCount === 0 && cards.length > 0 && activeFilters === 0 ? (
                 <EmptyState
