@@ -11,7 +11,7 @@ const BASE = process.env.AUDIT_BASE || 'http://localhost:3100';
 const PORT = new URL(BASE).port || '3100';
 const OUT = 'reports/mobile-audit';
 const ROUTES = [
-  '/', '/binder', '/collection', '/inbox', '/inbox/demo-chat-1', '/matches', '/preview',
+  '/', '/binder', '/binder/print', '/collection', '/inbox', '/inbox/demo-chat-1', '/matches', '/preview',
   '/profile', '/profile/demo-sam', '/reset-password', '/shops', '/shops/example-cards-leeds',
   '/trade', '/u/sam', '/wishlist',
 ];
