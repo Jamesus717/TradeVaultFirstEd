@@ -15,7 +15,7 @@ export function SetProgressCard({ setId, owned, total, onShowMissing }: Props) {
 
   return (
     <div className="min-w-[240px] rounded-xl border border-primary-300/20 bg-primary-400/10 p-5">
-      <p className="text-xs font-medium text-primary-100/75">Set Progress</p>
+      <p className="text-sm font-medium text-primary-100/75">Set Progress</p>
       <p className="mt-3 text-3xl font-semibold text-white">
         {p.owned} / {p.total || '--'}
       </p>
