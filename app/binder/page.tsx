@@ -9,10 +9,11 @@ import { SetPicker } from './SetPicker';
 import { useBinder } from './useBinder';
 import { CardDetailModal } from './components/CardDetailModal';
 import { BinderFiltersBar } from './components/BinderFilters';
+import { BinderSortControl } from './components/BinderSort';
 import { BinderCsv } from './components/BinderCsv';
 import { SetProgressCard } from './components/SetProgressCard';
 import { QuickAdd } from './components/QuickAdd';
-import type { SortMode, CardVariant } from './types';
+import type { CardVariant } from './types';
 
 export default function Page() {
   const [selectedCard, setSelectedCard] = useState<CardVariant | null>(null);
@@ -27,6 +28,7 @@ export default function Page() {
     setSearchQuery,
     sortMode,
     setSortMode,
+    sortAvailable,
     visibleCards,
     missingCards,
     binderSummary,
@@ -145,16 +147,7 @@ export default function Page() {
                     placeholder="Search card name..."
                     className="min-h-11 w-full rounded-xl border border-white/10 bg-stone-950/80 px-3 py-2.5 text-sm text-white outline-none focus:border-primary-300/50"
                   />
-                  <select
-                    value={sortMode}
-                    onChange={(event) => setSortMode(event.target.value as SortMode)}
-                    className="min-h-11 w-full rounded-xl border border-white/10 bg-stone-950/80 px-3 py-2.5 text-sm text-white outline-none focus:border-primary-300/50"
-                  >
-                    <option value="binder">Binder order (Number ↑)</option>
-                    <option value="number-desc">Number ↓</option>
-                    <option value="name-asc">Name A → Z</option>
-                    <option value="owned-first">Owned first</option>
-                  </select>
+                  <BinderSortControl value={sortMode} onChange={setSortMode} available={sortAvailable} />
                 </div>
 
                 <BinderFiltersBar

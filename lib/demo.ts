@@ -308,7 +308,7 @@ export const DEMO_BINDER_SETS = [
 ];
 
 export const DEMO_BINDER_ROWS = [
-  { cardId: 'base1-4', cardName: 'Charizard', setName: 'Base', condition: 'LP', qty: 1, price: 250 },
-  { cardId: 'base1-58', cardName: 'Pikachu', setName: 'Base', condition: 'NM', qty: 2, price: 12.5 },
-  { cardId: 'sv1-1', cardName: 'Pineco', setName: 'Scarlet & Violet', condition: null, qty: 1, price: null },
+  { cardId: 'base1-4', cardName: 'Charizard', setName: 'Base', condition: 'LP', qty: 1, price: 250, addedAt: '2026-10-02T10:00:00Z' },
+  { cardId: 'base1-58', cardName: 'Pikachu', setName: 'Base', condition: 'NM', qty: 2, price: 12.5, addedAt: '2026-10-20T10:00:00Z' },
+  { cardId: 'sv1-1', cardName: 'Pineco', setName: 'Scarlet & Violet', condition: null, qty: 1, price: null, addedAt: '2026-11-05T10:00:00Z' },
 ];

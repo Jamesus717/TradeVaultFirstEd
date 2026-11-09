@@ -7,8 +7,9 @@
 export const FILTER_CONDITIONS = ['NM', 'LP', 'MP', 'HP', 'DMG'] as const;
 export type FilterCondition = (typeof FILTER_CONDITIONS)[number];
 export type OwnershipFilter = 'all' | 'owned' | 'unowned';
-export const SORT_MODES = ['binder', 'number-desc', 'name-asc', 'owned-first'] as const;
-export type FilterSort = (typeof SORT_MODES)[number];
+import { isSortMode, type BinderSort } from './binderSort';
+
+export type FilterSort = BinderSort;
 
 export type BinderFilters = {
   q: string;
@@ -18,7 +19,8 @@ export type BinderFilters = {
   max: number | null;
 };
 
-export type CardDetails = { condition?: string | null; price?: number | null };
+// addedAt is an ISO date string; only demo data and CSV imports carry it today.
+export type CardDetails = { condition?: string | null; price?: number | null; addedAt?: string | null };
 // Keyed by lowercase base card id (e.g. "base1-4").
 export type DetailsById = Record<string, CardDetails>;
 
@@ -56,7 +58,7 @@ export function parseFilters(params: URLSearchParams): BinderFilters {
 
 export function parseSort(params: URLSearchParams): FilterSort {
   const s = params.get('sort');
-  return (SORT_MODES as readonly string[]).includes(s ?? '') ? (s as FilterSort) : 'binder';
+  return isSortMode(s) ? s : 'binder';
 }
 
 // Writes only non-default values, so the clean URL is just /binder.
