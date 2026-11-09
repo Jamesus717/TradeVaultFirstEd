@@ -4,9 +4,9 @@ A "Got it" button on each want on `/wishlist`. One tap moves the card to the bin
 
 ## How it works
 - `lib/gotIt.ts` uses existing tables only: `user_cards` upsert (same key as Quick add), then `wishlist_cards` delete. No migrations.
-- Already owned: the binder is left alone, so Undo never removes a card you had before.
+- A prior binder row (owned or not) is restored, never deleted. A failed rollback shows an error.
 - If the want delete fails, the binder add is rolled back, an error shows and the want stays.
-- Undo re-inserts the want, then removes the binder add. If that second step fails, the want is removed again and the error shows.
+- Undo re-inserts the want, then puts the binder row back as it was (deleted, or owned=false). If that second step fails, the want is removed again and the error shows.
 - Demo and `DEMO_EMPTY=1`: in memory only, nothing saved. Undo restores the card.
 - Button and Undo are 44 px tall, text 14 px or more.
 
