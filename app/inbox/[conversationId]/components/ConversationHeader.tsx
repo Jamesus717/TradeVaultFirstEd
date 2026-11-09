@@ -14,7 +14,7 @@ export default function ConversationHeader({
 }) {
   return (
     <div className="mb-4 flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4">
-      <Link href="/inbox" className="text-sm font-medium text-stone-300 hover:text-white">
+      <Link href="/inbox" className="-my-3 inline-flex min-h-11 items-center text-sm font-medium text-stone-300 hover:text-white">
         ← Back
       </Link>
       <div className="h-10 w-10 overflow-hidden rounded-lg bg-stone-900 ring-1 ring-white/5">
