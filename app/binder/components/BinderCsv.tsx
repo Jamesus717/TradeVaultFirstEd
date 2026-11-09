@@ -1,13 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { CSV_COLUMNS, MAX_CSV_BYTES, MAX_CSV_ROWS, mergeBinderRows, parseImport, saveImport, toCsv } from '../../../lib/binderCsv';
+import { CSV_COLUMNS, MAX_CSV_BYTES, MAX_CSV_ROWS, parseImport, saveImport, toCsv } from '../../../lib/binderCsv';
 import type { ExportRow, ImportPreview, SetRef } from '../../../lib/binderCsv';
-import { DEMO_BINDER_ROWS, DEMO_BINDER_SETS, demoMode } from '../../../lib/demo';
+import { DEMO_BINDER_SETS, demoMode } from '../../../lib/demo';
 import { fetchSets } from '../../../lib/fetchSets';
 import { fetchSetVariants } from '../../../lib/setCardsCache';
 import { supabase } from '../../../lib/supabaseClient';
 import { useAuth } from '../../auth';
+import { addBinderRows, getBinderRows, useBinderDetails } from '../../../lib/binderDetails';
 
 async function loadSets(): Promise<SetRef[]> {
   if (demoMode) return DEMO_BINDER_SETS;
@@ -90,7 +91,8 @@ export function BinderCsv() {
   const [failed, setFailed] = useState(false);
   const [preview, setPreview] = useState<ImportPreview | null>(null);
   // Demo mode has no database: the example binder lives in memory.
-  const [demoRows, setDemoRows] = useState<ExportRow[]>(DEMO_BINDER_ROWS);
+  useBinderDetails(); // re-render when demo rows change
+  const demoRows = getBinderRows();
 
   if (!user && !demoMode) return null;
 
@@ -144,7 +146,7 @@ export function BinderCsv() {
         qty: r.value!.qty,
         price: r.value!.price,
       }));
-      setDemoRows((current) => mergeBinderRows(current, added));
+      addBinderRows(added);
       say(`Demo: added ${added.length} example card${added.length === 1 ? '' : 's'} (kept in memory only).`);
     } else if (supabase && user) {
       const result = await saveImport(supabase, user.id, good);

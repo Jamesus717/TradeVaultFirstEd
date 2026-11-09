@@ -14,15 +14,17 @@ type Props = {
   canEdit: boolean;
   onToggleOwned: (card: CardVariant) => void;
   onCardClick: (card: CardVariant) => void;
+  onClearFilters?: () => void;
 };
 
-export function BinderGrid({ cards, owned, savingId, bulkSaving, canEdit, onToggleOwned, onCardClick }: Props) {
+export function BinderGrid({ cards, owned, savingId, bulkSaving, canEdit, onToggleOwned, onCardClick, onClearFilters }: Props) {
   if (cards.length === 0) {
     return (
       <EmptyState
         compact
         title="No cards match"
-        body="Try a different name, or switch the filter back to All Cards."
+        body="Nothing in this set fits those filters. Loosen one, or clear them all."
+        action={onClearFilters ? { label: 'Clear all filters', onClick: onClearFilters } : undefined}
       />
     );
   }
