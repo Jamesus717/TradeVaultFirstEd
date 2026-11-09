@@ -16,7 +16,7 @@ const want: GotItWant = {
 };
 
 // Records every write; `fail` names operations (table.op) that return an error.
-function fake(opts: { owned?: boolean; fail?: string[] } = {}) {
+function fake(opts: { owned?: boolean; unowned?: boolean; fail?: string[] } = {}) {
   const log: string[] = [];
   const failing = new Set(opts.fail ?? []);
   const res = (table: string, op: string) => {
@@ -26,13 +26,14 @@ function fake(opts: { owned?: boolean; fail?: string[] } = {}) {
   const client = {
     from: (table: string) => ({
       select: () => ({
-        match: async () => ({ data: opts.owned ? [{ owned: true }] : [], ...res(table, 'select') }),
+        match: async () => ({ data: opts.owned ? [{ owned: true }] : opts.unowned ? [{ owned: false }] : [], ...res(table, 'select') }),
       }),
       upsert: async () => res(table, 'upsert'),
       insert: async (row: Record<string, unknown>) => {
         log.push(`row:${JSON.stringify(row.card_id)}`);
         return res(table, 'insert');
       },
+      update: () => ({ match: async () => res(table, 'updateMatch') }),
       delete: () => ({
         eq: async () => res(table, 'delete'),
         match: async () => res(table, 'deleteMatch'),
@@ -47,14 +48,14 @@ describe('gotIt', () => {
     const { client, log } = fake();
     const result = await gotIt(client, 'u1', want);
     expect(log).toEqual(['user_cards.select', 'user_cards.upsert', 'wishlist_cards.delete']);
-    expect(result).toMatchObject({ ok: true, receipt: { binderAdded: true, variant: 'Normal' } });
+    expect(result).toMatchObject({ ok: true, receipt: { prior: 'none', variant: 'Normal' } });
   });
 
   it('leaves the binder alone when the card is already owned', async () => {
     const { client, log } = fake({ owned: true });
     const result = await gotIt(client, 'u1', want);
     expect(log).toEqual(['user_cards.select', 'wishlist_cards.delete']);
-    expect(result).toMatchObject({ ok: true, receipt: { binderAdded: false } });
+    expect(result).toMatchObject({ ok: true, receipt: { prior: 'owned' } });
   });
 
   it('stops and keeps the want when the binder write fails', async () => {
@@ -78,8 +79,38 @@ describe('gotIt', () => {
   });
 });
 
+describe('gotIt with an existing owned=false row', () => {
+  it('restores owned=false, not delete, when removing the want fails', async () => {
+    const { client, log } = fake({ unowned: true, fail: ['wishlist_cards.delete'] });
+    const result = await gotIt(client, 'u1', want);
+    expect(result.ok).toBe(false);
+    expect(log).toEqual(['user_cards.select', 'user_cards.upsert', 'wishlist_cards.delete', 'user_cards.updateMatch']);
+    expect(log).not.toContain('user_cards.deleteMatch');
+  });
+
+  it('reports when the rollback itself fails', async () => {
+    const { client } = fake({ fail: ['wishlist_cards.delete', 'user_cards.deleteMatch'] });
+    const result = await gotIt(client, 'u1', want);
+    expect(result.ok).toBe(false);
+    expect(!result.ok && result.message).toContain('Also could not undo the binder change');
+  });
+
+  it('records the prior state in the receipt', async () => {
+    const { client } = fake({ unowned: true });
+    const result = await gotIt(client, 'u1', want);
+    expect(result).toMatchObject({ ok: true, receipt: { prior: 'unowned' } });
+  });
+
+  it('undo sets owned back to false for a prior owned=false row', async () => {
+    const { client, log } = fake();
+    await undoGotIt(client, 'u1', { want, variant: 'Normal', prior: 'unowned' });
+    expect(log).toContain('user_cards.updateMatch');
+    expect(log).not.toContain('user_cards.deleteMatch');
+  });
+});
+
 describe('undoGotIt', () => {
-  const receipt = { want, variant: 'Normal', binderAdded: true };
+  const receipt = { want, variant: 'Normal', prior: 'none' as const };
 
   it('restores the want and removes the binder add', async () => {
     const { client, log } = fake();
@@ -90,7 +121,7 @@ describe('undoGotIt', () => {
 
   it('keeps an already-owned card in the binder', async () => {
     const { client, log } = fake();
-    await undoGotIt(client, 'u1', { ...receipt, binderAdded: false });
+    await undoGotIt(client, 'u1', { ...receipt, prior: 'owned' as const });
     expect(log).not.toContain('user_cards.deleteMatch');
   });
 

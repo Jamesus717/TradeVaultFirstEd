@@ -241,7 +241,7 @@ export default function WishlistPage() {
     if (movingId) return;
     setMovingId(row.id);
     setError('');
-    let receipt: GotItReceipt = { want: row, variant: 'Normal', binderAdded: true };
+    let receipt: GotItReceipt = { want: row, variant: 'Normal', prior: 'none' };
     if (!demoMode) {
       if (!supabase || !user) {
         setMovingId(null);
