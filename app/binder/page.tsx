@@ -13,6 +13,7 @@ import { BinderSortControl } from './components/BinderSort';
 import { BinderCsv } from './components/BinderCsv';
 import { SetProgressCard } from './components/SetProgressCard';
 import { BinderSummaryCard } from './components/BinderSummaryCard';
+import { SparesPanel } from './components/SparesPanel';
 import { QuickAdd } from './components/QuickAdd';
 import type { CardVariant } from './types';
 
@@ -101,6 +102,8 @@ export default function Page() {
         </section>
 
         <BinderCsv />
+
+        <SparesPanel />
 
         {isLoading ? (
           <BinderGridSkeleton />
