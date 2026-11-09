@@ -27,6 +27,7 @@ import {
   type BinderFilters,
   type OwnershipFilter,
 } from '../../lib/binderFilters';
+import { summarizeBinder } from '../../lib/binderSummary';
 import { availableSorts, sortCards } from '../../lib/binderSort';
 
 export function useBinder() {
@@ -115,6 +116,11 @@ export function useBinder() {
       window.history.replaceState(window.history.state, '', next);
     }
   }, [urlReady, filters, selectedSetId, sortMode]);
+
+  const ownedSummary = useMemo(
+    () => summarizeBinder(visibleCards, ownedForView, details),
+    [visibleCards, ownedForView, details]
+  );
 
   const binderSummary = useMemo(() => {
     if (!cards || cards.length === 0) {
@@ -486,6 +492,7 @@ export function useBinder() {
     visibleCards,
     missingCards,
     binderSummary,
+    ownedSummary,
     loadingSets,
     error,
     isLoading,
