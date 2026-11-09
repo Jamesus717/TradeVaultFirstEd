@@ -15,7 +15,7 @@ import {
 import { fetchSetVariants, SetCardsRequestError } from '../../lib/setCardsCache';
 
 import { useBinderDetails } from '../../lib/binderDetails';
-import { demoMode } from '../../lib/demo';
+import { demoEmpty, demoMode } from '../../lib/demo';
 import {
   EMPTY_FILTERS,
   activeFilterCount,
@@ -61,7 +61,7 @@ export function useBinder() {
 
   // Demo has no database: the example binder rows stand in for owned cards.
   const ownedForView = useMemo(() => {
-    if (!demoMode) return owned;
+    if (!demoMode || demoEmpty) return owned;
     const next = { ...owned };
     for (const card of cards) {
       if (details[card.baseCardId.toLowerCase()]) next[card.id] = true;
