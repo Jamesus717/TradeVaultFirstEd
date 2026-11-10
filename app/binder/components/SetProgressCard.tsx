@@ -3,15 +3,20 @@
 import { MISSING_FILTERS, missingCardsHref, setProgress } from '../../../lib/setProgress';
 import { printChecklistHref } from '../../../lib/printChecklist';
 import type { BinderFilters } from '../../../lib/binderFilters';
+import type { MissingCard } from '../../../lib/missingToWants';
+import { MissingToWants } from './MissingToWants';
 
 type Props = {
   setId: string;
   owned: number;
   total: number;
   onShowMissing: (filters: BinderFilters) => void;
+  userId: string | null;
+  cards: MissingCard[];
+  ownedMap: Record<string, boolean>;
 };
 
-export function SetProgressCard({ setId, owned, total, onShowMissing }: Props) {
+export function SetProgressCard({ setId, owned, total, onShowMissing, userId, cards, ownedMap }: Props) {
   const p = setProgress(owned, total);
 
   return (
@@ -48,6 +53,7 @@ export function SetProgressCard({ setId, owned, total, onShowMissing }: Props) {
           Show {p.missing} missing {p.missing === 1 ? 'card' : 'cards'}
         </a>
       ) : null}
+      {p.missing > 0 ? <MissingToWants userId={userId} cards={cards} owned={ownedMap} /> : null}
       {setId ? (
         <a
           href={printChecklistHref(setId)}
