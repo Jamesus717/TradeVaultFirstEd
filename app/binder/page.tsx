@@ -95,6 +95,9 @@ export default function Page() {
                   owned={ownedCount}
                   total={total}
                   onShowMissing={setFilters}
+                  userId={user?.id ?? null}
+                  cards={cards}
+                  ownedMap={owned}
                 />
               </div>
             </div>
