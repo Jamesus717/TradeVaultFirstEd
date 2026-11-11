@@ -73,6 +73,7 @@ export function UnreadBadge({ count, className = '' }: { count: number; classNam
   return (
     <span
       aria-hidden="true"
+      data-small-text-ok
       className={`flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[11px] font-bold leading-none text-white ring-2 ring-stone-950 ${className}`}
     >
       {count > 9 ? '9+' : count}

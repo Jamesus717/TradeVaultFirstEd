@@ -53,7 +53,7 @@ export type UserCardRow = {
   owned: boolean;
 };
 
-export type SortMode = 'binder' | 'number-desc' | 'name-asc' | 'owned-first';
+export type SortMode = import('../../lib/binderSort').BinderSort;
 
 export type CardPrice = {
   priceLow: number | null;

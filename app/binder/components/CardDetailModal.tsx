@@ -202,7 +202,7 @@ export function CardDetailModal({ card, isOpen, onClose, isOwned, onToggleOwned,
                 )}
                 <p className="text-xs text-stone-500">{PRICE_SOURCE_NOTE[price.source]}</p>
                 {price.fetchedAt && (
-                  <p className="text-[11px] text-stone-600">
+                  <p className="text-2xs text-stone-600">
                     Last updated: {new Date(price.fetchedAt).toLocaleDateString('en-GB')}
                   </p>
                 )}

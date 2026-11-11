@@ -80,7 +80,7 @@ function SetExpandableCard({
                 style={{ width: `${set.completionPct}%` }}
               />
             </div>
-            <span className="text-[11px] font-medium text-stone-400 whitespace-nowrap">
+            <span className="text-2xs font-medium text-stone-400 whitespace-nowrap">
               {set.ownedCount}/{set.totalCards}
               {set.totalCards > set.ownedCount ? ` · ${set.totalCards - set.ownedCount} to go` : ' · complete'}
             </span>
@@ -137,12 +137,12 @@ function SetExpandableCard({
                           sizes="(max-width: 640px) 33vw, 16vw"
                         />
                       ) : (
-                        <div className="absolute inset-0 flex items-center justify-center p-2 text-center text-[10px] text-stone-500">
+                        <div className="absolute inset-0 flex items-center justify-center p-2 text-center text-3xs text-stone-500">
                           {card.baseCardId}
                         </div>
                       )}
                       {card.variant !== 'Normal' && card.variant !== 'Unlimited' && (
-                        <div className="absolute bottom-0 inset-x-0 bg-black/60 backdrop-blur-sm p-1 text-[9px] text-center text-stone-300 font-medium truncate">
+                        <div className="absolute bottom-0 inset-x-0 bg-black/60 backdrop-blur-sm p-1 text-4xs text-center text-stone-300 font-medium truncate">
                           {card.variant}
                         </div>
                       )}
@@ -302,7 +302,7 @@ export default function CollectionPage() {
         <EmptyState
           title="Your binder is empty"
           body="Pick a set in the Binder and tap “Add to binder” on the cards you own. Your sets, value and progress show up here."
-          action={{ label: 'Open the Binder', href: '/' }}
+          action={{ label: 'Open the Binder', href: '/binder' }}
         />
       </main>
     );
@@ -354,7 +354,7 @@ export default function CollectionPage() {
                 <p className="text-sm text-stone-300 pt-2">
                   across {ownedSets.length} sets · {totalCards} cards
                 </p>
-                <p className="text-[10px] text-stone-500 pt-1">
+                <p className="text-3xs text-stone-500 pt-1">
                   Market prices from TCGplayer, converted to GBP
                 </p>
               </div>
@@ -408,7 +408,7 @@ export default function CollectionPage() {
                 <div key={`${grail.cardId}-${i}`} className="snap-start shrink-0 w-[140px] space-y-3">
                   <div className="tcg-card is-owned">
                     <div className="absolute inset-0 flex flex-col items-center justify-center p-3 text-center bg-gradient-to-br from-stone-800 to-stone-950">
-                      <span className="text-[10px] text-stone-400 tracking-widest">{grail.setId}</span>
+                      <span className="text-3xs text-stone-400 tracking-widest">{grail.setId}</span>
                       <span className="text-xs font-bold text-stone-300 mt-1">{grail.cardId.slice(grail.cardId.lastIndexOf('-') + 1)}</span>
                     </div>
                     {/* Card art sits over the text fallback; hides itself if the image 404s. */}
@@ -427,7 +427,7 @@ export default function CollectionPage() {
                     <p className="text-sm font-semibold text-primary-400">£{grail.estimatedValue.toFixed(2)}</p>
                     <p className="text-xs text-stone-400 truncate mt-0.5">{grail.cardId}</p>
                     {grail.variant !== 'Normal' && grail.variant !== 'Unlimited' && (
-                      <span className="inline-block mt-1 text-[10px] font-medium text-stone-500 border border-stone-700 rounded px-1.5 py-0.5">
+                      <span className="inline-block mt-1 text-3xs font-medium text-stone-500 border border-stone-700 rounded px-1.5 py-0.5">
                         {grail.variant}
                       </span>
                     )}

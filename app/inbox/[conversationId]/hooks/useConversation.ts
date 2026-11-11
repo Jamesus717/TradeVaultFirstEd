@@ -1,13 +1,16 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { DEMO_ME, demoConversation, demoMode } from '../../../../lib/demo';
 import { supabase } from '../../../../lib/supabaseClient';
 import { useAuth } from '../../../auth';
 import type { Conversation, ConversationStatus, Message, PublicProfile } from '../types';
 import { CONVERSATION_COLUMNS, MESSAGE_COLUMNS, shortId } from '../utils';
 
 export function useConversation(conversationId: string) {
-  const { user, supabaseDisabled } = useAuth();
+  const { user: authUser, supabaseDisabled } = useAuth();
+  // The demo has no sign-in: the viewer is the example user.
+  const user = useMemo(() => (demoMode ? { id: DEMO_ME } : authUser), [authUser]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -51,6 +54,15 @@ export function useConversation(conversationId: string) {
     let channel: ReturnType<NonNullable<typeof supabase>['channel']> | null = null;
 
     async function loadConversation() {
+      if (demoMode) {
+        const demo = demoConversation(conversationId, Date.now());
+        setConversation(demo?.conversation ?? null);
+        setMessages(demo?.messages ?? []);
+        setProfilesByUserId(demo?.profiles ?? {});
+        setError(demo ? '' : 'Conversation not found.');
+        return;
+      }
+
       const client = supabase;
       if (!user || supabaseDisabled || !client) {
         setConversation(null);

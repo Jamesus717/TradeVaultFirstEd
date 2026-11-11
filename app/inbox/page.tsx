@@ -3,10 +3,12 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { DEMO_ME, demoMode } from '../../lib/demo';
+import { cardOfferSummary, parseCardOffer } from '../../lib/cardOffer';
+import { DEMO_ME, demoEmpty, demoMode } from '../../lib/demo';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../auth';
 import { DemoBanner } from '../components/DemoBanner';
+import { EmptyState } from '../components/EmptyState';
 
 type ConversationStatus = 'active' | 'accepted' | 'declined' | 'completed' | 'cancelled';
 
@@ -166,6 +168,12 @@ function demoInbox() {
   };
 }
 
+// A card offer's content ends in a JSON payload; the list shows its summary.
+function previewOf(content: string | null) {
+  const offer = parseCardOffer(content);
+  return offer ? cardOfferSummary(offer) : content ?? '';
+}
+
 export default function InboxPage() {
   const { user, authLoading, supabaseDisabled } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -180,7 +188,7 @@ export default function InboxPage() {
 
     async function loadInbox() {
       if (demoMode) {
-        const demo = demoInbox();
+        const demo = demoEmpty ? { conversations: [], latest: {}, unread: {}, profiles: {} } : demoInbox();
         setConversations(demo.conversations);
         setLatestByConversation(demo.latest);
         setUnreadByConversation(demo.unread);
@@ -358,18 +366,12 @@ export default function InboxPage() {
             ))}
           </section>
         ) : conversations.length === 0 ? (
-          <section className="mt-6 rounded-2xl border border-white/10 bg-white/[0.03] p-10 text-center backdrop-blur">
-            <div className="text-5xl">💬</div>
-            <h2 className="mt-4 text-2xl font-semibold text-white">No conversations yet</h2>
-            <p className="mt-2 text-sm text-stone-400">
-              When you express interest in a listing or someone contacts you about yours, it will appear here.
-            </p>
-            <Link
-              href="/trade"
-              className="mt-6 inline-flex rounded-2xl bg-primary-400 px-6 py-3 text-sm font-semibold text-primary-950 hover:bg-primary-300"
-            >
-              Browse Trade Board
-            </Link>
+          <section className="mt-6">
+            <EmptyState
+              title="No messages yet"
+              body="When you start a trade from a match or message a listing, the chat shows up here. Add a want and check your matches to get one going."
+              action={{ label: 'See your matches', href: '/matches' }}
+            />
           </section>
         ) : (
           <section className="mt-6 space-y-3">
@@ -388,7 +390,7 @@ export default function InboxPage() {
                   ? `Offer: £${latest.offer_amount ?? ''} · ${latest.offer_status ?? ''}`
                   : latest?.message_type === 'system'
                     ? latest.content ?? ''
-                    : latest?.content ?? '';
+                    : previewOf(latest?.content ?? null);
 
               return (
                 <Link
@@ -431,7 +433,7 @@ export default function InboxPage() {
                       {badge ? (
                         <span
                           className={classNames(
-                            'rounded-full border px-3 py-1 text-[10px] font-bold tracking-wider',
+                            'rounded-full border px-3 py-1 text-3xs font-bold tracking-wider',
                             badge.className
                           )}
                         >

@@ -5,8 +5,11 @@
 import type { TradeListing } from '../app/trade/types';
 import type { MatchRow } from './matching';
 import type { Shop } from './shops';
+import type { Conversation, Message, PublicProfile } from '../app/inbox/[conversationId]/types';
 
 export const demoMode = process.env.NEXT_PUBLIC_TB_DEMO === '1';
+// `DEMO_EMPTY=1 npm run demo`: a brand new account, to see the empty states and the first-run guide.
+export const demoEmpty = demoMode && process.env.NEXT_PUBLIC_TB_DEMO_EMPTY === '1';
 
 function shop(id: string, name: string, town: string, description: string): Shop {
   return {
@@ -90,10 +93,11 @@ const DEMO_TRADER_SHOPS: Record<string, string> = {
 // limit message the database raises.
 export const DEMO_ALLOWANCE = { daily_limit: 10, used: 10, resets_in_hours: 5 };
 export const DEMO_LIMIT_MESSAGE = `Daily match limit reached, resets in ${DEMO_ALLOWANCE.resets_in_hours} h`;
-export const DEMO_UNREAD_MESSAGES = 2;
+export const DEMO_UNREAD_MESSAGES = demoEmpty ? 0 : 2;
 export const DEMO_ME = 'demo-me';
 
 export function demoMatches(shopId: string) {
+  if (demoEmpty) return [];
   return shopId ? DEMO_MATCHES.filter((match) => DEMO_TRADER_SHOPS[match.trader_id] === shopId) : DEMO_MATCHES;
 }
 
@@ -147,3 +151,170 @@ export function demoShopByListing(listings: TradeListing[]) {
     listings.map((entry) => [entry.id, DEMO_TRADER_SHOPS[traderByName.get(entry.user_id) ?? '']])
   );
 }
+
+// Stable ids for the detail pages, so /inbox/demo-chat-1, /profile/demo-sam,
+// /shops/example-cards-leeds and /u/sam always render in `npm run demo`.
+export type DemoProfile = {
+  user_id: string;
+  username: string;
+  display_name: string;
+  profile_slug: string;
+  bio: string;
+  created_at: string;
+};
+
+export const DEMO_PROFILES: DemoProfile[] = [sam, alex, robin, jo].map(([id, name]) => ({
+  user_id: id,
+  username: id.replace('demo-', ''),
+  display_name: name,
+  profile_slug: id.replace('demo-', ''),
+  bio: 'Example trader. Made up for the demo.',
+  created_at: '2026-01-15T10:00:00Z',
+}));
+
+export function demoProfileByUserId(userId: string) {
+  return DEMO_PROFILES.find((profile) => profile.user_id === userId) ?? null;
+}
+
+export function demoProfileBySlug(slug: string) {
+  return DEMO_PROFILES.find((profile) => profile.profile_slug === slug) ?? null;
+}
+
+const DEMO_CHATS = [
+  { id: 'demo-chat-1', other: 'demo-sam', number: 4, name: 'Charizard', status: 'active', line: 'Example: Saturday at Example Cards Leeds works for me' },
+  { id: 'demo-chat-2', other: 'demo-alex', number: 16, name: 'Zapdos', status: 'active', line: 'Example: would you add the Mewtwo?' },
+  { id: 'demo-chat-3', other: 'demo-robin', number: 15, name: 'Venusaur', status: 'accepted', line: 'Example: deal, see you there' },
+] as const;
+
+export const DEMO_CONVERSATION_IDS: string[] = DEMO_CHATS.map((chat) => chat.id);
+
+export function demoConversation(id: string, nowMs: number) {
+  const chat = DEMO_CHATS.find((entry) => entry.id === id);
+  if (!chat) {
+    return null;
+  }
+  const at = (minutes: number) => new Date(nowMs - minutes * 60_000).toISOString();
+  const conversation: Conversation = {
+    id: chat.id,
+    listing_id: `${chat.id}-listing`,
+    buyer_id: DEMO_ME,
+    seller_id: chat.other,
+    status: chat.status,
+    created_at: at(180),
+    updated_at: at(5),
+    trade_listings: [
+      {
+        id: `${chat.id}-listing`,
+        user_id: chat.other,
+        card_name: chat.name,
+        set_name: 'Base',
+        set_id: 'base1',
+        card_number: String(chat.number),
+        variant: 'Unlimited',
+        condition: 'Near Mint',
+        listing_type: 'trade',
+        price: null,
+        trade_description: 'Example: open to Base set holos',
+        image_url: null,
+        card_image_url: `https://images.pokemontcg.io/base1/${chat.number}.png`,
+        is_active: true,
+      },
+    ],
+  };
+  const message = (n: number, sender: string, content: string, minutes: number): Message => ({
+    id: `${chat.id}-msg-${n}`,
+    conversation_id: chat.id,
+    sender_id: sender,
+    content,
+    message_type: 'message',
+    offer_amount: null,
+    offer_status: null,
+    created_at: at(minutes),
+    read_at: at(minutes),
+  });
+  const messages = [
+    message(1, DEMO_ME, `Example: hi, is the ${chat.name} still available?`, 120),
+    message(2, chat.other, 'Example: yes, still here', 60),
+    message(3, chat.other, chat.line, 5),
+  ];
+  const profile = demoProfileByUserId(chat.other);
+  const profiles: Record<string, PublicProfile> = profile
+    ? { [profile.user_id]: { user_id: profile.user_id, username: profile.username, display_name: profile.display_name } }
+    : {};
+  return { conversation, messages, profiles };
+}
+
+// Price alerts demo: wishlist cards with target prices and example cached
+// prices. The prices are made up and the page labels them as examples.
+export type DemoWishlistRow = {
+  id: string;
+  card_id: string;
+  set_id: string | null;
+  card_name: string;
+  card_number: string | null;
+  image_url: string | null;
+  set_name: string | null;
+  quantity: number;
+  priority: 'low' | 'medium' | 'high';
+  note: string | null;
+  target_price: number | null;
+  created_at: string;
+};
+
+function want(
+  number: number,
+  name: string,
+  priority: DemoWishlistRow['priority'],
+  target: number | null,
+  note: string | null = null,
+  added = '2026-10-01',
+  set = { id: 'base1', name: 'Base' }
+): DemoWishlistRow {
+  return {
+    id: `demo-want-${set.id}-${number}`,
+    card_id: `${set.id}-${number}`,
+    set_id: set.id,
+    card_name: name,
+    card_number: String(number),
+    image_url: `https://images.pokemontcg.io/${set.id}/${number}.png`,
+    set_name: set.name,
+    quantity: 1,
+    priority,
+    note,
+    target_price: target,
+    created_at: `${added}T10:00:00Z`,
+  };
+}
+
+export const DEMO_WISHLIST: DemoWishlistRow[] = [
+  want(4, 'Charizard', 'high', 250, 'Example: unlimited is fine', '2026-11-04'),
+  want(2, 'Blastoise', 'high', 90, null, '2026-10-12'),
+  want(15, 'Venusaur', 'medium', 60, null, '2026-10-28'),
+  want(16, 'Zapdos', 'medium', 20, null, '2026-09-30'),
+  want(58, 'Pikachu', 'low', null, null, '2026-11-07'),
+  want(1, 'Pineco', 'low', null, null, '2026-11-06', { id: 'sv1', name: 'Scarlet & Violet' }),
+  want(25, 'Sprigatito', 'medium', null, null, '2026-10-20', { id: 'sv1', name: 'Scarlet & Violet' }),
+];
+
+export function demoPrices(nowMs: number) {
+  const hoursAgo = (h: number) => new Date(nowMs - h * 3_600_000).toISOString();
+  return [
+    { card_id: 'base1-4', price_mid: 231.4, currency: 'GBP', fetched_at: hoursAgo(3) },
+    { card_id: 'base1-2', price_mid: 104.9, currency: 'GBP', fetched_at: hoursAgo(5) },
+    { card_id: 'base1-15', price_mid: 48.75, currency: 'GBP', fetched_at: hoursAgo(20) },
+    { card_id: 'base1-16', price_mid: 18.2, currency: 'GBP', fetched_at: hoursAgo(30) },
+    { card_id: 'base1-58', price_mid: 6.1, currency: 'GBP', fetched_at: hoursAgo(2) },
+  ];
+}
+
+// Example binder for the CSV tool: made up, held in memory only.
+export const DEMO_BINDER_SETS = [
+  { id: 'base1', name: 'Base' },
+  { id: 'sv1', name: 'Scarlet & Violet' },
+];
+
+export const DEMO_BINDER_ROWS = [
+  { cardId: 'base1-4', cardName: 'Charizard', setName: 'Base', condition: 'LP', qty: 1, price: 250, addedAt: '2026-10-02T10:00:00Z' },
+  { cardId: 'base1-58', cardName: 'Pikachu', setName: 'Base', condition: 'NM', qty: 2, price: 12.5, addedAt: '2026-10-20T10:00:00Z' },
+  { cardId: 'sv1-1', cardName: 'Pineco', setName: 'Scarlet & Violet', condition: null, qty: 1, price: null, addedAt: '2026-11-05T10:00:00Z' },
+];

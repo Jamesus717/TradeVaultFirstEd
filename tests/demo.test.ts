@@ -36,3 +36,23 @@ describe('demo data', () => {
     }
   });
 });
+
+describe('demo detail data', () => {
+  it('builds a conversation for each seeded chat id and none for a made-up one', async () => {
+    const { DEMO_CONVERSATION_IDS, DEMO_ME, demoConversation } = await import('../lib/demo');
+    for (const id of DEMO_CONVERSATION_IDS) {
+      const demo = demoConversation(id, 0);
+      expect(demo?.conversation.buyer_id).toBe(DEMO_ME);
+      expect(demo?.messages.length).toBeGreaterThan(0);
+      expect(Object.keys(demo?.profiles ?? {})).toEqual([demo?.conversation.seller_id]);
+    }
+    expect(demoConversation('made-up', 0)).toBeNull();
+  });
+
+  it('finds a profile by user id and by slug', async () => {
+    const { demoProfileBySlug, demoProfileByUserId } = await import('../lib/demo');
+    expect(demoProfileByUserId('demo-sam')?.profile_slug).toBe('sam');
+    expect(demoProfileBySlug('sam')?.user_id).toBe('demo-sam');
+    expect(demoProfileBySlug('made-up')).toBeNull();
+  });
+});

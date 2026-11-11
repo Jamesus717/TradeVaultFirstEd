@@ -1,5 +1,7 @@
 'use client';
 
+import { parseCardOffer } from '../../../../lib/cardOffer';
+import { isReverseHolo } from '../../../../lib/fairTrade';
 import type { Message, OfferStatus } from '../types';
 import { classNames, formatMoneyGBP, formatTimeAgo } from '../utils';
 
@@ -47,7 +49,7 @@ export default function MessageItem({
             own ? 'rounded-br-sm' : 'rounded-bl-sm'
           )}
         >
-          <p className="text-[10px] font-bold tracking-wider text-amber-300/80">
+          <p className="text-3xs font-bold tracking-wider text-amber-300/80">
             Price Offer
           </p>
           <p className="mt-2 text-2xl font-semibold text-white">
@@ -91,13 +93,50 @@ export default function MessageItem({
                 </button>
               </>
             ) : (
-              <span className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-[10px] font-bold capitalize tracking-wider text-stone-200">
+              <span className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-3xs font-bold capitalize tracking-wider text-stone-200">
                 {message.offer_status ?? 'pending'}
               </span>
             )}
           </div>
         </div>
-        <p className="text-[10px] text-stone-500">
+        <p className="text-3xs text-stone-500">
+          {own ? 'You' : otherName} · {formatTimeAgo(message.created_at)}
+        </p>
+      </div>
+    );
+  }
+
+  const cardOffer = message.message_type === 'message' ? parseCardOffer(message.content) : null;
+  if (cardOffer) {
+    return (
+      <div className={classNames('flex flex-col gap-1', align)}>
+        <div
+          className={classNames(
+            'max-w-[85%] rounded-[1.25rem] border border-sky-300/20 bg-sky-400/5 p-4',
+            own ? 'rounded-br-sm' : 'rounded-bl-sm'
+          )}
+        >
+          <p className="text-3xs font-bold tracking-wider text-sky-300/80">Card Offer</p>
+          <ul className="mt-2 space-y-1 text-sm text-white">
+            {cardOffer.cards.map((card, index) => (
+              <li key={`${card.id}-${index}`}>
+                {card.name}
+                {card.variant ? (
+                  <span className="text-xs text-stone-400">
+                    {' '}
+                    · {card.variant}
+                    {isReverseHolo(card.variant) ? ' (valued as base print)' : ''}
+                  </span>
+                ) : null}
+              </li>
+            ))}
+            {cardOffer.cash ? <li className="font-semibold">+ {formatMoneyGBP(cardOffer.cash)} cash</li> : null}
+          </ul>
+          <p className="mt-2 text-2xs text-stone-400">
+            {own ? 'The fair-trade meter by the listing shows how even this is.' : 'Check the fair-trade meter by the listing, then reply.'}
+          </p>
+        </div>
+        <p className="text-3xs text-stone-500">
           {own ? 'You' : otherName} · {formatTimeAgo(message.created_at)}
         </p>
       </div>
@@ -117,7 +156,7 @@ export default function MessageItem({
       >
         {message.content}
       </div>
-      <p className="text-[10px] text-stone-500">
+      <p className="text-3xs text-stone-500">
         {own ? 'You' : otherName} · {formatTimeAgo(message.created_at)}
       </p>
     </div>

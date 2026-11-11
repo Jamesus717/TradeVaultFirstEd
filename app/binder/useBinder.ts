@@ -14,7 +14,21 @@ import {
 } from '../../lib/constants/cardVariants';
 import { fetchSetVariants, SetCardsRequestError } from '../../lib/setCardsCache';
 
-type OwnershipFilter = 'all' | 'owned' | 'unowned';
+import { useBinderDetails } from '../../lib/binderDetails';
+import { demoEmpty, demoMode } from '../../lib/demo';
+import {
+  EMPTY_FILTERS,
+  activeFilterCount,
+  applyFilters,
+  availableFilters,
+  parseFilters,
+  parseSort,
+  serializeFilters,
+  type BinderFilters,
+  type OwnershipFilter,
+} from '../../lib/binderFilters';
+import { summarizeBinder } from '../../lib/binderSummary';
+import { availableSorts, sortCards } from '../../lib/binderSort';
 
 export function useBinder() {
   const { user, supabaseDisabled } = useAuth();
@@ -22,9 +36,20 @@ export function useBinder() {
   const [selectedSetId, setSelectedSetId] = useState('');
   const [cards, setCards] = useState<CardVariant[]>([]);
   const [owned, setOwned] = useState<Record<string, boolean>>({});
-  const [searchQuery, setSearchQuery] = useState('');
+  const [filters, setFilters] = useState<BinderFilters>(EMPTY_FILTERS);
   const [sortMode, setSortMode] = useState<SortMode>('binder');
-  const [ownershipFilter, setOwnershipFilter] = useState<OwnershipFilter>('all');
+  const [urlReady, setUrlReady] = useState(false);
+  const details = useBinderDetails();
+  const available = useMemo(() => availableFilters(details), [details]);
+  const sortAvailable = useMemo(() => availableSorts(details), [details]);
+  const searchQuery = filters.q;
+  const ownershipFilter = filters.own;
+  const setSearchQuery = useCallback((q: string) => setFilters((f) => ({ ...f, q })), []);
+  const setOwnershipFilter = useCallback(
+    (own: OwnershipFilter) => setFilters((f) => ({ ...f, own })),
+    []
+  );
+  const clearFilters = useCallback(() => setFilters(EMPTY_FILTERS), []);
   const [loadingSets, setLoadingSets] = useState(true);
   const [loadingCards, setLoadingCards] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
@@ -37,68 +62,65 @@ export function useBinder() {
   );
   const groupedSets = useMemo(() => groupSetsBySeries(sets), [sets]);
 
+  // Demo has no database: the example binder rows stand in for owned cards.
+  const ownedForView = useMemo(() => {
+    if (!demoMode || demoEmpty) return owned;
+    const next = { ...owned };
+    for (const card of cards) {
+      if (details[card.baseCardId.toLowerCase()]) next[card.id] = true;
+    }
+    return next;
+  }, [owned, cards, details]);
+
   const visibleCards = useMemo(() => {
     if (!cards || cards.length === 0) return [];
 
-    const query = searchQuery.trim().toLowerCase();
-    const filtered = query
-      ? cards.filter((card) => card.name.toLowerCase().includes(query))
-      : cards;
+    const ownershipFiltered = applyFilters(cards, ownedForView, details, filters);
 
-    const ownershipFiltered =
-      ownershipFilter === 'owned'
-        ? filtered.filter((card) => Boolean(owned[card.id]))
-        : ownershipFilter === 'unowned'
-          ? filtered.filter((card) => !owned[card.id])
-          : filtered;
-
-    return [...ownershipFiltered].sort((a, b) => {
-      if (sortMode === 'binder') {
-        const numA = Number.parseInt(a.number.replace(/\D/g, ''), 10) || 0;
-        const numB = Number.parseInt(b.number.replace(/\D/g, ''), 10) || 0;
-        if (numA !== numB) return numA - numB;
-        if (a.name !== b.name) return a.name.localeCompare(b.name);
-        return a.variant.localeCompare(b.variant);
-      }
-
-      if (sortMode === 'number-desc') {
-        const numA = Number.parseInt(a.number.replace(/\D/g, ''), 10) || 0;
-        const numB = Number.parseInt(b.number.replace(/\D/g, ''), 10) || 0;
-        if (numA !== numB) return numB - numA;
-        if (a.name !== b.name) return a.name.localeCompare(b.name);
-        return a.variant.localeCompare(b.variant);
-      }
-
-      if (sortMode === 'name-asc') {
-        if (a.name !== b.name) return a.name.localeCompare(b.name);
-        return a.variant.localeCompare(b.variant);
-      }
-
-      if (sortMode === 'owned-first') {
-        const aOwned = Boolean(owned[a.id]);
-        const bOwned = Boolean(owned[b.id]);
-        if (aOwned && !bOwned) return -1;
-        if (!aOwned && bOwned) return 1;
-        const numA = Number.parseInt(a.number.replace(/\D/g, ''), 10) || 0;
-        const numB = Number.parseInt(b.number.replace(/\D/g, ''), 10) || 0;
-        return numA - numB;
-      }
-
-      return 0;
-    });
-  }, [cards, searchQuery, sortMode, ownershipFilter, owned]);
+    return sortCards(ownershipFiltered, sortMode, ownedForView, details);
+  }, [cards, filters, sortMode, ownedForView, details]);
 
   const missingCards = useMemo(
-    () => visibleCards.filter((card) => !owned[card.id]),
-    [owned, visibleCards]
+    () => visibleCards.filter((card) => !ownedForView[card.id]),
+    [ownedForView, visibleCards]
   );
 
+  // Read the filters from the URL once, after mount (avoids a hydration mismatch).
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const set = params.get('set');
     const timer = setTimeout(() => {
-      setOwnershipFilter('all');
+      setFilters(parseFilters(params));
+      setSortMode(parseSort(params));
+      if (set && /^[\w.-]{1,40}$/.test(set)) setSelectedSetId(set);
+      setUrlReady(true);
     }, 0);
     return () => clearTimeout(timer);
-  }, [selectedSetId]);
+  }, []);
+
+  // A link can name a set that does not exist (or load before the sets): fall back to the first.
+  useEffect(() => {
+    if (!urlReady || sets.length === 0) return;
+    if (!sets.some((set) => set.id === selectedSetId)) {
+      const timer = setTimeout(() => setSelectedSetId(sets[0].id), 0);
+      return () => clearTimeout(timer);
+    }
+  }, [urlReady, sets, selectedSetId]);
+
+  // Keep the URL in step with the filters, without piling up history entries.
+  useEffect(() => {
+    if (!urlReady) return;
+    const query = serializeFilters(filters, { set: selectedSetId, sort: sortMode });
+    const next = `${window.location.pathname}${query ? `?${query}` : ''}`;
+    if (next !== `${window.location.pathname}${window.location.search}`) {
+      window.history.replaceState(window.history.state, '', next);
+    }
+  }, [urlReady, filters, selectedSetId, sortMode]);
+
+  const ownedSummary = useMemo(
+    () => summarizeBinder(visibleCards, ownedForView, details),
+    [visibleCards, ownedForView, details]
+  );
 
   const binderSummary = useMemo(() => {
     if (!cards || cards.length === 0) {
@@ -138,7 +160,10 @@ export function useBinder() {
         const nextSets = buildSetList(json.data ?? []);
 
         setSets(nextSets);
-        setSelectedSetId((current) => current || nextSets[0]?.id || '');
+        // A shared link can name a set that no longer exists: fall back to the first.
+        setSelectedSetId((current) =>
+          current && nextSets.some((set) => set.id === current) ? current : nextSets[0]?.id || ''
+        );
       } catch (cause) {
         setError(cause instanceof Error ? cause.message : 'Something went wrong loading sets.');
       } finally {
@@ -248,8 +273,8 @@ export function useBinder() {
   // One pass instead of two full scans of the set on every render — a set is
   // up to ~500 variants and this ran on each keystroke in the search box.
   const ownedCount = useMemo(
-    () => cards.reduce((count, card) => (owned[card.id] ? count + 1 : count), 0),
-    [cards, owned]
+    () => cards.reduce((count, card) => (ownedForView[card.id] ? count + 1 : count), 0),
+    [cards, ownedForView]
   );
   const completion = total === 0 ? 0 : Math.round((ownedCount / total) * 100);
   const allOwned = total > 0 && ownedCount === total;
@@ -453,14 +478,21 @@ export function useBinder() {
     selectedSet,
     selectedSetId,
     setSelectedSetId,
-    owned,
+    owned: ownedForView,
+    filters,
+    setFilters,
+    clearFilters,
+    available,
+    activeFilters: activeFilterCount(filters),
     searchQuery,
     setSearchQuery,
     sortMode,
     setSortMode,
+    sortAvailable,
     visibleCards,
     missingCards,
     binderSummary,
+    ownedSummary,
     loadingSets,
     error,
     isLoading,

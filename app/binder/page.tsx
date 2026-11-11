@@ -3,12 +3,20 @@
 import { useState } from 'react';
 import { BinderGrid } from './BinderGrid';
 import { BinderGridSkeleton } from './BinderGridSkeleton';
+import { EmptyState } from '../components/EmptyState';
 import { MissingCards } from './MissingCards';
 import { SetPicker } from './SetPicker';
 import { useBinder } from './useBinder';
 import { CardDetailModal } from './components/CardDetailModal';
+import { BinderFiltersBar } from './components/BinderFilters';
+import { BinderSortControl } from './components/BinderSort';
+import { BinderCsv } from './components/BinderCsv';
+import { BinderExport } from './components/BinderExport';
+import { SetProgressCard } from './components/SetProgressCard';
+import { BinderSummaryCard } from './components/BinderSummaryCard';
+import { SparesPanel } from './components/SparesPanel';
 import { QuickAdd } from './components/QuickAdd';
-import type { SortMode, CardVariant } from './types';
+import type { CardVariant } from './types';
 
 export default function Page() {
   const [selectedCard, setSelectedCard] = useState<CardVariant | null>(null);
@@ -20,28 +28,31 @@ export default function Page() {
     selectedSetId,
     setSelectedSetId,
     owned,
-    searchQuery,
     setSearchQuery,
     sortMode,
     setSortMode,
+    sortAvailable,
     visibleCards,
     missingCards,
     binderSummary,
+    ownedSummary,
     loadingSets,
     isLoading,
     error,
     cards,
     total,
     ownedCount,
-    completion,
     allOwned,
     savingId,
     bulkSaving,
     toggleOwned,
     toggleAllOwned,
     noteOwned,
-    ownershipFilter,
-    setOwnershipFilter,
+    filters,
+    setFilters,
+    clearFilters,
+    available,
+    activeFilters,
   } = useBinder();
 
   return (
@@ -80,27 +91,23 @@ export default function Page() {
               </div>
 
               <div className="flex flex-col gap-4 lg:items-end">
-                <div className="min-w-[240px] rounded-xl border border-primary-300/20 bg-primary-400/10 p-5">
-                  <p className="text-xs font-medium text-primary-100/75">
-                    Collection Progress
-                  </p>
-                  <p className="mt-3 text-3xl font-semibold text-white">
-                    {ownedCount} / {total || '--'}
-                  </p>
-                  <p className="mt-1 text-sm text-primary-50/75">
-                    {completion}% complete{total > ownedCount ? ` · ${total - ownedCount} to go` : total ? ' · set complete!' : ''}
-                  </p>
-                  <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
-                    <div
-                      className="h-full rounded-full bg-primary-400 transition-all duration-300"
-                      style={{ width: `${completion}%` }}
-                    />
-                  </div>
-                </div>
+                <SetProgressCard
+                  setId={selectedSetId}
+                  owned={ownedCount}
+                  total={total}
+                  onShowMissing={setFilters}
+                  userId={user?.id ?? null}
+                  cards={cards}
+                  ownedMap={owned}
+                />
               </div>
             </div>
           </div>
         </section>
+
+        <BinderCsv />
+
+        <SparesPanel />
 
         {isLoading ? (
           <BinderGridSkeleton />
@@ -144,55 +151,58 @@ export default function Page() {
                 <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <input
                     type="search"
-                    value={searchQuery}
+                    value={filters.q}
                     onChange={(event) => setSearchQuery(event.target.value)}
                     placeholder="Search card name..."
                     className="min-h-11 w-full rounded-xl border border-white/10 bg-stone-950/80 px-3 py-2.5 text-sm text-white outline-none focus:border-primary-300/50"
                   />
-                  <select
-                    value={sortMode}
-                    onChange={(event) => setSortMode(event.target.value as SortMode)}
-                    className="min-h-11 w-full rounded-xl border border-white/10 bg-stone-950/80 px-3 py-2.5 text-sm text-white outline-none focus:border-primary-300/50"
-                  >
-                    <option value="binder">Binder order (Number ↑)</option>
-                    <option value="number-desc">Number ↓</option>
-                    <option value="name-asc">Name A → Z</option>
-                    <option value="owned-first">Owned first</option>
-                  </select>
+                  <BinderSortControl value={sortMode} onChange={setSortMode} available={sortAvailable} />
                 </div>
 
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {(
-                    [
-                      { value: 'all', label: 'All Cards' },
-                      { value: 'owned', label: '✓ Owned' },
-                      { value: 'unowned', label: 'Missing' },
-                    ] as const
-                  ).map(({ value, label }) => (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => setOwnershipFilter(value)}
-                      className={`min-h-11 rounded-full border px-4 py-1.5 
-                        text-xs font-semibold 
-                        transition-colors ${
-                        ownershipFilter === value
-                          ? 'border-primary-300/20 bg-primary-400/10 text-primary-200'
-                          : 'border-white/10 bg-white/[0.03] text-stone-300 hover:bg-white/[0.06]'
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
+                <BinderFiltersBar
+                  filters={filters}
+                  onChange={setFilters}
+                  onClear={clearFilters}
+                  activeCount={activeFilters}
+                  available={available}
+                />
 
-                <p className="mt-1 text-sm text-stone-400">
+                <p className="mt-3 text-sm text-stone-400" aria-live="polite">
                   {binderSummary}
                 </p>
               </div>
 
+              <BinderExport
+                cards={visibleCards}
+                owned={owned}
+                totalInSet={cards.length}
+                filterCount={activeFilters}
+                setName={selectedSet?.name ?? ''}
+              />
+
+              <BinderSummaryCard
+                summary={ownedSummary}
+                filterCount={activeFilters}
+                shown={visibleCards.length}
+                inSet={cards.length}
+                setName={selectedSet?.name ?? 'this set'}
+              />
+
+              {ownedCount === 0 && cards.length > 0 && activeFilters === 0 ? (
+                <EmptyState
+                  compact
+                  title="Your binder is empty"
+                  body={
+                    user
+                      ? 'Tap a card below to mark it as owned. Start with one you have in your hands.'
+                      : 'Sign in to save the cards you own. You can still look around the set.'
+                  }
+                />
+              ) : null}
+
               <BinderGrid
                 cards={visibleCards}
+                onClearFilters={activeFilters > 0 ? clearFilters : undefined}
                 owned={owned}
                 savingId={savingId}
                 bulkSaving={bulkSaving}
