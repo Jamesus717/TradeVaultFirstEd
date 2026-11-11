@@ -11,6 +11,8 @@ import { findUnderTarget, formatGbp, parseTargetPrice, type CachedPrice } from '
 import { fetchCachedPrices, missingTargetColumn } from '../../lib/priceAlertsData';
 import { PriceAlerts } from './PriceAlerts';
 import { WantsCsv } from './WantsCsv';
+import { ExportCsvButton } from '../components/ExportCsvButton';
+import { exportScope } from '../../lib/exportCsv';
 import { WantsFiltersBar } from './WantsFilters';
 import {
   DEFAULT_WANT_SORT,
@@ -428,6 +430,22 @@ export default function WishlistPage() {
                 getItems={() =>
                   rows.map((r) => ({ name: r.card_name, setName: r.set_name ?? r.set_id, qty: r.quantity, priority: r.priority }))
                 }
+              />
+            </section>
+
+            <section className="panel mt-6 p-5">
+              <ExportCsvButton
+                filename="tradevault-wishlist.csv"
+                emptyMessage="Nothing to export. Your wishlist is empty or no cards match your filters."
+                scope={`${exportScope('wishlist cards', sorted.length, rows.length, filterCount)} Price is your target price, if set.`}
+                rows={sorted.map((r) => ({
+                  card: r.card_name,
+                  set: r.set_name ?? r.set_id ?? '',
+                  number: r.card_number,
+                  condition: null,
+                  qty: r.quantity,
+                  price: r.target_price == null || r.target_price === '' ? null : Number(r.target_price),
+                }))}
               />
             </section>
 

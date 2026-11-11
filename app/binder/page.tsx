@@ -11,6 +11,7 @@ import { CardDetailModal } from './components/CardDetailModal';
 import { BinderFiltersBar } from './components/BinderFilters';
 import { BinderSortControl } from './components/BinderSort';
 import { BinderCsv } from './components/BinderCsv';
+import { BinderExport } from './components/BinderExport';
 import { SetProgressCard } from './components/SetProgressCard';
 import { BinderSummaryCard } from './components/BinderSummaryCard';
 import { SparesPanel } from './components/SparesPanel';
@@ -170,6 +171,14 @@ export default function Page() {
                   {binderSummary}
                 </p>
               </div>
+
+              <BinderExport
+                cards={visibleCards}
+                owned={owned}
+                totalInSet={cards.length}
+                filterCount={activeFilters}
+                setName={selectedSet?.name ?? ''}
+              />
 
               <BinderSummaryCard
                 summary={ownedSummary}
