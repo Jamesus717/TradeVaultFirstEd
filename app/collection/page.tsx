@@ -221,7 +221,7 @@ function CollectionSkeleton() {
               {Array.from({ length: 5 }).map((_, index) => (
                 <div
                   key={`set-row-skeleton-${index}`}
-                  className="h-[106px] animate-pulse rounded-[1.5rem] border border-white/10 bg-white/[0.03]"
+                  className="h-[106px] animate-pulse rounded-xl border border-white/10 bg-white/[0.03]"
                 />
               ))}
             </div>
@@ -282,7 +282,7 @@ export default function CollectionPage() {
   if (error) {
     return (
       <main className="min-h-screen bg-transparent text-stone-100 p-8">
-        <div className="max-w-7xl mx-auto rounded-[2rem] border border-rose-500/20 bg-rose-500/10 p-8 text-rose-200">
+        <div className="max-w-7xl mx-auto rounded-2xl border border-rose-500/20 bg-rose-500/10 p-8 text-rose-200">
           <p>Couldn&apos;t load your collection: {error}</p>
           <button
             type="button"
@@ -362,11 +362,11 @@ export default function CollectionPage() {
               {nextGoal ? (
                 <Link
                   href={`/?set=${nextGoal.setId}`}
-                  className="group flex w-full items-center gap-5 rounded-[1.5rem] border border-primary-300/20 bg-primary-400/10 p-5 transition-colors hover:bg-primary-400/15 md:w-[360px]"
+                  className="group flex w-full items-center gap-5 rounded-xl border border-primary-300/20 bg-primary-400/10 p-5 transition-colors hover:bg-primary-400/15 md:w-[360px]"
                 >
                   <ProgressRing pct={nextGoal.completionPct} />
                   <div className="min-w-0">
-                    <p className="text-xs font-medium uppercase tracking-[0.25em] text-primary-100/75">Next goal</p>
+                    <p className="text-xs font-medium text-primary-100/75">Next goal</p>
                     <p className="mt-1 truncate font-display text-lg font-semibold text-white">{nextGoal.setName}</p>
                     <p className="text-sm text-primary-50/75">
                       {nextGoal.totalCards - nextGoal.ownedCount} cards to go · open binder →
@@ -382,19 +382,19 @@ export default function CollectionPage() {
         {/* SECTION 2 — Stats Row */}
         <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="panel p-5 sm:p-6">
-            <p className="text-xs font-medium uppercase tracking-widest text-stone-400">Cards To Go</p>
+            <p className="text-xs font-medium tracking-widest text-stone-400">Cards To Go</p>
             <p className="mt-2 text-2xl font-semibold text-white">{cardsToGo}</p>
           </div>
           <div className="panel p-5 sm:p-6">
-            <p className="text-xs font-medium uppercase tracking-widest text-stone-400">Cards Owned</p>
+            <p className="text-xs font-medium tracking-widest text-stone-400">Cards Owned</p>
             <p className="mt-2 text-2xl font-semibold text-white">{totalCards}</p>
           </div>
           <div className="panel p-5 sm:p-6">
-            <p className="text-xs font-medium uppercase tracking-widest text-stone-400">Sets Tracked</p>
+            <p className="text-xs font-medium tracking-widest text-stone-400">Sets Tracked</p>
             <p className="mt-2 text-2xl font-semibold text-white">{ownedSets.length}</p>
           </div>
           <div className="panel p-5 sm:p-6">
-            <p className="text-xs font-medium uppercase tracking-widest text-stone-400">Sets Complete</p>
+            <p className="text-xs font-medium tracking-widest text-stone-400">Sets Complete</p>
             <p className="mt-2 text-2xl font-semibold text-white">{completeSets}</p>
           </div>
         </section>
@@ -408,7 +408,7 @@ export default function CollectionPage() {
                 <div key={`${grail.cardId}-${i}`} className="snap-start shrink-0 w-[140px] space-y-3">
                   <div className="tcg-card is-owned">
                     <div className="absolute inset-0 flex flex-col items-center justify-center p-3 text-center bg-gradient-to-br from-stone-800 to-stone-950">
-                      <span className="text-[10px] text-stone-400 uppercase tracking-widest">{grail.setId}</span>
+                      <span className="text-[10px] text-stone-400 tracking-widest">{grail.setId}</span>
                       <span className="text-xs font-bold text-stone-300 mt-1">{grail.cardId.slice(grail.cardId.lastIndexOf('-') + 1)}</span>
                     </div>
                     {/* Card art sits over the text fallback; hides itself if the image 404s. */}

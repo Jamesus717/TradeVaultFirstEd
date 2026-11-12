@@ -28,13 +28,13 @@ export default function ForgotPasswordView({ form }: { form: AuthFormState }) {
       </div>
 
       {authError ? (
-        <div className="rounded-[1.5rem] border border-rose-300/20 bg-rose-500/10 p-4 text-sm text-rose-100 backdrop-blur">
+        <div className="rounded-xl border border-rose-300/20 bg-rose-500/10 p-4 text-sm text-rose-100 backdrop-blur">
           {authError}
         </div>
       ) : null}
 
       {resetSuccess ? (
-        <div className="rounded-[1.5rem] border border-primary-300/20 bg-primary-500/10 p-4 text-sm text-primary-100 backdrop-blur">
+        <div className="rounded-xl border border-primary-300/20 bg-primary-500/10 p-4 text-sm text-primary-100 backdrop-blur">
           {resetSuccess}
         </div>
       ) : null}

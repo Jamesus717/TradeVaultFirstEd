@@ -14,7 +14,7 @@ type Props = {
 };
 
 const actionClass =
-  'mt-2 inline-flex rounded-xl bg-primary-400 px-5 py-2.5 text-sm font-semibold text-primary-950 transition-colors hover:bg-primary-300 disabled:cursor-not-allowed disabled:bg-stone-800 disabled:text-stone-400';
+  'mt-2 inline-flex min-h-11 items-center rounded-xl bg-primary-400 px-5 py-2.5 text-sm font-semibold text-primary-950 transition-colors hover:bg-primary-300 disabled:cursor-not-allowed disabled:bg-stone-800 disabled:text-stone-400';
 
 /*
  * One empty state for every page: a fanned stack of three blank card backs,

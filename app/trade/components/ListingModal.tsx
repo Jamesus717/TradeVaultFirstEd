@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { demoMode } from '../../../lib/demo';
 import type { ListingFormState } from '../hooks/useListingForm';
 import type { ListingCondition } from '../types';
 import { canReverseHolo, classNames } from '../utils';
@@ -18,8 +19,8 @@ export function ListingModal({ form }: Props) {
   const { selectedCard, listingType, variant } = form;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[2rem] border border-white/10 bg-stone-900 p-8">
+    <div className="sheet-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+      <div className="sheet max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-white/10 bg-stone-900 p-8">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-2xl font-semibold text-white">List a Card</h2>
@@ -51,14 +52,14 @@ export function ListingModal({ form }: Props) {
           />
 
           <div className={classNames(!selectedCard ? 'opacity-60' : '')}>
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-stone-400">
+            <p className="text-xs font-semibold text-stone-400">
               Step 2 — Listing details
             </p>
 
             <div className="mt-3 space-y-4">
               <div className="space-y-2">
                 <p className="text-sm font-medium text-stone-200">Variant</p>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {form.availableVariants.map((value) => {
                     const reverseDisabled =
                       value === 'Reverse Holo' && !canReverseHolo(selectedCard?.rarity);
@@ -70,7 +71,7 @@ export function ListingModal({ form }: Props) {
                         disabled={!selectedCard || reverseDisabled}
                         onClick={() => form.setVariant(value)}
                         className={classNames(
-                          'rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] transition-colors',
+                          'rounded-full border px-4 py-2 text-xs font-semibold transition-colors',
                           variant === value
                             ? 'border-primary-300/20 bg-primary-400/10 text-primary-200'
                             : 'border-white/10 bg-white/[0.03] text-stone-300 hover:bg-white/[0.06]',
@@ -116,7 +117,7 @@ export function ListingModal({ form }: Props) {
                       disabled={!selectedCard}
                       onClick={() => form.setListingType(entry.value)}
                       className={classNames(
-                        'rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] transition-colors',
+                        'rounded-full border px-4 py-2 text-xs font-semibold transition-colors',
                         listingType === entry.value
                           ? 'border-primary-300/20 bg-primary-400/10 text-primary-200'
                           : 'border-white/10 bg-white/[0.03] text-stone-300 hover:bg-white/[0.06]',
@@ -173,7 +174,7 @@ export function ListingModal({ form }: Props) {
                   className="w-full rounded-xl border border-white/10 bg-stone-950 px-4 py-3 text-sm text-white outline-none"
                 />
                 <p className="text-xs text-stone-500">
-                  Only the first part — we never store your full postcode
+                  Only the first part. It is not shown on the trade board or in chats.
                 </p>
               </div>
 
@@ -207,6 +208,10 @@ export function ListingModal({ form }: Props) {
                   )}
                 </label>
               </div>
+
+              {demoMode ? (
+                <p className="text-sm text-stone-400">Example only: saving is off in demo mode.</p>
+              ) : null}
 
               {form.submitError ? (
                 <div className="rounded-2xl border border-rose-300/20 bg-rose-500/10 p-4 text-sm text-rose-100">

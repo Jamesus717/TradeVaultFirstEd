@@ -7,7 +7,7 @@ export default function VerifyEmailView({ form }: { form: AuthFormState }) {
 
   return (
     <div className="mt-6 space-y-4">
-      <div className="rounded-[1.5rem] border border-primary-300/20 bg-primary-400/10 p-5 text-sm text-stone-100">
+      <div className="rounded-xl border border-primary-300/20 bg-primary-400/10 p-5 text-sm text-stone-100">
         <p className="font-semibold text-white">Check your email!</p>
         <p className="mt-2 text-stone-200">
           We&apos;ve sent you a verification link. You must verify your email before you can log in.

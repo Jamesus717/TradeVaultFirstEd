@@ -1,6 +1,7 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  devIndicators: false,
   images: {
     remotePatterns: [
       {
@@ -10,6 +11,10 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'images.scrydex.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'assets.tcgdex.net',
       },
       {
         protocol: 'https',

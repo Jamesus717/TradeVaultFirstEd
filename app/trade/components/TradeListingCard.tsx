@@ -77,7 +77,7 @@ export function TradeListingCard({
         <div className="absolute left-0 top-0 flex w-full items-start justify-between p-2">
           <div
             className={classNames(
-              'rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider',
+              'rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wider',
               conditionBadgeClass(listing.condition)
             )}
           >
@@ -85,7 +85,7 @@ export function TradeListingCard({
           </div>
           <div
             className={classNames(
-              'rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider',
+              'rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wider',
               typeBadge.className
             )}
           >
@@ -95,13 +95,13 @@ export function TradeListingCard({
       </div>
 
       {onWishlist ? (
-        <p className="bg-primary-400/15 px-4 py-1.5 text-center text-[11px] font-semibold uppercase tracking-[0.2em] text-primary-200">
+        <p className="bg-primary-400/15 px-4 py-1.5 text-center text-[11px] font-semibold text-primary-200">
           ★ On your wishlist
         </p>
       ) : null}
 
       <div className="flex flex-1 flex-col gap-2 border-t border-white/5 p-4">
-        <p className="truncate text-[11px] uppercase tracking-[0.22em] text-stone-400">
+        <p className="truncate text-[11px] text-stone-400">
           {listing.set_name}
         </p>
         <h3 className="text-base font-semibold text-white leading-tight">
@@ -131,13 +131,6 @@ export function TradeListingCard({
             ) : null}
           </div>
         )}
-
-        {listing.postcode_prefix ? (
-          <p className="text-xs text-stone-400">
-            <span className="mr-1">📍</span>
-            {listing.postcode_prefix} area
-          </p>
-        ) : null}
 
         <div className="mt-auto flex items-center justify-between pt-2">
           <div className="flex items-center gap-2">
@@ -189,7 +182,7 @@ export function TradeListingCard({
               onClick={onExpressInterest}
               disabled={!hasUser || interestPending}
               className={classNames(
-                'rounded-xl px-3 py-1.5 text-xs font-medium transition-colors',
+                'min-h-11 rounded-xl px-3 py-1.5 text-xs font-medium transition-colors',
                 showOpenChat
                   ? 'bg-primary-400/20 text-primary-200 hover:bg-primary-400/30'
                   : 'bg-stone-800 text-stone-100 hover:bg-primary-400 hover:text-primary-950',

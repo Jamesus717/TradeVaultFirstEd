@@ -1,6 +1,6 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
-import { Bricolage_Grotesque, Inter } from 'next/font/google';
+import { Bricolage_Grotesque, Instrument_Sans } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from './auth';
 import Navbar from './navbar';
@@ -11,7 +11,7 @@ const display = Bricolage_Grotesque({
   display: 'swap',
 });
 
-const body = Inter({
+const body = Instrument_Sans({
   subsets: ['latin'],
   variable: '--font-body',
   display: 'swap',
@@ -21,6 +21,17 @@ export const metadata: Metadata = {
   title: 'TradeBinder — Pokémon TCG collection tracker & trading platform',
   description:
     'Track Pokémon TCG collections, completion, variants, and wishlist, plus manage trades with other collectors.',
+  applicationName: 'TradeBinder',
+  appleWebApp: { capable: true, title: 'TradeBinder', statusBarStyle: 'black-translucent' },
+};
+
+// viewport-fit=cover lets the tab bar pad itself with env(safe-area-inset-bottom).
+export const viewport: Viewport = {
+  themeColor: '#0c0a09',
+  colorScheme: 'dark',
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({

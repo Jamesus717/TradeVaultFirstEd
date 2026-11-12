@@ -22,7 +22,7 @@ export default function AuthModal({ form }: { form: AuthFormState }) {
       }}
     >
       <div
-        className="w-full max-w-md rounded-[2rem] border border-white/10 bg-stone-900 p-8 shadow-2xl shadow-black/30"
+        className="w-full max-w-md rounded-2xl border border-white/10 bg-stone-900 p-8 shadow-2xl shadow-black/30"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-4">
