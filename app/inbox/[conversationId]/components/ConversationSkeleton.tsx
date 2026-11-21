@@ -15,7 +15,7 @@ export default function ConversationSkeleton() {
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
       <div>
-        <div className="mb-4 flex items-center gap-3 rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-4">
+        <div className="mb-4 flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4">
           <div className="h-10 w-10 shrink-0 animate-pulse rounded-lg bg-white/[0.06]" />
           <div className="min-w-0 flex-1 space-y-2">
             <div className="h-3.5 w-1/3 animate-pulse rounded bg-white/[0.06]" />
@@ -23,7 +23,7 @@ export default function ConversationSkeleton() {
           </div>
         </div>
 
-        <section className="flex h-[60vh] flex-col overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.03]">
+        <section className="flex h-[60vh] flex-col overflow-hidden rounded-xl border border-white/10 bg-white/[0.03]">
           <div className="flex-1 space-y-3 overflow-hidden p-5">
             {[
               'w-2/5 self-start',
@@ -45,7 +45,7 @@ export default function ConversationSkeleton() {
         </section>
       </div>
 
-      <aside className="h-fit space-y-4 rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5">
+      <aside className="h-fit space-y-4 rounded-xl border border-white/10 bg-white/[0.03] p-5">
         <div className="h-3 w-16 animate-pulse rounded bg-white/[0.06]" />
         <div className="aspect-[3/4] w-full animate-pulse rounded-[1.25rem] bg-white/[0.05]" />
         <div className="space-y-2">

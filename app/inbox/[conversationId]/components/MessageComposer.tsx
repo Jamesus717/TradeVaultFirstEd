@@ -28,8 +28,8 @@ export default function MessageComposer({
   return (
     <div className="border-t border-white/10 p-4">
       {offerOpen ? (
-        <div className="mb-3 rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-amber-200/80">
+        <div className="mb-3 rounded-xl border border-white/10 bg-white/[0.03] p-4">
+          <p className="text-xs font-semibold text-amber-200/80">
             Make Offer
           </p>
           <div className="mt-3 flex items-center gap-2">

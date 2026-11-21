@@ -121,7 +121,7 @@ export default function CredentialsView({ form }: { form: AuthFormState }) {
       {authError ? (
         <div
           className={classNames(
-            'rounded-[1.5rem] border p-4 text-sm backdrop-blur',
+            'rounded-xl border p-4 text-sm backdrop-blur',
             authError.toLowerCase().includes('verify your email')
               ? 'border-amber-300/15 bg-amber-400/5 text-amber-200/80'
               : 'border-rose-300/20 bg-rose-500/10 text-rose-100'

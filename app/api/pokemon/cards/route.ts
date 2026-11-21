@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { fallbackSetCards } from '../../../../lib/cardData/fallback';
 import { pokemonCachedJson } from '../../../../lib/pokemonServer';
 
 export const dynamic = 'force-dynamic';
@@ -17,6 +18,7 @@ export async function GET(request: Request) {
   return pokemonCachedJson(
     `/cards?${query.toString()}`,
     24 * 60 * 60 * 1000,
-    'public, s-maxage=86400, stale-while-revalidate=604800'
+    'public, s-maxage=86400, stale-while-revalidate=604800',
+    () => fallbackSetCards(setId)
   );
 }
