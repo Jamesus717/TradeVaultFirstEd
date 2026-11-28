@@ -13,7 +13,7 @@ export default function ConversationHeader({
   activeListing: Listing | null;
 }) {
   return (
-    <div className="mb-4 flex items-center gap-3 rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-4">
+    <div className="mb-4 flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4">
       <Link href="/inbox" className="text-sm font-medium text-stone-300 hover:text-white">
         ← Back
       </Link>
@@ -43,7 +43,7 @@ export default function ConversationHeader({
       {conversation ? (
         <span
           className={classNames(
-            'rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-wider',
+            'rounded-full border px-3 py-1 text-[10px] font-bold tracking-wider',
             statusBadge(conversation.status).className
           )}
         >

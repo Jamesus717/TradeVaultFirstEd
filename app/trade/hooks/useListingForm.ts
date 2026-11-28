@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { demoMode } from '../../../lib/demo';
 import { supabase } from '../../../lib/supabaseClient';
 import { getVariantsForSet } from '../../../lib/constants/cardVariants';
 import { useAuth } from '../../auth';
@@ -209,14 +210,15 @@ export function useListingForm({ onListingCreated }: Params) {
   }
 
   async function openModal() {
-    if (!user) {
+    // Demo mode opens the form signed out so it can be seen; saving still needs a user.
+    if (!user && !demoMode) {
       return;
     }
 
     setModalOpen(true);
     setSubmitError('');
 
-    if (!supabase) {
+    if (!supabase || !user) {
       setOwnedCards([]);
       return;
     }

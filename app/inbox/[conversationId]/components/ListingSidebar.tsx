@@ -22,8 +22,8 @@ export default function ListingSidebar({
   listingSold: boolean;
 }) {
   return (
-    <aside className="h-fit space-y-4 rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5 lg:sticky lg:top-24">
-      <p className="text-xs font-semibold uppercase tracking-[0.25em] text-stone-400">Listing</p>
+    <aside className="h-fit space-y-4 rounded-xl border border-white/10 bg-white/[0.03] p-5 lg:sticky lg:top-24">
+      <p className="text-xs font-semibold text-stone-400">Listing</p>
       <div className="overflow-hidden rounded-[1.25rem] border border-white/10 bg-stone-900">
         <div className="relative aspect-[3/4]">
           {activeListing?.image_url || activeListing?.card_image_url ? (
@@ -53,7 +53,7 @@ export default function ListingSidebar({
         <div className="flex flex-wrap items-center gap-2">
           <span
             className={classNames(
-              'rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider',
+              'rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wider',
               conditionBadgeClass(activeListing.condition)
             )}
           >
@@ -61,7 +61,7 @@ export default function ListingSidebar({
           </span>
           <span
             className={classNames(
-              'rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider',
+              'rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wider',
               listingTypeBadge(activeListing.listing_type).className
             )}
           >
@@ -80,15 +80,8 @@ export default function ListingSidebar({
         <p className="text-sm text-stone-300">{activeListing.trade_description}</p>
       ) : null}
 
-      {activeListing?.postcode_prefix ? (
-        <p className="text-xs text-stone-400">
-          <span className="mr-1">📍</span>
-          {activeListing.postcode_prefix} area
-        </p>
-      ) : null}
-
       <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.03] p-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-stone-400">Seller</p>
+        <p className="text-xs font-semibold text-stone-400">Seller</p>
         <p className="mt-2 text-sm text-stone-200">
           {conversation.seller_id === userId ? 'You' : otherName}
         </p>

@@ -1,7 +1,7 @@
 import type { ListingCondition, ListingType } from './types';
 
 export const LISTING_COLUMNS =
-  'id,user_id,card_id,card_name,set_name,set_id,card_number,variant,condition,listing_type,price,trade_description,postcode_prefix,image_url,card_image_url,created_at,is_active';
+  'id,user_id,card_id,card_name,set_name,set_id,card_number,variant,condition,listing_type,price,trade_description,image_url,card_image_url,created_at,is_active';
 
 export function classNames(...values: Array<string | false | null | undefined>) {
   return values.filter(Boolean).join(' ');

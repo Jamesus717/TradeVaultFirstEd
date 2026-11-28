@@ -68,7 +68,7 @@ export function TradeBoardGrid({
         filtersActive ? (
           <EmptyState
             title="Nothing matches those filters"
-            body="Try a wider postcode, another set, or clear the filters to see every listing."
+            body="Try another set or shop, or clear the filters to see every listing."
             action={{ label: 'Clear filters', onClick: onClearFilters }}
           />
         ) : (

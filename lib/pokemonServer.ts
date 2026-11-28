@@ -68,14 +68,20 @@ const memoryCache = new Map<string, CachedEntry>();
 
 export const OK_CACHE_CONTROL = 'public, s-maxage=3600, stale-while-revalidate=86400';
 
+function fallbackResponse(data: unknown) {
+  return Response.json(data, { headers: { 'Cache-Control': 'no-store', 'X-Fallback': '1' } });
+}
+
 // GET + JSON with a per-isolate cache. Rules that fix the "Failed to load sets"
 // bug: only successes are cached, errors are never marked cacheable (so the CDN
 // can't pin a failure for an hour), and when upstream fails we serve the last
-// good copy, however old, instead of an error.
+// good copy, however old, instead of an error. With no good copy either, an
+// optional fallback source gets a go before the error is returned.
 export async function pokemonCachedJson(
   path: string,
   ttlMs: number,
-  cacheControl: string = OK_CACHE_CONTROL
+  cacheControl: string = OK_CACHE_CONTROL,
+  fallback?: () => Promise<unknown | null>
 ): Promise<Response> {
   const cached = memoryCache.get(path);
 
@@ -98,6 +104,13 @@ export async function pokemonCachedJson(
       });
     }
 
+    if (response.status >= 500) {
+      const fromFallback = await fallback?.();
+      if (fromFallback) {
+        return fallbackResponse(fromFallback);
+      }
+    }
+
     // 4xx is a real answer (e.g. unknown set): pass it through, uncached.
     const status = response.status >= 500 ? 502 : response.status;
     return Response.json(
@@ -109,6 +122,11 @@ export async function pokemonCachedJson(
       return Response.json(cached.data, {
         headers: { 'Cache-Control': 'no-store', 'X-Stale': '1' },
       });
+    }
+    // Timeouts and dropped connections are as much an outage as a 5xx.
+    const fromFallback = await fallback?.();
+    if (fromFallback) {
+      return fallbackResponse(fromFallback);
     }
     return Response.json(
       { error: { message: 'Pokémon TCG API is unreachable.', status: 502 } },

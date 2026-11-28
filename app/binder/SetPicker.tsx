@@ -13,7 +13,7 @@ type Props = {
 export function SetPicker({ groupedSets, selectedSetId, onChange, disabled, selectedSetLabel }: Props) {
   return (
     <div className="max-w-xl">
-      <label className="mb-2 block text-xs font-medium uppercase tracking-[0.25em] text-stone-400">
+      <label className="mb-2 block text-xs font-medium text-stone-400">
         Select Set
       </label>
       <select

@@ -68,7 +68,7 @@ export default function ResetPasswordPage() {
   return (
     <main className="min-h-screen bg-transparent text-stone-100">
       <div className="mx-auto flex min-h-[70vh] w-full max-w-7xl items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
-        <div className="w-full max-w-md rounded-[2rem] border border-white/10 bg-white/[0.03] p-8 backdrop-blur">
+        <div className="w-full max-w-md rounded-2xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur">
           <h1 className="mb-2 text-2xl font-semibold text-white">Set a new password</h1>
 
           {loading ? (
@@ -107,7 +107,7 @@ export default function ResetPasswordPage() {
               />
 
               {error ? (
-                <div className="rounded-[1.5rem] border border-rose-300/20 bg-rose-500/10 p-4 text-sm text-rose-100">
+                <div className="rounded-xl border border-rose-300/20 bg-rose-500/10 p-4 text-sm text-rose-100">
                   {error}
                 </div>
               ) : null}

@@ -6,7 +6,12 @@ import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../auth';
 import type { CardVariant, PokemonSet, SetApiResponse, SortMode, UserCardRow } from './types';
 import { buildSetList, groupSetsBySeries, LEGACY_SET_ID } from './utils';
-import { NO_REVERSE_HOLO_SETS, normalizeVariantForSet, variantToSlug } from '../../lib/constants/cardVariants';
+import {
+  NO_REVERSE_HOLO_SETS,
+  normalizeVariantForSet,
+  variantToSlug,
+  type CardVariantType,
+} from '../../lib/constants/cardVariants';
 import { fetchSetVariants, SetCardsRequestError } from '../../lib/setCardsCache';
 
 type OwnershipFilter = 'all' | 'owned' | 'unowned';
@@ -429,6 +434,16 @@ export function useBinder() {
     await markAllAsOwned();
   }
 
+  // Quick add saves on its own; this ticks the card if its set is on screen.
+  const noteOwned = useCallback(
+    (setId: string, cardId: string, variant: CardVariantType) => {
+      if (setId === selectedSetId) {
+        setOwned((current) => ({ ...current, [`${cardId}-${variantToSlug(variant)}`]: true }));
+      }
+    },
+    [selectedSetId]
+  );
+
   const isLoading = loadingSets || (!!selectedSetId && loadingCards);
 
   return {
@@ -458,6 +473,7 @@ export function useBinder() {
     bulkSaving,
     toggleOwned,
     toggleAllOwned,
+    noteOwned,
     ownershipFilter,
     setOwnershipFilter,
   };

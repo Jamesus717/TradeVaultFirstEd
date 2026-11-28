@@ -4,9 +4,14 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { demoMode } from '../../lib/demo';
 import { supabase } from '../../lib/supabaseClient';
 import { useProfile } from '../../lib/useProfile';
 import { useAuth } from '../auth';
+import { useAuthForm } from '../auth/hooks/useAuthForm';
+import { DemoBanner } from '../components/DemoBanner';
+import { MatchRequestsSetting } from './MatchRequestsSetting';
+import { MoreLinks } from './MoreLinks';
 
 function formatMemberSince(value: string) {
   const date = new Date(value);
@@ -41,6 +46,7 @@ function validateUsername(value: string) {
 export default function ProfileEditorPage() {
   const router = useRouter();
   const { user, authLoading } = useAuth();
+  const { handleLogout, submitting: loggingOut } = useAuthForm();
   const { profile, loading, saving, error, updateProfile, uploadAvatar } = useProfile();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -53,7 +59,8 @@ export default function ProfileEditorPage() {
   const [bioDraft, setBioDraft] = useState('');
 
   useEffect(() => {
-    if (!authLoading && !user) {
+    // Phones reach More through Profile, so a signed-out visitor stays here.
+    if (!authLoading && !user && !demoMode && !supabase) {
       router.replace('/');
     }
   }, [authLoading, router, user]);
@@ -171,11 +178,42 @@ export default function ProfileEditorPage() {
     }
   };
 
-  if (authLoading || (!user && !authLoading)) {
+  if (demoMode) {
+    return (
+      <main className="min-h-screen bg-transparent text-stone-100">
+        <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
+          <DemoBanner />
+          <header className="space-y-2">
+            <p className="eyebrow">My Account</p>
+            <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">Profile</h1>
+            <p className="text-sm text-stone-300">Example profile. Settings here change nothing.</p>
+          </header>
+          <MoreLinks />
+          <MatchRequestsSetting userId={null} />
+        </div>
+      </main>
+    );
+  }
+
+  if (!authLoading && !user) {
+    return (
+      <main className="min-h-screen bg-transparent text-stone-100">
+        <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
+          <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-8 text-center text-stone-300">
+            <h1 className="text-2xl font-semibold text-white">Your profile</h1>
+            <p className="mt-2 text-sm">Log in or sign up to set up your profile and trading settings.</p>
+          </section>
+          <MoreLinks />
+        </div>
+      </main>
+    );
+  }
+
+  if (authLoading || !user) {
     return (
       <main className="min-h-screen bg-transparent text-stone-100">
         <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
-          <section className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-10 text-center text-stone-300">
+          <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-10 text-center text-stone-300">
             Loading...
           </section>
         </div>
@@ -198,8 +236,11 @@ export default function ProfileEditorPage() {
           </div>
 
           <div className="space-y-8 p-6 sm:p-8">
-            <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-stone-400">Appearance</p>
+            <MoreLinks />
+            <MatchRequestsSetting userId={user.id} />
+
+            <section className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
+              <p className="text-xs font-semibold text-stone-400">Appearance</p>
               <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-sm text-stone-300">Choose your accent colour theme.</p>
                 <div className="flex items-center gap-3">
@@ -225,8 +266,8 @@ export default function ProfileEditorPage() {
               </div>
             </section>
 
-            <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-stone-400">Avatar</p>
+            <section className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
+              <p className="text-xs font-semibold text-stone-400">Avatar</p>
               <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-4">
                   <button
@@ -283,8 +324,8 @@ export default function ProfileEditorPage() {
               </div>
             </section>
 
-            <section className="space-y-4 rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-stone-400">Profile Details</p>
+            <section className="space-y-4 rounded-xl border border-white/10 bg-white/[0.03] p-5">
+              <p className="text-xs font-semibold text-stone-400">Profile Details</p>
 
               <div className="space-y-2">
                 <label className="text-xs font-medium text-stone-400">Display Name</label>
@@ -372,8 +413,8 @@ export default function ProfileEditorPage() {
               ) : null}
             </section>
 
-            <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-stone-400">Account</p>
+            <section className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
+              <p className="text-xs font-semibold text-stone-400">Account</p>
               <div className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
                 <div className="rounded-xl border border-white/10 bg-stone-950/30 px-4 py-3">
                   <p className="text-xs text-stone-500">Email</p>
@@ -400,8 +441,8 @@ export default function ProfileEditorPage() {
               </div>
             </section>
 
-            <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-stone-400">Password</p>
+            <section className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
+              <p className="text-xs font-semibold text-stone-400">Password</p>
               <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-sm text-stone-300">Send a password reset email to your account address.</p>
                 <button
@@ -416,6 +457,14 @@ export default function ProfileEditorPage() {
                 </button>
               </div>
               {resetMessage ? <p className="mt-3 text-sm text-primary-200">{resetMessage}</p> : null}
+              <button
+                type="button"
+                onClick={handleLogout}
+                disabled={loggingOut}
+                className="mt-4 min-h-11 w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm font-medium text-stone-200 hover:bg-white/[0.06] disabled:opacity-60 sm:w-auto"
+              >
+                Log out
+              </button>
               {!supabase ? (
                 <p className="mt-2 text-xs text-stone-500">Supabase environment variables are missing.</p>
               ) : null}

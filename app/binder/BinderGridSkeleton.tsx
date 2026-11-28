@@ -7,7 +7,7 @@
  * then replace it with the filter panel plus the whole card grid, which moved
  * everything on the page. This mirrors the real geometry instead: the same
  * grid column counts and gap as BinderGrid, and per card the same
- * rounded-[1.5rem] border, p-3 padding, aspect-[5/7] image well, three text
+ * rounded-xl border, p-3 padding, aspect-[5/7] image well, three text
  * lines and footer button.
  *
  * Same border/background tokens as the real cards; no new colours, no new
